@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { BookOpen, ChevronDown, Menu, X, Award, Shield } from 'lucide-react';
+import { ChevronDown, Menu, X, Award, Shield } from 'lucide-react';
+import logoImg from '../../assets/logo.png'; // Make sure the path matches your image location
 
 function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -13,11 +14,13 @@ function Navbar() {
     <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
         
-        {/* Brand Logo & Tagline */}
+        {/* Brand Logo with Custom Image */}
         <Link to="/" className="flex items-center gap-3 group">
-          <div className="bg-brand-600 text-white p-2.5 rounded-2xl group-hover:bg-brand-700 transition shadow-sm">
-            <BookOpen className="w-6 h-6" />
-          </div>
+          <img 
+            src={logoImg} 
+            alt="Roshan Safha Logo" 
+            className="h-12 w-auto object-contain rounded-xl shadow-xs transition-transform group-hover:scale-105"
+          />
           <div>
             <span className="font-black text-xl sm:text-2xl text-slate-900 tracking-tight block leading-none">Roshan Safha</span>
             <span className="text-[10px] text-slate-500 font-semibold tracking-wider uppercase block mt-1">Muzaffarabad, AJK</span>

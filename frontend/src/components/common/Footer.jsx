@@ -1,8 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { BookOpen, Mail, Phone, MapPin, Heart } from 'lucide-react';
+import { Mail, Phone, MapPin, Heart } from 'lucide-react';
+import logoImg from '../../assets/logo.png';
 
-// Pure SVG Social Icons to guarantee zero import mismatches
 function InstagramIcon({ className = "w-4 h-4" }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -31,9 +31,11 @@ function Footer() {
         {/* Brand & Exact Tagline */}
         <div className="space-y-4 md:col-span-1">
           <div className="flex items-center gap-2.5 text-white font-bold text-lg">
-            <div className="bg-brand-600 p-2 rounded-xl text-white">
-              <BookOpen className="w-5 h-5" />
-            </div>
+            <img 
+              src={logoImg} 
+              alt="Roshan Safha Logo" 
+              className="h-9 w-auto object-contain rounded-lg"
+            />
             Roshan Safha
           </div>
           <p className="text-xs text-slate-300 italic leading-relaxed">
@@ -51,7 +53,7 @@ function Footer() {
 
         {/* Quick Links */}
         <div>
-          <h4 className="text-xs font-bold uppercase text-slate-200 tracking-wider mb-4">Site Navigation</h4>
+          <h4 className="text-xs font-bold uppercase text-slate-200 tracking-wider mb-4">Explore</h4>
           <ul className="space-y-2.5 text-xs">
             <li><Link to="/" className="hover:text-white transition">Home</Link></li>
             <li><Link to="/about" className="hover:text-white transition">About Us (Our Story & SDGs)</Link></li>
@@ -94,7 +96,7 @@ function Footer() {
       </div>
 
       <div className="border-t border-slate-800 py-6 text-center text-xs text-slate-500 flex flex-wrap items-center justify-center gap-2">
-        <span>Copyright © 2026 Roshan Safha. All rights reserved.</span>
+        <span>Copyright © 2025 Roshan Safha. All rights reserved.</span>
         <span>•</span>
         <span className="flex items-center gap-1">
           Made with <Heart className="w-3.5 h-3.5 text-red-500 fill-red-500 inline" /> for community empowerment.

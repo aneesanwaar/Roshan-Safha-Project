@@ -30,22 +30,52 @@ function Footer() {
         
         {/* Brand & Exact Tagline */}
         <div className="space-y-4 md:col-span-1">
-          <div className="flex items-center gap-2.5 text-white font-bold text-lg">
+          <Link to="/" className="flex items-center gap-3 group">
             <img 
               src={logoImg} 
               alt="Roshan Safha Logo" 
-              className="h-9 w-auto object-contain rounded-lg"
+              className="h-11 w-auto object-contain rounded-xl"
             />
-            Roshan Safha
-          </div>
+            <div className="flex flex-col justify-center">
+              {/* English Script Title */}
+              <span 
+                className="text-2xl font-bold text-white tracking-wide leading-none"
+                style={{ fontFamily: "'Caveat', cursive, sans-serif" }}
+              >
+                Roshan Safha
+              </span>
+              {/* Urdu Title */}
+              <span 
+                className="text-sm font-semibold text-emerald-400 leading-tight mt-0.5"
+                style={{ fontFamily: "'Noto Nastaliq Urdu', 'Segoe UI', Tahoma, sans-serif" }}
+                dir="rtl"
+              >
+                روشن صفحہ
+              </span>
+            </div>
+          </Link>
+
           <p className="text-xs text-slate-300 italic leading-relaxed">
             “Roshan Safha-because second chances are for everyone and everything.”
           </p>
+
           <div className="flex items-center gap-3 pt-2">
-            <a href="https://instagram.com" target="_blank" rel="noreferrer" className="p-2 bg-slate-800 hover:bg-brand-600 hover:text-white rounded-xl transition text-slate-400">
+            <a 
+              href="https://instagram.com" 
+              target="_blank" 
+              rel="noreferrer" 
+              className="p-2 bg-slate-800 hover:bg-emerald-600 hover:text-white rounded-xl transition text-slate-400"
+              aria-label="Instagram"
+            >
               <InstagramIcon className="w-4 h-4" />
             </a>
-            <a href="https://linkedin.com" target="_blank" rel="noreferrer" className="p-2 bg-slate-800 hover:bg-brand-600 hover:text-white rounded-xl transition text-slate-400">
+            <a 
+              href="https://linkedin.com" 
+              target="_blank" 
+              rel="noreferrer" 
+              className="p-2 bg-slate-800 hover:bg-emerald-600 hover:text-white rounded-xl transition text-slate-400"
+              aria-label="LinkedIn"
+            >
               <LinkedinIcon className="w-4 h-4" />
             </a>
           </div>
@@ -53,7 +83,7 @@ function Footer() {
 
         {/* Quick Links */}
         <div>
-          <h4 className="text-xs font-bold uppercase text-slate-200 tracking-wider mb-4">Explore</h4>
+          <h4 className="text-xs font-bold uppercase text-slate-200 tracking-wider mb-4">Site Navigation</h4>
           <ul className="space-y-2.5 text-xs">
             <li><Link to="/" className="hover:text-white transition">Home</Link></li>
             <li><Link to="/about" className="hover:text-white transition">About Us (Our Story & SDGs)</Link></li>
@@ -79,15 +109,15 @@ function Footer() {
           <h4 className="text-xs font-bold uppercase text-slate-200 tracking-wider mb-4">Contact Details</h4>
           <ul className="space-y-3 text-xs">
             <li className="flex items-center gap-2.5">
-              <Mail className="w-4 h-4 text-brand-500 shrink-0" />
+              <Mail className="w-4 h-4 text-emerald-500 shrink-0" />
               <a href="mailto:roshansafha@gmail.com" className="hover:text-white transition">roshansafha@gmail.com</a>
             </li>
             <li className="flex items-center gap-2.5">
-              <Phone className="w-4 h-4 text-brand-500 shrink-0" />
+              <Phone className="w-4 h-4 text-emerald-500 shrink-0" />
               <a href="tel:+923005966967" className="hover:text-white transition">+92 300 5966967</a>
             </li>
             <li className="flex items-start gap-2.5">
-              <MapPin className="w-4 h-4 text-brand-500 shrink-0 mt-0.5" />
+              <MapPin className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
               <span>Muzaffarabad, Azad Jammu & Kashmir, Pakistan</span>
             </li>
           </ul>

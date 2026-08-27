@@ -1,0 +1,21 @@
+node_modules
+.env
+.env.local
+.env.development
+.env.production
+
+# Ignore backend uploads
+backend/uploads/essays/*
+!backend/uploads/essays/.gitkeep
+
+logs
+*.log
+
+dist
+build
+
+.DS_Store
+
+coverage
+
+.vscode

@@ -1,5 +1,15 @@
 @import "tailwindcss";
 
+/* Professional Brand Logo Protection */
+.brand-logo-img {
+  -webkit-user-drag: none;
+  -khtml-user-drag: none;
+  -moz-user-drag: none;
+  -o-user-drag: none;
+  user-select: none;
+  pointer-events: none;
+}
+
 @theme {
   --color-brand-50: #f0fdf4;
   --color-brand-100: #dcfce7;

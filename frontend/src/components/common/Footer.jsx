@@ -28,31 +28,17 @@ function Footer() {
     <footer className="bg-slate-900 text-slate-400 border-t border-slate-800 text-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 grid grid-cols-1 md:grid-cols-4 gap-10">
         
-        {/* Brand & Exact Tagline */}
+        {/* Brand Column with Clean Crisp Logo Badge */}
         <div className="space-y-4 md:col-span-1">
-          <Link to="/" className="flex items-center gap-3 group">
+          <Link 
+            to="/" 
+            className="inline-flex items-center bg-white/95 hover:bg-white px-3.5 py-2 rounded-2xl shadow-sm border border-slate-700/50 transition-transform hover:scale-102 group mb-1"
+          >
             <img 
               src={logoImg} 
               alt="Roshan Safha Logo" 
-              className="h-11 w-auto object-contain rounded-xl"
+              className="h-12 sm:h-14 w-auto object-contain"
             />
-            <div className="flex flex-col justify-center">
-              {/* English Script Title */}
-              <span 
-                className="text-2xl font-bold text-white tracking-wide leading-none"
-                style={{ fontFamily: "'Caveat', cursive, sans-serif" }}
-              >
-                Roshan Safha
-              </span>
-              {/* Urdu Title */}
-              <span 
-                className="text-sm font-semibold text-emerald-400 leading-tight mt-0.5"
-                style={{ fontFamily: "'Noto Nastaliq Urdu', 'Segoe UI', Tahoma, sans-serif" }}
-                dir="rtl"
-              >
-                روشن صفحہ
-              </span>
-            </div>
           </Link>
 
           <p className="text-xs text-slate-300 italic leading-relaxed">

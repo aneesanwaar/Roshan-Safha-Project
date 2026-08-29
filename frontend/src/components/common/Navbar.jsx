@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { ChevronDown, Menu, X, Award } from 'lucide-react';
+import { ChevronDown, Menu, X, BookOpen } from 'lucide-react';
 import logoImg from '../../assets/logo.png';
 
 function Navbar() {
@@ -14,7 +14,7 @@ function Navbar() {
     <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 sm:h-24 flex items-center justify-between gap-4">
         
-        {/* Horizontal Full Brand Lockup */}
+        {/* Full Horizontal Brand Logo */}
         <Link 
           to="/" 
           className="flex items-center select-none py-1 group shrink-0"
@@ -58,11 +58,18 @@ function Navbar() {
                 className="absolute top-full left-0 w-64 bg-white border border-slate-200 rounded-2xl shadow-xl py-3 px-2 space-y-1 animate-in fade-in slide-in-from-top-2"
               >
                 <Link 
-                  to="/programs/donations" 
+                  to="/programs/donate-books" 
                   onClick={() => setDropdownOpen(false)} 
                   className="block px-3 py-2 text-xs font-medium text-slate-700 hover:bg-emerald-50 hover:text-emerald-800 rounded-xl transition"
                 >
-                  📚 Book Donations & Available Catalog
+                  🎁 Donate Books (Donor Portal)
+                </Link>
+                <Link 
+                  to="/programs/book-catalog" 
+                  onClick={() => setDropdownOpen(false)} 
+                  className="block px-3 py-2 text-xs font-medium text-slate-700 hover:bg-emerald-50 hover:text-emerald-800 rounded-xl transition"
+                >
+                  📚 Available Books Catalog
                 </Link>
                 <Link 
                   to="/programs/essays" 
@@ -76,7 +83,7 @@ function Navbar() {
                   onClick={() => setDropdownOpen(false)} 
                   className="block px-3 py-2 text-xs font-medium text-slate-700 hover:bg-emerald-50 hover:text-emerald-800 rounded-xl transition"
                 >
-                  🌱 SDGs-Based Summer Circle & Events
+                  🌱 SDGs Summer Circle
                 </Link>
               </div>
             )}
@@ -108,14 +115,14 @@ function Navbar() {
           </Link>
         </nav>
 
-        {/* Action CTA */}
+        {/* Action CTA Button */}
         <div className="hidden lg:flex items-center">
           <Link 
-            to="/programs/essays" 
-            className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl text-xs font-bold shadow-sm transition"
+            to="/programs/donate-books" 
+            className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl text-xs font-bold shadow-sm transition-all hover:shadow-md active:scale-95"
           >
-            <Award className="w-4 h-4" />
-            Contest 2026
+            <BookOpen className="w-4 h-4" />
+            Donate Books
           </Link>
         </div>
 
@@ -136,7 +143,8 @@ function Navbar() {
           <Link to="/" onClick={() => setMobileOpen(false)} className="block py-1">Home</Link>
           <Link to="/about" onClick={() => setMobileOpen(false)} className="block py-1">About Us</Link>
           <div className="pl-3 border-l-2 border-emerald-200 space-y-2 py-1 text-xs text-slate-600">
-            <Link to="/programs/donations" onClick={() => setMobileOpen(false)} className="block">Book Donations & Catalog</Link>
+            <Link to="/programs/donate-books" onClick={() => setMobileOpen(false)} className="block">Donate Books (Donor Portal)</Link>
+            <Link to="/programs/book-catalog" onClick={() => setMobileOpen(false)} className="block">Available Books Catalog</Link>
             <Link to="/programs/essays" onClick={() => setMobileOpen(false)} className="block">Essay Contests</Link>
             <Link to="/programs/summer-circle" onClick={() => setMobileOpen(false)} className="block">SDGs Summer Circle</Link>
           </div>
@@ -144,6 +152,16 @@ function Navbar() {
           <Link to="/announcements" onClick={() => setMobileOpen(false)} className="block py-1">Announcements</Link>
           <Link to="/get-involved" onClick={() => setMobileOpen(false)} className="block py-1">Get Involved</Link>
           <Link to="/contact" onClick={() => setMobileOpen(false)} className="block py-1">Contact Us</Link>
+          <div className="pt-2">
+            <Link 
+              to="/programs/donate-books" 
+              onClick={() => setMobileOpen(false)}
+              className="flex items-center justify-center gap-2 bg-emerald-600 text-white px-4 py-2.5 rounded-xl text-xs font-bold w-full"
+            >
+              <BookOpen className="w-4 h-4" />
+              Donate Books
+            </Link>
+          </div>
         </div>
       )}
     </header>

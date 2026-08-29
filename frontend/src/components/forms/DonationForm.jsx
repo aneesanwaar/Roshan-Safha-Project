@@ -1,82 +1,190 @@
 import React, { useState } from 'react';
-import { api } from '../../services/api';
-import { CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import { Send, CheckCircle2, AlertCircle } from 'lucide-react';
 
-function DonationForm() {
-  const [data, setData] = useState({
+function DonationForm({ onSuccess }) {
+  const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: '',
     city: '',
     numberOfBooks: '',
+    bookTypes: '',
     dropoffMethod: 'Drop-off',
     message: ''
   });
-  const [status, setStatus] = useState({ loading: false, error: null, success: false });
+
+  const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState({ type: '', message: '' });
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setStatus({ loading: true, error: null, success: false });
+    setLoading(true);
+    setStatus({ type: '', message: '' });
+
     try {
-      const res = await api.submitDonation(data);
-      if (res.success) setStatus({ loading: false, error: null, success: true });
-      else setStatus({ loading: false, error: res.message || "Failed.", success: false });
-    } catch {
-      setStatus({ loading: false, error: "Network error.", success: false });
+      const payload = {
+        ...formData,
+        numberOfBooks: Number(formData.numberOfBooks) || 0
+      };
+
+      const response = await fetch('/api/donations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to submit donation pledge');
+      }
+
+      setStatus({ type: 'success', message: 'Thank you! Your donation pledge has been registered.' });
+      setFormData({
+        name: '',
+        email: '',
+        phone: '',
+        city: '',
+        numberOfBooks: '',
+        bookTypes: '',
+        dropoffMethod: 'Drop-off',
+        message: ''
+      });
+      if (onSuccess) onSuccess();
+    } catch (err) {
+      setStatus({ type: 'error', message: err.message });
+    } finally {
+      setLoading(false);
     }
   };
 
-  if (status.success) {
-    return (
-      <div className="bg-brand-50 border border-brand-200 p-8 rounded-2xl text-center space-y-3">
-        <CheckCircle2 className="w-10 h-10 text-brand-600 mx-auto" />
-        <h3 className="text-lg font-bold text-brand-900">Donation Pledged!</h3>
-        <p className="text-brand-800 text-xs">Our team will reach out with drop-off/pickup coordination details.</p>
-        <button onClick={() => setStatus({ loading: false, error: null, success: false })} className="text-xs font-semibold text-brand-700 underline">Donate More</button>
-      </div>
-    );
-  }
-
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {status.error && <div className="p-3 bg-red-50 text-red-700 rounded-xl text-xs">{status.error}</div>}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <label className="block text-xs font-semibold uppercase text-slate-700 mb-1">Donor Name</label>
-          <input required type="text" value={data.name} onChange={e => setData({...data, name: e.target.value})} className="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-brand-500 outline-none" placeholder="Your name" />
+      {status.message && (
+        <div className={`p-3 rounded-xl text-xs flex items-center gap-2 ${
+          status.type === 'success' ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-red-50 text-red-800 border border-red-200'
+        }`}>
+          {status.type === 'success' ? <CheckCircle2 className="w-4 h-4 shrink-0" /> : <AlertCircle className="w-4 h-4 shrink-0" />}
+          <span>{status.message}</span>
         </div>
+      )}
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
         <div>
-          <label className="block text-xs font-semibold uppercase text-slate-700 mb-1">Email</label>
-          <input required type="email" value={data.email} onChange={e => setData({...data, email: e.target.value})} className="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-brand-500 outline-none" placeholder="donor@example.com" />
+          <label className="block text-xs font-bold text-slate-700 mb-1">Donor Name *</label>
+          <input
+            type="text"
+            name="name"
+            required
+            placeholder="e.g. Ayesha Tariq"
+            value={formData.name}
+            onChange={handleChange}
+            className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500"
+          />
+        </div>
+
+        <div>
+          <label className="block text-xs font-bold text-slate-700 mb-1">Email Address *</label>
+          <input
+            type="email"
+            name="email"
+            required
+            placeholder="ayesha@example.com"
+            value={formData.email}
+            onChange={handleChange}
+            className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500"
+          />
+        </div>
+
+        <div>
+          <label className="block text-xs font-bold text-slate-700 mb-1">Phone Number *</label>
+          <input
+            type="tel"
+            name="phone"
+            required
+            placeholder="0300 1234567"
+            value={formData.phone}
+            onChange={handleChange}
+            className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500"
+          />
+        </div>
+
+        <div>
+          <label className="block text-xs font-bold text-slate-700 mb-1">City</label>
+          <input
+            type="text"
+            name="city"
+            placeholder="e.g. Muzaffarabad"
+            value={formData.city}
+            onChange={handleChange}
+            className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500"
+          />
+        </div>
+
+        <div>
+          <label className="block text-xs font-bold text-slate-700 mb-1">Number of Books</label>
+          <input
+            type="number"
+            name="numberOfBooks"
+            min="1"
+            placeholder="e.g. 10"
+            value={formData.numberOfBooks}
+            onChange={handleChange}
+            className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500"
+          />
+        </div>
+
+        <div>
+          <label className="block text-xs font-bold text-slate-700 mb-1">Drop-off Method</label>
+          <select
+            name="dropoffMethod"
+            value={formData.dropoffMethod}
+            onChange={handleChange}
+            className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500 font-medium text-slate-700"
+          >
+            <option value="Drop-off">Drop-off at Center</option>
+            <option value="Pickup Required">Pickup Required (Muzaffarabad)</option>
+            <option value="Courier">Courier</option>
+          </select>
         </div>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div>
-          <label className="block text-xs font-semibold uppercase text-slate-700 mb-1">Phone</label>
-          <input required type="tel" value={data.phone} onChange={e => setData({...data, phone: e.target.value})} className="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-brand-500 outline-none" placeholder="0300-0000000" />
-        </div>
-        <div>
-          <label className="block text-xs font-semibold uppercase text-slate-700 mb-1">City</label>
-          <input required type="text" value={data.city} onChange={e => setData({...data, city: e.target.value})} className="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-brand-500 outline-none" placeholder="e.g. Rawalpindi" />
-        </div>
-        <div>
-          <label className="block text-xs font-semibold uppercase text-slate-700 mb-1">No. of Books</label>
-          <input required type="number" min="1" value={data.numberOfBooks} onChange={e => setData({...data, numberOfBooks: e.target.value})} className="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-brand-500 outline-none" placeholder="e.g. 10" />
-        </div>
-      </div>
+
       <div>
-        <label className="block text-xs font-semibold uppercase text-slate-700 mb-1">Handover Method</label>
-        <select value={data.dropoffMethod} onChange={e => setData({...data, dropoffMethod: e.target.value})} className="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-brand-500 outline-none bg-white">
-          <option value="Drop-off">I will drop off at designated point</option>
-          <option value="Pickup">Request pickup (for 20+ books)</option>
-        </select>
+        <label className="block text-xs font-bold text-slate-700 mb-1">Book Types</label>
+        <input
+          type="text"
+          name="bookTypes"
+          placeholder="e.g. Matric Science, FSc Pre-Med, English Novels"
+          value={formData.bookTypes}
+          onChange={handleChange}
+          className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500"
+        />
       </div>
+
       <div>
-        <label className="block text-xs font-semibold uppercase text-slate-700 mb-1">Book Titles / Categories (Optional)</label>
-        <textarea rows={3} value={data.message} onChange={e => setData({...data, message: e.target.value})} className="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-brand-500 outline-none" placeholder="e.g. High school science textbooks, English literature classics..." />
+        <label className="block text-xs font-bold text-slate-700 mb-1">Message / Notes</label>
+        <textarea
+          name="message"
+          rows="2"
+          placeholder="Any additional details..."
+          value={formData.message}
+          onChange={handleChange}
+          className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500"
+        ></textarea>
       </div>
-      <button disabled={status.loading} type="submit" className="w-full bg-brand-600 hover:bg-brand-700 text-white font-bold py-3.5 rounded-xl shadow-sm text-sm flex items-center justify-center gap-2">
-        {status.loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Pledge Book Donation"}
+
+      <button
+        type="submit"
+        disabled={loading}
+        className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-sm transition flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
+      >
+        <Send className="w-3.5 h-3.5" />
+        {loading ? 'Submitting...' : 'Submit Donation'}
       </button>
     </form>
   );

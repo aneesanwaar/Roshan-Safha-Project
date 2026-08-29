@@ -1,145 +1,242 @@
 import React, { useState } from 'react';
-import { api } from '../../services/api';
-import { Upload, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import { Send, CheckCircle2, AlertCircle, Upload } from 'lucide-react';
 
-function EssayForm() {
+function EssayForm({ onSuccess }) {
   const [formData, setFormData] = useState({
     studentName: '',
-    email: '',
-    phone: '',
     age: '',
     institutionName: '',
     category: 'Junior',
+    email: '',
+    phone: '',
     essayTitle: '',
-    agree: false
+    hasAgreed: false
   });
-  const [file, setFile] = useState(null);
-  const [status, setStatus] = useState({ loading: false, error: null, success: false });
+
+  const [essayFile, setEssayFile] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState({ type: '', message: '' });
+
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
+  };
 
   const handleFileChange = (e) => {
-    const selected = e.target.files[0];
-    if (selected) {
-      if (selected.size > 5 * 1024 * 1024) {
-        setStatus({ ...status, error: "File size exceeds 5MB limit." });
-        return;
-      }
-      setFile(selected);
-      setStatus({ ...status, error: null });
+    if (e.target.files && e.target.files[0]) {
+      setEssayFile(e.target.files[0]);
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!file) {
-      setStatus({ ...status, error: "Please upload your essay file (.pdf, .doc, .docx)." });
-      return;
-    }
-    if (!formData.agree) {
-      setStatus({ ...status, error: "You must certify original authorship." });
+    setStatus({ type: '', message: '' });
+
+    if (!essayFile) {
+      setStatus({ type: 'error', message: 'Please select an essay document to upload.' });
       return;
     }
 
-    setStatus({ loading: true, error: null, success: false });
+    if (!formData.hasAgreed) {
+      setStatus({ type: 'error', message: 'You must agree to the terms and conditions.' });
+      return;
+    }
 
-    const payload = new FormData();
-    Object.keys(formData).forEach(k => payload.append(k, formData[k]));
-    payload.append('essayFile', file);
+    setLoading(true);
 
     try {
-      const res = await api.submitEssay(payload);
-      if (res.success) {
-        setStatus({ loading: false, error: null, success: true });
-      } else {
-        setStatus({ loading: false, error: res.message || "Failed to submit.", success: false });
+      const data = new FormData();
+      data.append('studentName', formData.studentName);
+      data.append('age', Number(formData.age));
+      data.append('institutionName', formData.institutionName);
+      data.append('category', formData.category);
+      data.append('email', formData.email);
+      data.append('phone', formData.phone);
+      data.append('essayTitle', formData.essayTitle);
+      data.append('hasAgreed', String(formData.hasAgreed));
+      data.append('essayFile', essayFile);
+
+      const response = await fetch('/api/essays', {
+        method: 'POST',
+        body: data // Sent as multipart/form-data
+      });
+
+      const resData = await response.json();
+
+      if (!response.ok) {
+        throw new Error(resData.message || 'Failed to submit essay');
       }
-    } catch {
-      setStatus({ loading: false, error: "Network error occurred.", success: false });
+
+      setStatus({ type: 'success', message: 'Essay submitted successfully! Good luck.' });
+      setFormData({
+        studentName: '',
+        age: '',
+        institutionName: '',
+        category: 'Junior',
+        email: '',
+        phone: '',
+        essayTitle: '',
+        hasAgreed: false
+      });
+      setEssayFile(null);
+      if (onSuccess) onSuccess();
+    } catch (err) {
+      setStatus({ type: 'error', message: err.message });
+    } finally {
+      setLoading(false);
     }
   };
 
-  if (status.success) {
-    return (
-      <div className="bg-brand-50 border border-brand-200 p-8 rounded-2xl text-center space-y-4">
-        <CheckCircle2 className="w-12 h-12 text-brand-600 mx-auto" />
-        <h3 className="text-xl font-bold text-brand-900">Submission Confirmed!</h3>
-        <p className="text-brand-800 text-sm max-w-md mx-auto">
-          Your essay entry has been recorded. A confirmation email and direct download link have been sent.
-        </p>
-        <button 
-          onClick={() => setStatus({ loading: false, error: null, success: false })}
-          className="text-sm font-semibold text-brand-700 underline hover:text-brand-800"
-        >
-          Submit Another Entry
-        </button>
-      </div>
-    );
-  }
-
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
-      {status.error && (
-        <div className="p-3.5 bg-red-50 border border-red-200 text-red-700 rounded-xl text-xs flex items-center gap-2">
-          <AlertCircle className="w-4 h-4 shrink-0" />
-          <span>{status.error}</span>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      {status.message && (
+        <div className={`p-3 rounded-xl text-xs flex items-center gap-2 ${
+          status.type === 'success' ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-red-50 text-red-800 border border-red-200'
+        }`}>
+          {status.type === 'success' ? <CheckCircle2 className="w-4 h-4 shrink-0" /> : <AlertCircle className="w-4 h-4 shrink-0" />}
+          <span>{status.message}</span>
         </div>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
         <div>
-          <label className="block text-xs font-semibold uppercase text-slate-700 mb-1">Student Full Name</label>
-          <input required type="text" value={formData.studentName} onChange={e => setFormData({...formData, studentName: e.target.value})} className="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-brand-500 outline-none" placeholder="e.g. Fatima Noor" />
+          <label className="block text-xs font-bold text-slate-700 mb-1">Student Name *</label>
+          <input
+            type="text"
+            name="studentName"
+            required
+            placeholder="e.g. Maryam Tariq"
+            value={formData.studentName}
+            onChange={handleChange}
+            className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500"
+          />
         </div>
-        <div>
-          <label className="block text-xs font-semibold uppercase text-slate-700 mb-1">Email Address</label>
-          <input required type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-brand-500 outline-none" placeholder="fatima@example.com" />
-        </div>
-      </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div>
-          <label className="block text-xs font-semibold uppercase text-slate-700 mb-1">Phone Number</label>
-          <input required type="tel" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-brand-500 outline-none" placeholder="0300-1234567" />
+          <label className="block text-xs font-bold text-slate-700 mb-1">Age *</label>
+          <input
+            type="number"
+            name="age"
+            min="5"
+            max="100"
+            required
+            placeholder="e.g. 15"
+            value={formData.age}
+            onChange={handleChange}
+            className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500"
+          />
         </div>
+
         <div>
-          <label className="block text-xs font-semibold uppercase text-slate-700 mb-1">Age</label>
-          <input required type="number" min="5" max="100" value={formData.age} onChange={e => setFormData({...formData, age: e.target.value})} className="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-brand-500 outline-none" placeholder="16" />
+          <label className="block text-xs font-bold text-slate-700 mb-1">Institution / School *</label>
+          <input
+            type="text"
+            name="institutionName"
+            required
+            placeholder="e.g. Army Public School Muzaffarabad"
+            value={formData.institutionName}
+            onChange={handleChange}
+            className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500"
+          />
         </div>
+
         <div>
-          <label className="block text-xs font-semibold uppercase text-slate-700 mb-1">Category</label>
-          <select value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})} className="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-brand-500 outline-none bg-white">
+          <label className="block text-xs font-bold text-slate-700 mb-1">Category *</label>
+          <select
+            name="category"
+            required
+            value={formData.category}
+            onChange={handleChange}
+            className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500 font-medium text-slate-700"
+          >
             <option value="Junior">Junior (Under 16)</option>
-            <option value="Senior">Senior (16+)</option>
+            <option value="Senior">Senior (16+ / University)</option>
           </select>
         </div>
-      </div>
 
-      <div>
-        <label className="block text-xs font-semibold uppercase text-slate-700 mb-1">Educational Institution</label>
-        <input required type="text" value={formData.institutionName} onChange={e => setFormData({...formData, institutionName: e.target.value})} className="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-brand-500 outline-none" placeholder="School, College, or University" />
-      </div>
+        <div>
+          <label className="block text-xs font-bold text-slate-700 mb-1">Email Address *</label>
+          <input
+            type="email"
+            name="email"
+            required
+            placeholder="maryam@example.com"
+            value={formData.email}
+            onChange={handleChange}
+            className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500"
+          />
+        </div>
 
-      <div>
-        <label className="block text-xs font-semibold uppercase text-slate-700 mb-1">Essay Title</label>
-        <input required type="text" value={formData.essayTitle} onChange={e => setFormData({...formData, essayTitle: e.target.value})} className="w-full border border-slate-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-brand-500 outline-none" placeholder="Title of your written piece" />
-      </div>
-
-      <div>
-        <label className="block text-xs font-semibold uppercase text-slate-700 mb-1">Essay Document (.pdf, .doc, .docx - Max 5MB)</label>
-        <div className="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:bg-slate-50 transition cursor-pointer relative bg-slate-50/50">
-          <input required type="file" accept=".pdf,.doc,.docx" onChange={handleFileChange} className="absolute inset-0 opacity-0 cursor-pointer" />
-          <Upload className="w-8 h-8 text-slate-400 mx-auto mb-2" />
-          <p className="text-sm font-medium text-slate-700">{file ? file.name : "Click or drag file to attach"}</p>
-          <p className="text-xs text-slate-400 mt-1">Stored securely on Cloudinary storage</p>
+        <div>
+          <label className="block text-xs font-bold text-slate-700 mb-1">Phone Number *</label>
+          <input
+            type="tel"
+            name="phone"
+            required
+            placeholder="0300 1234567"
+            value={formData.phone}
+            onChange={handleChange}
+            className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500"
+          />
         </div>
       </div>
 
-      <label className="flex items-start gap-2.5 cursor-pointer pt-2">
-        <input type="checkbox" checked={formData.agree} onChange={e => setFormData({...formData, agree: e.target.checked})} className="mt-1 rounded text-brand-600 focus:ring-brand-500" />
-        <span className="text-xs text-slate-600 leading-relaxed">I certify that this submission is original work and meets all Roshan Safha contest criteria.</span>
+      <div>
+        <label className="block text-xs font-bold text-slate-700 mb-1">Essay Title *</label>
+        <input
+          type="text"
+          name="essayTitle"
+          required
+          placeholder="e.g. Sustainable Literacy & Community Development"
+          value={formData.essayTitle}
+          onChange={handleChange}
+          className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500"
+        />
+      </div>
+
+      <div>
+        <label className="block text-xs font-bold text-slate-700 mb-1">Upload Essay Document (PDF / DOCX) *</label>
+        <div className="relative border border-dashed border-slate-300 rounded-xl p-4 bg-slate-50 hover:bg-slate-100 transition text-center cursor-pointer">
+          <input
+            type="file"
+            name="essayFile"
+            required
+            accept=".pdf,.doc,.docx"
+            onChange={handleFileChange}
+            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+          />
+          <Upload className="w-5 h-5 text-slate-400 mx-auto mb-1" />
+          <p className="text-xs font-semibold text-slate-700">
+            {essayFile ? essayFile.name : 'Click or drag document to upload'}
+          </p>
+          <p className="text-[10px] text-slate-400">PDF, DOC, or DOCX (Max 10MB)</p>
+        </div>
+      </div>
+
+      <label className="flex items-start gap-2 pt-1 cursor-pointer">
+        <input
+          type="checkbox"
+          name="hasAgreed"
+          required
+          checked={formData.hasAgreed}
+          onChange={handleChange}
+          className="mt-0.5 rounded text-emerald-600 focus:ring-emerald-500"
+        />
+        <span className="text-[11px] text-slate-600">
+          I confirm that this essay is my 100% original work and I agree to the competition rules and terms. *
+        </span>
       </label>
 
-      <button disabled={status.loading} type="submit" className="w-full bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white font-bold py-3.5 rounded-xl shadow-sm transition flex items-center justify-center gap-2 text-sm">
-        {status.loading ? <><Loader2 className="w-4 h-4 animate-spin" /> Uploading...</> : "Submit Contest Entry"}
+      <button
+        type="submit"
+        disabled={loading}
+        className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-sm transition flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
+      >
+        <Send className="w-3.5 h-3.5" />
+        {loading ? 'Uploading & Submitting...' : 'Submit Essay Entry'}
       </button>
     </form>
   );

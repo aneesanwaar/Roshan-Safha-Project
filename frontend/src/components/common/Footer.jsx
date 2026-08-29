@@ -83,10 +83,11 @@ function Footer() {
         <div>
           <h4 className="text-xs font-bold uppercase text-slate-200 tracking-wider mb-4">Core Programs</h4>
           <ul className="space-y-2.5 text-xs">
-            <li><Link to="/programs/donations" className="hover:text-white transition">Book Donations & Catalog</Link></li>
+            <li><Link to="/programs/donate-books" className="hover:text-white transition">Donate Books (Pledge Portal)</Link></li>
+            <li><Link to="/programs/book-catalog" className="hover:text-white transition">Available Books Catalog</Link></li>
             <li><Link to="/programs/essays" className="hover:text-white transition">Annual Essay Contests</Link></li>
             <li><Link to="/programs/summer-circle" className="hover:text-white transition">SDGs Summer Circle</Link></li>
-            <li><Link to="/privacy" className="hover:text-white transition">Privacy Policy</Link></li>
+            <li><Link to="/contact" className="hover:text-white transition">Contact & Helpdesk</Link></li>
           </ul>
         </div>
 

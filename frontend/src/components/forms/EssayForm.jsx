@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Send, CheckCircle2, AlertCircle, Upload } from 'lucide-react';
+import { Send, CheckCircle2, AlertCircle, Upload, FileText, X } from 'lucide-react';
 
 function EssayForm({ onSuccess }) {
   const [formData, setFormData] = useState({
@@ -31,12 +31,16 @@ function EssayForm({ onSuccess }) {
     }
   };
 
+  const removeFile = () => {
+    setEssayFile(null);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setStatus({ type: '', message: '' });
 
     if (!essayFile) {
-      setStatus({ type: 'error', message: 'Please select an essay document to upload.' });
+      setStatus({ type: 'error', message: 'Please attach your essay document (PDF/Word).' });
       return;
     }
 
@@ -48,6 +52,7 @@ function EssayForm({ onSuccess }) {
     setLoading(true);
 
     try {
+      // Must use FormData to match uploadDoc.single("essayFile") in essayroutes.js
       const data = new FormData();
       data.append('studentName', formData.studentName);
       data.append('age', Number(formData.age));
@@ -57,11 +62,11 @@ function EssayForm({ onSuccess }) {
       data.append('phone', formData.phone);
       data.append('essayTitle', formData.essayTitle);
       data.append('hasAgreed', String(formData.hasAgreed));
-      data.append('essayFile', essayFile);
+      data.append('essayFile', essayFile); // Backend multer field name
 
       const response = await fetch('/api/essays', {
         method: 'POST',
-        body: data // Sent as multipart/form-data
+        body: data
       });
 
       const resData = await response.json();
@@ -70,7 +75,7 @@ function EssayForm({ onSuccess }) {
         throw new Error(resData.message || 'Failed to submit essay');
       }
 
-      setStatus({ type: 'success', message: 'Essay submitted successfully! Good luck.' });
+      setStatus({ type: 'success', message: 'Essay submitted successfully! Your submission is now under review.' });
       setFormData({
         studentName: '',
         age: '',
@@ -136,7 +141,7 @@ function EssayForm({ onSuccess }) {
             type="text"
             name="institutionName"
             required
-            placeholder="e.g. Army Public School Muzaffarabad"
+            placeholder="e.g. University of AJK"
             value={formData.institutionName}
             onChange={handleChange}
             className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500"
@@ -190,50 +195,70 @@ function EssayForm({ onSuccess }) {
           type="text"
           name="essayTitle"
           required
-          placeholder="e.g. Sustainable Literacy & Community Development"
+          placeholder="e.g. Sustainable Literacy in Azad Kashmir"
           value={formData.essayTitle}
           onChange={handleChange}
           className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500"
         />
       </div>
 
+      {/* Direct File Upload matching uploadDoc.single("essayFile") */}
       <div>
-        <label className="block text-xs font-bold text-slate-700 mb-1">Upload Essay Document (PDF / DOCX) *</label>
-        <div className="relative border border-dashed border-slate-300 rounded-xl p-4 bg-slate-50 hover:bg-slate-100 transition text-center cursor-pointer">
-          <input
-            type="file"
-            name="essayFile"
-            required
-            accept=".pdf,.doc,.docx"
-            onChange={handleFileChange}
-            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-          />
-          <Upload className="w-5 h-5 text-slate-400 mx-auto mb-1" />
-          <p className="text-xs font-semibold text-slate-700">
-            {essayFile ? essayFile.name : 'Click or drag document to upload'}
-          </p>
-          <p className="text-[10px] text-slate-400">PDF, DOC, or DOCX (Max 10MB)</p>
-        </div>
+        <label className="block text-xs font-bold text-slate-700 mb-1">Upload Essay File (PDF / Word) *</label>
+        
+        {!essayFile ? (
+          <label className="border-2 border-dashed border-slate-300 hover:border-emerald-500 bg-slate-50 hover:bg-emerald-50/40 rounded-2xl p-6 flex flex-col items-center justify-center cursor-pointer transition">
+            <Upload className="w-6 h-6 text-slate-400 mb-1.5" />
+            <span className="text-xs font-bold text-slate-700">Click to browse file</span>
+            <span className="text-[11px] text-slate-400 mt-0.5">Accepts .pdf, .doc, or .docx (Max 10MB)</span>
+            <input
+              type="file"
+              name="essayFile"
+              required
+              accept=".pdf,.doc,.docx"
+              onChange={handleFileChange}
+              className="hidden"
+            />
+          </label>
+        ) : (
+          <div className="flex items-center justify-between p-3.5 bg-emerald-50 border border-emerald-200 rounded-xl">
+            <div className="flex items-center gap-2.5">
+              <FileText className="w-5 h-5 text-emerald-700 shrink-0" />
+              <div>
+                <p className="text-xs font-bold text-emerald-950 truncate max-w-60 sm:max-w-xs">{essayFile.name}</p>
+                <p className="text-[10px] text-emerald-700">{(essayFile.size / (1024 * 1024)).toFixed(2)} MB</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={removeFile}
+              className="p-1 text-slate-400 hover:text-red-600 rounded-lg transition"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
       </div>
 
-      <label className="flex items-start gap-2 pt-1 cursor-pointer">
+      {/* Agreement Checkbox matching hasAgreed: Boolean */}
+      <label className="flex items-start gap-2 pt-1 cursor-pointer select-none">
         <input
           type="checkbox"
           name="hasAgreed"
           required
           checked={formData.hasAgreed}
           onChange={handleChange}
-          className="mt-0.5 rounded text-emerald-600 focus:ring-emerald-500"
+          className="mt-0.5 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer"
         />
-        <span className="text-[11px] text-slate-600">
-          I confirm that this essay is my 100% original work and I agree to the competition rules and terms. *
+        <span className="text-[11px] text-slate-600 leading-tight">
+          I confirm that this essay is my 100% original work and I agree to the competition terms. *
         </span>
       </label>
 
       <button
         type="submit"
         disabled={loading}
-        className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-sm transition flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
+        className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl text-xs shadow-sm transition flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
       >
         <Send className="w-3.5 h-3.5" />
         {loading ? 'Uploading & Submitting...' : 'Submit Essay Entry'}

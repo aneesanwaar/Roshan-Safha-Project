@@ -68,7 +68,7 @@ function SummerCirclePage() {
         </div>
 
         {/* Schedule & Registration Section */}
-        <div className="bg-gradient-to-br from-emerald-800 to-teal-900 rounded-3xl text-white p-6 sm:p-10 shadow-lg grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+        <div className="bg-linear-to-br from-emerald-800 to-teal-900 rounded-3xl text-white p-6 sm:p-10 shadow-lg grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
           <div className="space-y-3">
             <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-200 bg-white/10 px-2.5 py-1 rounded-md">
               Summer 2026 Cohorts

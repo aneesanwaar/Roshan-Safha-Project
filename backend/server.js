@@ -16,6 +16,8 @@ const authRoutes = require("./routes/authRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const announcementRoutes = require("./routes/announcementRoutes");
 const galleryRoutes = require("./routes/galleryRoutes");
+const bookRoutes = require("./routes/bookRoutes");
+
 
 const app = express();
 
@@ -41,6 +43,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/announcements", announcementRoutes);
 app.use("/api/gallery", require("./routes/galleryRoutes"));
+app.use("/api/books", bookRoutes);
 
 
 

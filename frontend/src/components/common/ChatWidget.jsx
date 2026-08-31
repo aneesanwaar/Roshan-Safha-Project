@@ -135,7 +135,7 @@ function ChatWidget() {
 
       {/* 2. Floating Chat Modal */}
       {isOpen && (
-        <div className="bg-white rounded-3xl border border-slate-200 shadow-2xl w-[90vw] sm:w-[380px] h-[520px] max-h-[85vh] flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-5">
+        <div className="bg-white rounded-3xl border border-slate-200 shadow-2xl w-[90vw] sm:w-95 h-130 max-h-[85vh] flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-5">
           
           {/* Header */}
           <div className="bg-slate-950 text-white p-4 flex items-center justify-between border-b border-slate-800">

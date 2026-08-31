@@ -30,7 +30,7 @@ function AppLayout() {
     <div className="flex flex-col min-h-screen bg-white text-slate-900 font-sans selection:bg-[#E8A94A] selection:text-slate-950">
       {!isAdminRoute && <Navbar />}
 
-      <div className="flex-grow">
+      <div className="grow">
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/about" element={<AboutPage />} />

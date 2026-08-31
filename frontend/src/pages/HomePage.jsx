@@ -61,7 +61,7 @@ function Home() {
     <div className="space-y-20 pb-20">
       
       {/* 1. HERO SECTION */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-brand-50/80 via-white to-slate-50 pt-16 sm:pt-20 pb-20 sm:pb-24 px-4 sm:px-6 lg:px-8 border-b border-slate-200">
+      <section className="relative overflow-hidden bg-linear-to-b from-brand-50/80 via-white to-slate-50 pt-16 sm:pt-20 pb-20 sm:pb-24 px-4 sm:px-6 lg:px-8 border-b border-slate-200">
         <div className="max-w-5xl mx-auto text-center space-y-6">
           
           <div className="inline-flex items-center gap-2 bg-white px-4 py-1.5 rounded-full text-xs font-bold text-brand-800 border border-brand-200 shadow-sm">
@@ -150,7 +150,7 @@ function Home() {
 
       {/* 3. FEATURED CONTEST BANNER */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="relative overflow-hidden bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white rounded-3xl p-6 sm:p-12 border border-slate-800 shadow-xl">
+        <div className="relative overflow-hidden bg-linear-to-r from-slate-900 via-slate-800 to-slate-900 text-white rounded-3xl p-6 sm:p-12 border border-slate-800 shadow-xl">
           <div className="relative z-10 grid md:grid-cols-2 gap-8 items-center">
             
             <div className="space-y-4">
@@ -212,7 +212,7 @@ function Home() {
           {announcements.map((item) => (
             <article key={item._id} className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition flex flex-col justify-between">
               {item.imageUrl && (
-                <div className="aspect-[16/10] bg-slate-100 overflow-hidden">
+                <div className="aspect-16/10 bg-slate-100 overflow-hidden">
                   <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover hover:scale-105 transition duration-300" />
                 </div>
               )}

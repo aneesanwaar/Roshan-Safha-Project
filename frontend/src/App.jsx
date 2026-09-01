@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 
 // Common Components
 import Navbar from './components/common/Navbar';
@@ -22,43 +22,46 @@ import ContactPage from './pages/ContactPage';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminLogin from './pages/AdminLogin';
 
-function AppLayout() {
+function App() {
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith('/admin');
 
   return (
-    <div className="flex flex-col min-h-screen bg-white text-slate-900 font-sans selection:bg-[#E8A94A] selection:text-slate-950">
+    <div className="flex flex-col min-h-screen">
+      {/* 1. Header (Hidden on Admin Routes) */}
       {!isAdminRoute && <Navbar />}
 
-      <div className="grow">
+      {/* 2. Main Routing View */}
+      <main className="flex-grow">
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/about" element={<AboutPage />} />
+          
+          {/* Programs */}
           <Route path="/programs/donate-books" element={<BookDonationPage />} />
           <Route path="/programs/book-catalog" element={<BookCatalogPage />} />
           <Route path="/programs/essays" element={<EssayContestsPage />} />
           <Route path="/programs/summer-circle" element={<SummerCirclePage />} />
+
+          {/* Media & Community */}
           <Route path="/gallery" element={<GalleryPage />} />
           <Route path="/announcements" element={<AnnouncementsPage />} />
           <Route path="/get-involved" element={<GetInvolvedPage />} />
           <Route path="/contact" element={<ContactPage />} />
+
+          {/* Admin Routes */}
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
         </Routes>
-      </div>
+      </main>
 
+      {/* 3. Footer (Hidden on Admin Routes) */}
       {!isAdminRoute && <Footer />}
+
+      {/* 4. Chatbot Widget (Hidden on Admin Routes) */}
       {!isAdminRoute && <ChatWidget />}
     </div>
-  );
-}
-
-function App() {
-  return (
-    <BrowserRouter>
-      <AppLayout />
-    </BrowserRouter>
   );
 }
 

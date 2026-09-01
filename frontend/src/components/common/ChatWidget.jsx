@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { MessageSquare, X, Send, Bot, Sparkles, User, Minimize2, BookOpen } from 'lucide-react';
+import { MessageSquare, X, Send, Bot, Sparkles, User, Minimize2 } from 'lucide-react';
 
 function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
@@ -27,7 +27,6 @@ function ChatWidget() {
     }
   }, [messages, isOpen]);
 
-  // Quick Action Starter Chips
   const quickPrompts = [
     'How do I donate syllabus books?',
     'کتابیں کیسے عطیہ کریں؟',
@@ -35,7 +34,6 @@ function ChatWidget() {
     'What are the 2026 Essay Contest rules?'
   ];
 
-  // Local Knowledge Base Matcher
   const generateAssistantReply = (userQuery) => {
     const q = userQuery.toLowerCase();
 
@@ -62,7 +60,7 @@ function ChatWidget() {
     return "Thank you for reaching out! You can explore our restored book catalog, donate syllabus sets, or register for upcoming essay competitions right from the navigation menu above. For direct contact, WhatsApp us at +92 300 1234567.";
   };
 
-  const handleSendMessage = async (textToSend) => {
+  const handleSendMessage = (textToSend) => {
     const query = textToSend || inputMessage;
     if (!query.trim()) return;
 
@@ -77,31 +75,6 @@ function ChatWidget() {
     setInputMessage('');
     setIsLoading(true);
 
-    try {
-      // Attempt backend API call (if backend chat route is active)
-      const res = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: query })
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        const botReply = {
-          id: `bot_${Date.now()}`,
-          sender: 'bot',
-          text: data.reply || data.message,
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        };
-        setMessages((prev) => [...prev, botReply]);
-        setIsLoading(false);
-        return;
-      }
-    } catch (err) {
-      // Fallback to local knowledge assistant
-    }
-
-    // Local response simulation
     setTimeout(() => {
       const replyText = generateAssistantReply(query);
       const botReply = {
@@ -112,18 +85,15 @@ function ChatWidget() {
       };
       setMessages((prev) => [...prev, botReply]);
       setIsLoading(false);
-    }, 700);
+    }, 600);
   };
 
   return (
-    <aside aria-label="AI Assistant" className="fixed bottom-5 right-5 z-50">
-      
-      {/* 1. Toggle Button (When Closed) */}
-      {!isOpen && (
+    <aside aria-label="AI Assistant" className="fixed bottom-6 right-6 z-50">
+      {!isOpen ? (
         <button
           onClick={() => setIsOpen(true)}
           className="flex items-center gap-2.5 bg-slate-950 hover:bg-slate-900 text-[#E8A94A] px-4 py-3 rounded-full shadow-2xl transition-all duration-200 hover:scale-105 active:scale-95 border border-[#E8A94A]/40 cursor-pointer"
-          aria-label="Open Roshan Safha AI Assistant"
         >
           <div className="w-6 h-6 rounded-full bg-[#E8A94A] text-slate-950 flex items-center justify-center font-bold text-xs">
             <Bot className="w-3.5 h-3.5" />
@@ -131,14 +101,10 @@ function ChatWidget() {
           <span className="text-xs font-black tracking-wide pr-1">AI Assistant</span>
           <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
         </button>
-      )}
-
-      {/* 2. Floating Chat Modal */}
-      {isOpen && (
-        <div className="bg-white rounded-3xl border border-slate-200 shadow-2xl w-[90vw] sm:w-95 h-130 max-h-[85vh] flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-5">
-          
+      ) : (
+        <div className="bg-white rounded-3xl border border-slate-200 shadow-2xl w-[90vw] sm:w-[380px] h-[520px] max-h-[80vh] flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-5">
           {/* Header */}
-          <div className="bg-slate-950 text-white p-4 flex items-center justify-between border-b border-slate-800">
+          <div className="bg-slate-950 text-white p-4 flex items-center justify-between border-b border-slate-800 shrink-0">
             <div className="flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-xl bg-[#E8A94A] text-slate-950 flex items-center justify-center font-bold">
                 <Sparkles className="w-4 h-4" />
@@ -146,7 +112,7 @@ function ChatWidget() {
               <div>
                 <h3 className="text-xs font-black text-white flex items-center gap-1.5">
                   Roshan Safha AI
-                  <span className="text-[9px] bg-emerald-950 text-emerald-400 border border-emerald-800 px-1.5 py-0.2 rounded">Bilingual</span>
+                  <span className="text-[9px] bg-emerald-950 text-emerald-400 border border-emerald-800 px-1.5 py-0.5 rounded">Bilingual</span>
                 </h3>
                 <p className="text-[10px] text-slate-400">Literacy & Program Guide</p>
               </div>
@@ -155,14 +121,13 @@ function ChatWidget() {
             <button
               onClick={() => setIsOpen(false)}
               className="p-1.5 text-slate-400 hover:text-white rounded-xl hover:bg-slate-800 transition cursor-pointer"
-              aria-label="Close Assistant"
             >
               <Minimize2 className="w-4 h-4" />
             </button>
           </div>
 
-          {/* Messages Feed */}
-          <div className="flex-1 p-4 overflow-y-auto space-y-3 bg-slate-50/70 text-xs">
+          {/* Messages */}
+          <div className="flex-1 p-4 overflow-y-auto space-y-3 bg-slate-50 text-xs">
             {messages.map((msg) => (
               <div
                 key={msg.id}
@@ -175,10 +140,10 @@ function ChatWidget() {
                 )}
 
                 <div
-                  className={`p-3 rounded-2xl max-w-[80%] leading-relaxed ${
+                  className={`p-3 rounded-2xl max-w-[82%] leading-relaxed ${
                     msg.sender === 'user'
                       ? 'bg-slate-950 text-white rounded-tr-xs shadow-xs font-medium'
-                      : 'bg-white text-slate-800 border border-slate-200/80 rounded-tl-xs shadow-xs'
+                      : 'bg-white text-slate-800 border border-slate-200 rounded-tl-xs shadow-xs'
                   }`}
                 >
                   <p>{msg.text}</p>
@@ -196,25 +161,25 @@ function ChatWidget() {
             ))}
 
             {isLoading && (
-              <div className="flex gap-2 items-center text-slate-400 text-xs italic pl-8">
+              <div className="flex gap-1.5 items-center text-slate-400 text-xs italic pl-8">
                 <span className="w-1.5 h-1.5 bg-[#E8A94A] rounded-full animate-bounce"></span>
                 <span className="w-1.5 h-1.5 bg-[#E8A94A] rounded-full animate-bounce [animation-delay:0.2s]"></span>
                 <span className="w-1.5 h-1.5 bg-[#E8A94A] rounded-full animate-bounce [animation-delay:0.4s]"></span>
-                <span className="text-[11px] font-medium ml-1">Roshan AI is typing...</span>
+                <span className="text-[10px] ml-1">Roshan AI is typing...</span>
               </div>
             )}
 
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Quick Prompt Chips (when few messages) */}
+          {/* Quick Prompts */}
           {messages.length <= 2 && (
-            <div className="px-3 py-2 bg-slate-100 border-t border-slate-200/80 flex flex-wrap gap-1.5">
+            <div className="px-3 py-2 bg-slate-100 border-t border-slate-200 flex flex-wrap gap-1.5 shrink-0">
               {quickPrompts.map((prompt, idx) => (
                 <button
                   key={idx}
                   onClick={() => handleSendMessage(prompt)}
-                  className="text-[10px] font-bold bg-white text-slate-700 border border-slate-200 px-2.5 py-1 rounded-lg hover:bg-[#E8A94A] hover:text-slate-950 hover:border-amber-400 transition cursor-pointer text-left"
+                  className="text-[10px] font-bold bg-white text-slate-700 border border-slate-200 px-2 py-1 rounded-lg hover:bg-[#E8A94A] hover:text-slate-950 transition cursor-pointer text-left"
                 >
                   {prompt}
                 </button>
@@ -228,25 +193,23 @@ function ChatWidget() {
               e.preventDefault();
               handleSendMessage();
             }}
-            className="p-3 bg-white border-t border-slate-200 flex items-center gap-2"
+            className="p-3 bg-white border-t border-slate-200 flex items-center gap-2 shrink-0"
           >
             <input
               type="text"
               placeholder="Ask anything / سوال پوچھیں..."
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
-              className="flex-1 text-xs bg-slate-100 border border-slate-200 rounded-xl px-3 py-2.5 outline-none focus:bg-white focus:ring-2 focus:ring-[#E8A94A]"
+              className="flex-1 text-xs bg-slate-100 border border-slate-200 rounded-xl px-3 py-2 outline-none focus:bg-white focus:ring-2 focus:ring-[#E8A94A]"
             />
             <button
               type="submit"
               disabled={!inputMessage.trim() || isLoading}
-              className="bg-[#E8A94A] hover:bg-[#d99839] disabled:bg-slate-200 text-slate-950 p-2.5 rounded-xl transition cursor-pointer disabled:cursor-not-allowed"
-              aria-label="Send Message"
+              className="bg-[#E8A94A] hover:bg-[#d99839] disabled:bg-slate-200 text-slate-950 p-2 rounded-xl transition cursor-pointer disabled:cursor-not-allowed shrink-0"
             >
               <Send className="w-4 h-4" />
             </button>
           </form>
-
         </div>
       )}
     </aside>

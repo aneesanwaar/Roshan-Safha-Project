@@ -2,11 +2,14 @@ const express = require("express");
 const router = express.Router();
 const {
   getDashboardStats,
-  getAllSubmissions,
-  updateEssayStatus,
+  getSubmissions,
+  updateSubmissionStatus,
   getAnalyticsTrends,
   getPageContent,
   updatePageContent,
+  getWinners,
+  createWinner,
+  deleteWinner,
   getTeamUsers,
   deleteTeamUser
 } = require("../controllers/adminController");
@@ -17,8 +20,8 @@ router.use(protect);
 
 // 1. Dashboard Overview Stats & Submissions Data
 router.get("/stats", getDashboardStats);
-router.get("/submissions", getAllSubmissions);
-router.patch("/essays/:id/status", updateEssayStatus);
+router.get("/submissions", getSubmissions);
+router.patch("/submissions/:type/:id/status", updateSubmissionStatus);
 
 // 2. AI Trend Analytics
 router.get("/analytics/trends", getAnalyticsTrends);
@@ -27,7 +30,12 @@ router.get("/analytics/trends", getAnalyticsTrends);
 router.get("/cms/:page", getPageContent);
 router.put("/cms/:page", updatePageContent);
 
-// 4. Team Member Roles
+// 4. Past Winners Archive
+router.get("/winners", getWinners);
+router.post("/winners", createWinner);
+router.delete("/winners/:id", deleteWinner);
+
+// 5. Team Member Roles
 router.get("/users", getTeamUsers);
 router.delete("/users/:id", deleteTeamUser);
 

@@ -33,12 +33,20 @@ def run_linear_regression(time_series_data, target_key='books'):
     next_step = np.array([[len(df)]])
     prediction = model.predict(next_step)
     forecast_next = int(max(0, round(float(prediction[0][0]))))
-
-    initial_val = float(df[target_key].iloc[0]) if df[target_key].iloc[0] > 0 else 1.0
+# 5. Percentage Growth Surge
+    initial_val = float(df[target_key].iloc[0])
     latest_val = float(df[target_key].iloc[-1])
-    growth_rate = round(((latest_val - initial_val) / initial_val) * 100, 2)
-
-    trend_status = "Accelerating Growth" if slope > 5 else ("Steady Growth" if slope > 0 else "Decline")
+    
+    # Handle flat zero datasets cleanly
+    if initial_val == 0 and latest_val == 0:
+        growth_rate = 0.0
+        trend_status = "No Activity Recorded"
+    elif initial_val == 0:
+        growth_rate = round(latest_val * 100.0, 2)
+        trend_status = "Accelerating Growth" if slope > 0 else "Steady Growth"
+    else:
+        growth_rate = round(((latest_val - initial_val) / initial_val) * 100.0, 2)
+        trend_status = "Accelerating Growth" if slope > 5 else ("Steady Growth" if slope > 0 else "Decline")
 
     return {
         "slope": round(slope, 2),
@@ -48,3 +56,4 @@ def run_linear_regression(time_series_data, target_key='books'):
         "growth_rate": growth_rate,
         "trend": trend_status
     }
+   

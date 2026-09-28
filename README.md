@@ -226,9 +226,15 @@ roshan-safha-project
 │   ├── middleware
 │   └── server.js
 │
-├── ai-module
-│   ├── trend_analysis.py
-│   └── chatbot.py
+├── ai_service
+│   ├── ml_models
+│   │   └── trend_analyzer.py
+│   └── nlp
+│   │    └── chatbot_engine.py
+│   ├── app.py
+│   │   
+│   └── requirements.txt
+│      
 │
 ├── API_DOCS.md
 │

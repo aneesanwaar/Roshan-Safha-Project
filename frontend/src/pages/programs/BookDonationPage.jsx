@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { BookOpen, CheckCircle, Heart, MapPin, Sparkles, Send, ShieldCheck, AlertCircle } from 'lucide-react';
+import { BookOpen, CheckCircle, Heart, MapPin, Sparkles, Send, AlertCircle, Loader2 } from 'lucide-react';
+import { submitDonation } from '../../services/api';
 
 function DonateBooks() {
   const [formData, setFormData] = useState({
@@ -14,6 +15,8 @@ function DonateBooks() {
     notes: ''
   });
 
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState(null);
   const [submitted, setSubmitted] = useState(false);
 
   const categories = [
@@ -33,14 +36,47 @@ function DonateBooks() {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setErrorMsg(null);
+
     if (formData.bookCategories.length === 0) {
-      alert('Please select at least one book category.');
+      setErrorMsg('Please select at least one book category.');
       return;
     }
-    // Simulate backend pledge submission
-    setSubmitted(true);
+
+    setLoading(true);
+
+    try {
+      // Map local form fields to MongoDB DonationSchema fields
+      const payload = {
+        name: formData.donorName,
+        phone: formData.contactNumber,
+        email: formData.email,
+        city: formData.city,
+        numberOfBooks: Number(formData.bookCount) || 1,
+        bookTypes: formData.bookCategories.join(', '),
+        dropoffMethod: formData.deliveryMethod === 'dropoff' ? 'Drop-off' : 'Pickup Required',
+        message: `Condition: ${formData.condition}. Notes: ${formData.notes || 'None'}`
+      };
+
+      const response = await submitDonation(payload);
+
+      if (response.data && response.data.success !== false) {
+        setSubmitted(true);
+      } else {
+        throw new Error(response.data?.error || 'Failed to submit book pledge.');
+      }
+    } catch (err) {
+      console.error('Donation Submission Error:', err);
+      setErrorMsg(
+        err.response?.data?.error || 
+        err.message || 
+        'Unable to connect to the backend server. Please verify your connection.'
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -103,7 +139,7 @@ function DonateBooks() {
               </div>
               <h2 className="text-2xl font-bold text-slate-900">Thank You, {formData.donorName}!</h2>
               <p className="text-sm text-slate-600 max-w-md mx-auto">
-                Your pledge of approximately <strong className="text-emerald-700">{formData.bookCount} books</strong> has been logged. Our volunteer team will WhatsApp you at <strong className="text-slate-800">{formData.contactNumber}</strong> shortly to coordinate.
+                Your pledge of approximately <strong className="text-emerald-700">{formData.bookCount} books</strong> has been logged in our system. Our volunteer team will WhatsApp you at <strong className="text-slate-800">{formData.contactNumber}</strong> shortly to coordinate.
               </p>
               <button
                 onClick={() => {
@@ -120,7 +156,7 @@ function DonateBooks() {
                     notes: ''
                   });
                 }}
-                className="mt-4 inline-flex items-center gap-2 bg-slate-900 text-white px-5 py-2.5 rounded-xl text-xs font-bold hover:bg-slate-800 transition"
+                className="mt-4 inline-flex items-center gap-2 bg-slate-900 text-white px-5 py-2.5 rounded-xl text-xs font-bold hover:bg-slate-800 transition cursor-pointer"
               >
                 Submit Another Pledge
               </button>
@@ -131,6 +167,14 @@ function DonateBooks() {
                 <h3 className="text-lg font-bold text-slate-900">Book Donation Intake Pledge</h3>
                 <p className="text-xs text-slate-500">Please provide accurate contact details so we can coordinate collection or provide the nearest drop-off point.</p>
               </div>
+
+              {/* Error Alert */}
+              {errorMsg && (
+                <div className="p-3.5 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700 flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0 text-red-500" />
+                  <span>{errorMsg}</span>
+                </div>
+              )}
 
               {/* Personal Info */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -159,9 +203,10 @@ function DonateBooks() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Email Address</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Email Address *</label>
                   <input
                     type="email"
+                    required
                     placeholder="name@domain.com"
                     value={formData.email}
                     onChange={e => setFormData({ ...formData, email: e.target.value })}
@@ -290,13 +335,23 @@ function DonateBooks() {
                 ></textarea>
               </div>
 
-              {/* Submit */}
+              {/* Submit Button */}
               <button
                 type="submit"
-                className="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 px-6 rounded-xl text-sm shadow-md transition-all active:scale-[0.99] cursor-pointer"
+                disabled={loading}
+                className="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 px-6 rounded-xl text-sm shadow-md transition-all active:scale-[0.99] disabled:opacity-50 cursor-pointer"
               >
-                <Send className="w-4 h-4" />
-                Submit Book Donation Pledge
+                {loading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Submitting Pledge to Database...
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-4 h-4" />
+                    Submit Book Donation Pledge
+                  </>
+                )}
               </button>
             </form>
           )}

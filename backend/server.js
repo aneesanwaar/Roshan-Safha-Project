@@ -30,7 +30,7 @@ app.use(cors());
 
 
 // 3. Routes Configuration
-app.use("/api/donations", donationRoutes);
+app.use("/api/donations", require("./routes/donationRoutes"));
 app.use("/api/volunteers", volunteerRoutes);
 app.use("/api/contact", contactRoutes); // Registered the new contact endpoint
 app.use("/api/events", eventRoutes); // Registered the new event endpoint

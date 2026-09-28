@@ -1,28 +1,36 @@
-
 const express = require("express");
 const router = express.Router();
+const Donation = require("../models/Donation");
 
-// 1. Import the validation logic
-const { donationValidationRules, validate } = require("../middleware/validators");
+// POST /api/donations
+router.post("/", async (req, res) => {
+  try {
+    const { name, email, phone, city, numberOfBooks, bookTypes, dropoffMethod, message } = req.body;
 
-// 2. Import spam protection middleware
-const verifyRecaptcha = require("../middleware/recaptcha");
+    if (!name || !email || !phone) {
+      return res.status(400).json({ error: "Name, email, and phone number are required." });
+    }
 
-// 3. Import the controller functions
-const { createDonation, getDonations } = require("../controllers/donationController");
+    const donation = await Donation.create({
+      name,
+      email,
+      phone,
+      city,
+      numberOfBooks: Number(numberOfBooks) || 0,
+      bookTypes,
+      dropoffMethod,
+      message
+    });
 
-const { protect } = require('../middleware/authMiddleware'); // Import the guard
-
-// 4. Test route
-router.get("/test", (req, res) => {
-  res.send("Donation route working");
+    return res.status(201).json({
+      success: true,
+      message: "Donation registered successfully.",
+      data: donation
+    });
+  } catch (error) {
+    console.error("Donation creation error:", error);
+    return res.status(500).json({ error: "Failed to submit donation." });
+  }
 });
-
-// 5. POST route with Triple-Layer Security 
-// Order: Spam Check -> Data Validation -> Error Handling -> Controller Execution
-router.post("/", verifyRecaptcha, donationValidationRules, validate, createDonation);
-
-// 6. GET route to fetch all donations
-router.get("/", protect, getDonations);
 
 module.exports = router;

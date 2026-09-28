@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Send, CheckCircle2, AlertCircle } from 'lucide-react';
+import { submitDonation } from '../../services/api';
 
 function DonationForm({ onSuccess }) {
   const [formData, setFormData] = useState({
@@ -32,32 +33,34 @@ function DonationForm({ onSuccess }) {
         numberOfBooks: Number(formData.numberOfBooks) || 0
       };
 
-      const response = await fetch('/api/donations', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
+      const response = await submitDonation(payload);
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to submit donation pledge');
+      if (response.data && response.data.success !== false) {
+        setStatus({
+          type: 'success',
+          message: 'Thank you! Your donation pledge has been registered.'
+        });
+        setFormData({
+          name: '',
+          email: '',
+          phone: '',
+          city: '',
+          numberOfBooks: '',
+          bookTypes: '',
+          dropoffMethod: 'Drop-off',
+          message: ''
+        });
+        if (onSuccess) onSuccess(response.data);
+      } else {
+        throw new Error(response.data?.message || 'Failed to submit donation pledge');
       }
-
-      setStatus({ type: 'success', message: 'Thank you! Your donation pledge has been registered.' });
-      setFormData({
-        name: '',
-        email: '',
-        phone: '',
-        city: '',
-        numberOfBooks: '',
-        bookTypes: '',
-        dropoffMethod: 'Drop-off',
-        message: ''
-      });
-      if (onSuccess) onSuccess();
     } catch (err) {
-      setStatus({ type: 'error', message: err.message });
+      const errMsg =
+        err.response?.data?.error ||
+        err.response?.data?.message ||
+        err.message ||
+        'Failed to connect to the server.';
+      setStatus({ type: 'error', message: errMsg });
     } finally {
       setLoading(false);
     }
@@ -66,10 +69,18 @@ function DonationForm({ onSuccess }) {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {status.message && (
-        <div className={`p-3 rounded-xl text-xs flex items-center gap-2 ${
-          status.type === 'success' ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-red-50 text-red-800 border border-red-200'
-        }`}>
-          {status.type === 'success' ? <CheckCircle2 className="w-4 h-4 shrink-0" /> : <AlertCircle className="w-4 h-4 shrink-0" />}
+        <div
+          className={`p-3 rounded-xl text-xs flex items-center gap-2 ${
+            status.type === 'success'
+              ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+              : 'bg-red-50 text-red-800 border border-red-200'
+          }`}
+        >
+          {status.type === 'success' ? (
+            <CheckCircle2 className="w-4 h-4 shrink-0" />
+          ) : (
+            <AlertCircle className="w-4 h-4 shrink-0" />
+          )}
           <span>{status.message}</span>
         </div>
       )}

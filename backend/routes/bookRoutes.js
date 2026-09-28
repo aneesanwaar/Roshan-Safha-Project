@@ -2,18 +2,20 @@ const express = require("express");
 const router = express.Router();
 const {
   getBooks,
-  addBook,
+  getBookById,
+  createBook,
   updateBook,
-  claimBook
+  deleteBook
 } = require("../controllers/bookController");
-const { protect } = require("../middleware/authMiddleware");
+const { protect, authorizeRoles } = require("../middleware/authMiddleware");
 
-// Public routes
+// Public endpoints (Used by student catalog page)
 router.get("/", getBooks);
-router.post("/:id/claim", claimBook);
+router.get("/:id", getBookById);
 
-// Admin protected routes
-router.post("/", protect, addBook);
-router.put("/:id", protect, updateBook);
+// Protected Admin endpoints (Inventory management)
+router.post("/", protect, authorizeRoles("admin", "Super Admin"), createBook);
+router.put("/:id", protect, authorizeRoles("admin", "Super Admin"), updateBook);
+router.delete("/:id", protect, authorizeRoles("admin", "Super Admin"), deleteBook);
 
 module.exports = router;

@@ -1,16 +1,11 @@
 const Book = require("../models/Book");
 
-// @desc    Get all books with optional search and grade filter
-// @route   GET /api/books
-// @access  Public
+// 1. GET /api/books (Public: Search, Filter, and Pagination)
 exports.getBooks = async (req, res) => {
   try {
-    const { search, grade } = req.query;
-    let query = { status: "Available" };
+    const { search, educationLevel, subject, condition, page = 1, limit = 12 } = req.query;
 
-    if (grade && grade !== "All") {
-      query.gradeLevel = grade;
-    }
+    const query = { isAvailable: true };
 
     if (search) {
       query.$or = [
@@ -20,28 +15,64 @@ exports.getBooks = async (req, res) => {
       ];
     }
 
-    const books = await Book.find(query).sort({ createdAt: -1 });
-    res.status(200).json({ success: true, count: books.length, data: books });
+    if (educationLevel && educationLevel !== "All") {
+      query.educationLevel = educationLevel;
+    }
+
+    if (subject && subject !== "All") {
+      query.subject = { $regex: subject, $options: "i" };
+    }
+
+    if (condition && condition !== "All") {
+      query.condition = condition;
+    }
+
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    const [books, total] = await Promise.all([
+      Book.find(query).sort({ createdAt: -1 }).skip(skip).limit(parseInt(limit)),
+      Book.countDocuments(query)
+    ]);
+
+    res.status(200).json({
+      success: true,
+      count: books.length,
+      total,
+      totalPages: Math.ceil(total / limit),
+      currentPage: parseInt(page),
+      data: books
+    });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    console.error("Get Books Error:", error);
+    res.status(500).json({ error: "Failed to fetch book catalog." });
   }
 };
 
-// @desc    Add a restored book into inventory
-// @route   POST /api/books
-// @access  Private (Admin)
-exports.addBook = async (req, res) => {
+// 2. GET /api/books/:id (Public: Single Book Details)
+exports.getBookById = async (req, res) => {
+  try {
+    const book = await Book.findById(req.params.id);
+    if (!book) {
+      return res.status(404).json({ error: "Book not found." });
+    }
+    res.status(200).json({ success: true, data: book });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch book details." });
+  }
+};
+
+// 3. POST /api/books (Admin: Add New Restored Book to Shelf)
+exports.createBook = async (req, res) => {
   try {
     const book = await Book.create(req.body);
     res.status(201).json({ success: true, data: book });
   } catch (error) {
-    res.status(400).json({ success: false, message: error.message });
+    console.error("Create Book Error:", error);
+    res.status(400).json({ error: error.message || "Failed to create book entry." });
   }
 };
 
-// @desc    Update book details / stock count
-// @route   PUT /api/books/:id
-// @access  Private (Admin)
+// 4. PUT /api/books/:id (Admin: Update Book Details / Adjust Stock)
 exports.updateBook = async (req, res) => {
   try {
     const book = await Book.findByIdAndUpdate(req.params.id, req.body, {
@@ -50,34 +81,28 @@ exports.updateBook = async (req, res) => {
     });
 
     if (!book) {
-      return res.status(404).json({ success: false, message: "Book not found" });
+      return res.status(404).json({ error: "Book not found." });
     }
+
+    // Auto-update availability flag
+    book.isAvailable = book.availableQuantity > 0;
+    await book.save();
 
     res.status(200).json({ success: true, data: book });
   } catch (error) {
-    res.status(400).json({ success: false, message: error.message });
+    res.status(400).json({ error: error.message || "Failed to update book." });
   }
 };
 
-// @desc    Claim / Request a book copy
-// @route   POST /api/books/:id/claim
-// @access  Public
-exports.claimBook = async (req, res) => {
+// 5. DELETE /api/books/:id (Admin: Remove Book from Inventory)
+exports.deleteBook = async (req, res) => {
   try {
-    const book = await Book.findById(req.params.id);
-
-    if (!book || book.copiesAvailable < 1) {
-      return res.status(400).json({ success: false, message: "Book copy no longer available" });
+    const book = await Book.findByIdAndDelete(req.params.id);
+    if (!book) {
+      return res.status(404).json({ error: "Book not found." });
     }
-
-    book.copiesAvailable -= 1;
-    if (book.copiesAvailable === 0) {
-      book.status = "Out of Stock";
-    }
-    await book.save();
-
-    res.status(200).json({ success: true, message: "Book reserved successfully", data: book });
+    res.status(200).json({ success: true, message: "Book removed successfully." });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ error: "Failed to delete book." });
   }
 };

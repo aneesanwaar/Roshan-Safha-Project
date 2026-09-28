@@ -19,16 +19,34 @@ const protect = async (req, res, next) => {
       // 4. Find the user in DB and attach to the request (excluding password)
       req.user = await User.findById(decoded.id).select('-password');
 
-      next(); // Move to the next function (the Controller)
+      // 5. Ensure user still exists in the database
+      if (!req.user) {
+        return res.status(401).json({ error: 'User no longer exists, token invalid.' });
+      }
+
+      return next(); // Move to the next function (the Controller)
     } catch (error) {
-      console.error(error);
-      res.status(401).json({ error: 'Not authorized, token failed' });
+      console.error('JWT Verification Error:', error.message);
+      return res.status(401).json({ error: 'Not authorized, token failed.' });
     }
   }
 
+  // If no Bearer token was provided in headers
   if (!token) {
-    res.status(401).json({ error: 'Not authorized, no token found' });
+    return res.status(401).json({ error: 'Not authorized, no token found.' });
   }
 };
 
-module.exports = { protect };
+// Role-based Access Control Guard (e.g. authorizeRoles('admin', 'Super Admin'))
+const authorizeRoles = (...roles) => {
+  return (req, res, next) => {
+    if (!req.user || !roles.includes(req.user.role)) {
+      return res.status(403).json({
+        error: `User role '${req.user ? req.user.role : 'Unknown'}' is not authorized to access this resource.`
+      });
+    }
+    next();
+  };
+};
+
+module.exports = { protect, authorizeRoles };

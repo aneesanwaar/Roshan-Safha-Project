@@ -1,6 +1,7 @@
 const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const multer = require('multer');
+const path = require('path'); // Added: needed for extension parsing
 
 // 1. Configure Cloudinary with your credentials from .env
 cloudinary.config({
@@ -15,11 +16,10 @@ const imageStorage = new CloudinaryStorage({
   params: {
     folder: 'RoshanSafha/Content',
     allowed_formats: ['jpg', 'png', 'jpeg'],
-    // ADD THESE THREE LINES:
     transformation: [
-      { width: 1000, crop: "limit" }, // Resizes if larger than 1000px
-      { quality: "auto" },            // Compresses to best visual quality/file size ratio
-      { fetch_format: "auto" }        // Converts to modern formats like WebP for speed
+      { width: 1000, crop: "limit" },
+      { quality: "auto" },
+      { fetch_format: "auto" }
     ]
   },
 });
@@ -28,17 +28,16 @@ const imageStorage = new CloudinaryStorage({
 const docStorage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: async (req, file) => {
-    // Extract data from the body to use in the filename
     const studentName = req.body.studentName ? req.body.studentName.replace(/\s+/g, '_') : 'student';
     const category = req.body.category || 'general';
     const timestamp = Date.now();
+    const ext = path.extname(file.originalname).toLowerCase(); // Extract .pdf, .docx, .doc
 
     return {
       folder: 'RoshanSafha/Essays',
-      resource_type: 'raw', // required for non-image files
-      allowed_formats: ['pdf', 'doc', 'docx'],
-      // This creates a name like: Senior_Ali_Khan_171123456.pdf
-      public_id: `${category}_${studentName}_${timestamp}`, 
+      resource_type: 'raw',
+      // Explicitly append the extension so Cloudinary retains and downloads the correct format
+      public_id: `${category}_${studentName}_${timestamp}${ext}`,
     };
   },
 });
@@ -47,20 +46,18 @@ const docStorage = new CloudinaryStorage({
 const limits = { fileSize: 5 * 1024 * 1024 };
 
 const uploadImage = multer({ storage: imageStorage });
-const uploadDoc = multer({ 
+const uploadDoc = multer({
   storage: docStorage,
   limits: limits,
-  // This fileFilter ensures only PDF and Word documents are accepted for essays
-  fileFilter: (req, file, cb) => { 
-    if (
-      file.mimetype === "application/pdf" || 
-      file.mimetype === "application/msword" || 
-      file.mimetype === "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-    ) {
+  fileFilter: (req, file, cb) => {
+    const allowedExtensions = ['.pdf', '.doc', '.docx'];
+    const ext = path.extname(file.originalname).toLowerCase();
+    if (allowedExtensions.includes(ext)) {
       cb(null, true);
     } else {
-      cb(new Error("Only PDF and Word documents are allowed!"), false);
+      cb(new Error('Only .pdf, .doc, and .docx formats are allowed!'));
     }
-  }
+  },
 });
+
 module.exports = { uploadImage, uploadDoc };

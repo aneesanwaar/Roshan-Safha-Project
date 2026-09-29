@@ -23,10 +23,13 @@ API.interceptors.request.use((config) => {
 // -------------------------------------------------------------
 export const submitDonation = (data) => API.post('/donations', data);
 
-export const submitEssay = (formData) =>
-  API.post('/essays', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
+export const submitEssay = (formData) => {
+  return API.post('/essays', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
   });
+};
 
 export const submitVolunteer = (data) => API.post('/volunteers', data);
 export const submitCollaboration = (data) => API.post('/collaborations', data);

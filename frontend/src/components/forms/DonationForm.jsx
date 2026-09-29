@@ -30,7 +30,8 @@ function DonationForm({ onSuccess }) {
     try {
       const payload = {
         ...formData,
-        numberOfBooks: Number(formData.numberOfBooks) || 0
+        numberOfBooks: Number(formData.numberOfBooks) || 0,
+        recaptchaToken: formData.recaptchaToken || null
       };
 
       const response = await submitDonation(payload);

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Send, CheckCircle2, AlertCircle, Upload, FileText, X } from 'lucide-react';
+import { Send, CheckCircle2, AlertCircle, Upload, FileText, X, Loader2 } from 'lucide-react';
+import { submitEssay } from '../../services/api';
 
 function EssayForm({ onSuccess }) {
   const [formData, setFormData] = useState({
@@ -27,7 +28,13 @@ function EssayForm({ onSuccess }) {
 
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files[0]) {
-      setEssayFile(e.target.files[0]);
+      const file = e.target.files[0];
+      if (file.size > 10 * 1024 * 1024) {
+        setStatus({ type: 'error', message: 'File size exceeds maximum limit of 10MB.' });
+        return;
+      }
+      setEssayFile(file);
+      setStatus({ type: '', message: '' });
     }
   };
 
@@ -52,7 +59,6 @@ function EssayForm({ onSuccess }) {
     setLoading(true);
 
     try {
-      // Must use FormData to match uploadDoc.single("essayFile") in essayroutes.js
       const data = new FormData();
       data.append('studentName', formData.studentName);
       data.append('age', Number(formData.age));
@@ -62,34 +68,35 @@ function EssayForm({ onSuccess }) {
       data.append('phone', formData.phone);
       data.append('essayTitle', formData.essayTitle);
       data.append('hasAgreed', String(formData.hasAgreed));
-      data.append('essayFile', essayFile); // Backend multer field name
+      data.append('essayFile', essayFile);
 
-      const response = await fetch('/api/essays', {
-        method: 'POST',
-        body: data
-      });
+      const response = await submitEssay(data);
 
-      const resData = await response.json();
-
-      if (!response.ok) {
-        throw new Error(resData.message || 'Failed to submit essay');
+      if (response.data) {
+        setStatus({ 
+          type: 'success', 
+          message: response.data.message || 'Essay submitted successfully! Your submission is now under review.' 
+        });
+        setFormData({
+          studentName: '',
+          age: '',
+          institutionName: '',
+          category: 'Junior',
+          email: '',
+          phone: '',
+          essayTitle: '',
+          hasAgreed: false
+        });
+        setEssayFile(null);
+        if (onSuccess) onSuccess(response.data);
       }
-
-      setStatus({ type: 'success', message: 'Essay submitted successfully! Your submission is now under review.' });
-      setFormData({
-        studentName: '',
-        age: '',
-        institutionName: '',
-        category: 'Junior',
-        email: '',
-        phone: '',
-        essayTitle: '',
-        hasAgreed: false
-      });
-      setEssayFile(null);
-      if (onSuccess) onSuccess();
     } catch (err) {
-      setStatus({ type: 'error', message: err.message });
+      const errMsg =
+        err.response?.data?.error ||
+        err.response?.data?.message ||
+        err.message ||
+        'Failed to connect to the server.';
+      setStatus({ type: 'error', message: errMsg });
     } finally {
       setLoading(false);
     }
@@ -202,7 +209,6 @@ function EssayForm({ onSuccess }) {
         />
       </div>
 
-      {/* Direct File Upload matching uploadDoc.single("essayFile") */}
       <div>
         <label className="block text-xs font-bold text-slate-700 mb-1">Upload Essay File (PDF / Word) *</label>
         
@@ -240,7 +246,6 @@ function EssayForm({ onSuccess }) {
         )}
       </div>
 
-      {/* Agreement Checkbox matching hasAgreed: Boolean */}
       <label className="flex items-start gap-2 pt-1 cursor-pointer select-none">
         <input
           type="checkbox"
@@ -260,8 +265,17 @@ function EssayForm({ onSuccess }) {
         disabled={loading}
         className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl text-xs shadow-sm transition flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
       >
-        <Send className="w-3.5 h-3.5" />
-        {loading ? 'Uploading & Submitting...' : 'Submit Essay Entry'}
+        {loading ? (
+          <>
+            <Loader2 className="w-4 h-4 animate-spin" />
+            Uploading & Submitting...
+          </>
+        ) : (
+          <>
+            <Send className="w-3.5 h-3.5" />
+            Submit Essay Entry
+          </>
+        )}
       </button>
     </form>
   );

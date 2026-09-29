@@ -1,8 +1,8 @@
 const axios = require('axios');
 
 const verifyRecaptcha = async (req, res, next) => {
-  // 1. Professional Bypass: If we are in development mode, skip verification for Postman testing
-  if (process.env.NODE_ENV === 'development') {
+  // 1. Bypass if NOT in production, or if no SECRET key is configured in .env
+  if (process.env.NODE_ENV !== 'production' || !process.env.RECAPTCHA_SECRET) {
     return next();
   }
 

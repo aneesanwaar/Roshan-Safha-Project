@@ -1,5 +1,9 @@
 import React, { useState } from 'react';
-import { Send, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Send, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import { submitCollaboration } from '../../services/api';
+
+const PAK_PHONE_REGEX = /^((\+92)|(0092)|(0))?[ -]?3[0-9]{2}[ -]?[0-9]{7}$/;
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function CollaborationForm({ onSuccess }) {
   const [formData, setFormData] = useState({
@@ -11,33 +15,78 @@ function CollaborationForm({ onSuccess }) {
     message: ''
   });
 
+  const [fieldErrors, setFieldErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState({ type: '', message: '' });
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    if (status.message) setStatus({ type: '', message: '' });
+    if (fieldErrors[name]) {
+      setFieldErrors((prev) => {
+        const next = { ...prev };
+        delete next[name];
+        return next;
+      });
+    }
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const validateForm = () => {
+    const errors = {};
+    if (!formData.name.trim()) errors.name = 'Representative name is required';
+    if (!formData.organization.trim()) errors.organization = 'Organization name is required';
+
+    if (!formData.email.trim()) {
+      errors.email = 'Official email is required';
+    } else if (!EMAIL_REGEX.test(formData.email.trim())) {
+      errors.email = 'Please enter a valid email address';
+    }
+
+    if (!formData.phone.trim()) {
+      errors.phone = 'Phone number is required';
+    } else if (!PAK_PHONE_REGEX.test(formData.phone.trim())) {
+      errors.phone = 'Use valid Pakistani mobile format (e.g., 03001234567 or +923001234567)';
+    }
+
+    if (!formData.collabType.trim()) errors.collabType = 'Collaboration type is required';
+
+    if (!formData.message.trim()) {
+      errors.message = 'Proposal description is required';
+    } else if (formData.message.trim().length < 20) {
+      errors.message = 'Please provide a detailed proposal (minimum 20 characters)';
+    }
+
+    return errors;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
     setStatus({ type: '', message: '' });
 
+    const clientValidationErrors = validateForm();
+    if (Object.keys(clientValidationErrors).length > 0) {
+      setFieldErrors(clientValidationErrors);
+      setStatus({ type: 'error', message: 'Please correct the highlighted fields below.' });
+      return;
+    }
+
+    setFieldErrors({});
+    setLoading(true);
+
     try {
-      const response = await fetch('/api/collaborations', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+      const payload = {
+        ...formData,
+        recaptchaToken: formData.recaptchaToken || null
+      };
+
+      const response = await submitCollaboration(payload);
+
+      setStatus({
+        type: 'success',
+        message: response.data?.message || 'Partnership request submitted successfully!'
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to submit collaboration proposal');
-      }
-
-      setStatus({ type: 'success', message: 'Partnership request submitted successfully!' });
       setFormData({
         name: '',
         organization: '',
@@ -46,21 +95,55 @@ function CollaborationForm({ onSuccess }) {
         collabType: 'School / College Partnership',
         message: ''
       });
-      if (onSuccess) onSuccess();
+      setFieldErrors({});
+
+      if (onSuccess) onSuccess(response.data);
     } catch (err) {
-      setStatus({ type: 'error', message: err.message });
+      const respData = err.response?.data;
+
+      if (respData?.errors && Array.isArray(respData.errors)) {
+        const mappedErrors = {};
+        respData.errors.forEach((item) => {
+          if (item.path && !mappedErrors[item.path]) {
+            mappedErrors[item.path] = item.msg;
+          }
+        });
+        setFieldErrors(mappedErrors);
+      }
+
+      const errorMsg =
+        respData?.error ||
+        respData?.message ||
+        err.message ||
+        'Failed to submit collaboration proposal';
+      setStatus({ type: 'error', message: errorMsg });
     } finally {
       setLoading(false);
     }
   };
 
+  const getInputClass = (fieldName) =>
+    `w-full text-xs rounded-xl p-2.5 outline-none transition ${
+      fieldErrors[fieldName]
+        ? 'bg-red-50/50 border border-red-400 focus:ring-2 focus:ring-red-400 focus:bg-white text-slate-800'
+        : 'bg-slate-50 border border-slate-200 focus:bg-white focus:ring-2 focus:ring-emerald-500 text-slate-800'
+    }`;
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} noValidate className="space-y-4">
       {status.message && (
-        <div className={`p-3 rounded-xl text-xs flex items-center gap-2 ${
-          status.type === 'success' ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-red-50 text-red-800 border border-red-200'
-        }`}>
-          {status.type === 'success' ? <CheckCircle2 className="w-4 h-4 shrink-0" /> : <AlertCircle className="w-4 h-4 shrink-0" />}
+        <div
+          className={`p-3 rounded-xl text-xs flex items-center gap-2 ${
+            status.type === 'success'
+              ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+              : 'bg-red-50 text-red-800 border border-red-200'
+          }`}
+        >
+          {status.type === 'success' ? (
+            <CheckCircle2 className="w-4 h-4 shrink-0" />
+          ) : (
+            <AlertCircle className="w-4 h-4 shrink-0" />
+          )}
           <span>{status.message}</span>
         </div>
       )}
@@ -71,12 +154,14 @@ function CollaborationForm({ onSuccess }) {
           <input
             type="text"
             name="name"
-            required
             placeholder="e.g. Dr. Rashid Khan"
             value={formData.name}
             onChange={handleChange}
-            className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500"
+            className={getInputClass('name')}
           />
+          {fieldErrors.name && (
+            <p className="text-[11px] text-red-600 mt-1 font-medium">{fieldErrors.name}</p>
+          )}
         </div>
 
         <div>
@@ -84,12 +169,14 @@ function CollaborationForm({ onSuccess }) {
           <input
             type="text"
             name="organization"
-            required
             placeholder="e.g. AJK Youth Forum / City Grammar School"
             value={formData.organization}
             onChange={handleChange}
-            className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500"
+            className={getInputClass('organization')}
           />
+          {fieldErrors.organization && (
+            <p className="text-[11px] text-red-600 mt-1 font-medium">{fieldErrors.organization}</p>
+          )}
         </div>
 
         <div>
@@ -97,12 +184,14 @@ function CollaborationForm({ onSuccess }) {
           <input
             type="email"
             name="email"
-            required
             placeholder="contact@org.org"
             value={formData.email}
             onChange={handleChange}
-            className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500"
+            className={getInputClass('email')}
           />
+          {fieldErrors.email && (
+            <p className="text-[11px] text-red-600 mt-1 font-medium">{fieldErrors.email}</p>
+          )}
         </div>
 
         <div>
@@ -110,12 +199,14 @@ function CollaborationForm({ onSuccess }) {
           <input
             type="tel"
             name="phone"
-            required
             placeholder="0300 1234567"
             value={formData.phone}
             onChange={handleChange}
-            className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500"
+            className={getInputClass('phone')}
           />
+          {fieldErrors.phone && (
+            <p className="text-[11px] text-red-600 mt-1 font-medium">{fieldErrors.phone}</p>
+          )}
         </div>
       </div>
 
@@ -123,16 +214,18 @@ function CollaborationForm({ onSuccess }) {
         <label className="block text-xs font-bold text-slate-700 mb-1">Collaboration Type *</label>
         <select
           name="collabType"
-          required
           value={formData.collabType}
           onChange={handleChange}
-          className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500 font-medium text-slate-700"
+          className={`${getInputClass('collabType')} font-medium text-slate-700`}
         >
           <option value="School / College Partnership">School / College Partnership</option>
           <option value="NGO / Youth Foundation">NGO / Youth Foundation</option>
           <option value="Book Drive Co-Host">Book Drive Co-Host</option>
           <option value="Corporate / Event Sponsor">Corporate / Event Sponsor</option>
         </select>
+        {fieldErrors.collabType && (
+          <p className="text-[11px] text-red-600 mt-1 font-medium">{fieldErrors.collabType}</p>
+        )}
       </div>
 
       <div>
@@ -140,12 +233,14 @@ function CollaborationForm({ onSuccess }) {
         <textarea
           name="message"
           rows="3"
-          required
-          placeholder="Briefly describe the collaboration proposal..."
+          placeholder="Briefly describe the collaboration proposal (minimum 20 characters)..."
           value={formData.message}
           onChange={handleChange}
-          className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500"
+          className={getInputClass('message')}
         ></textarea>
+        {fieldErrors.message && (
+          <p className="text-[11px] text-red-600 mt-1 font-medium">{fieldErrors.message}</p>
+        )}
       </div>
 
       <button
@@ -153,8 +248,17 @@ function CollaborationForm({ onSuccess }) {
         disabled={loading}
         className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-sm transition flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
       >
-        <Send className="w-3.5 h-3.5" />
-        {loading ? 'Submitting...' : 'Submit Partnership Proposal'}
+        {loading ? (
+          <>
+            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            Submitting Proposal...
+          </>
+        ) : (
+          <>
+            <Send className="w-3.5 h-3.5" />
+            Submit Partnership Proposal
+          </>
+        )}
       </button>
     </form>
   );

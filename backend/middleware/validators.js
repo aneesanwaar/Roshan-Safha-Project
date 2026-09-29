@@ -75,11 +75,17 @@ const eventValidationRules = [
 
 // collaboration form validation rules 
 const collabValidationRules = [
-  body("name").notEmpty().withMessage("Name is required"),
-  body("organization").notEmpty().withMessage("Organization name is required"),
-  body("email").isEmail().withMessage("Valid email is required"),
-  body("collabType").notEmpty().withMessage("Collaboration type is required"),
-  body("message").isLength({ min: 20 }).withMessage("Please provide a detailed proposal (min 20 chars)")
+  body("name").trim().notEmpty().withMessage("Representative name is required"),
+  body("organization").trim().notEmpty().withMessage("Organization name is required"),
+  body("email").trim().isEmail().withMessage("Valid email is required"),
+  body("phone")
+    .trim()
+    .notEmpty()
+    .withMessage("Phone number is required")
+    .matches(pakistaniPhoneRegex)
+    .withMessage("Enter a valid Pakistani mobile number (e.g., 03001234567 or +923001234567)"),
+  body("collabType").trim().notEmpty().withMessage("Collaboration type is required"),
+  body("message").trim().isLength({ min: 20 }).withMessage("Please provide a detailed proposal (minimum 20 characters)")
 ];
 
 module.exports = {

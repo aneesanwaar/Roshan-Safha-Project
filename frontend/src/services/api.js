@@ -34,6 +34,7 @@ export const submitEssay = (formData) => {
 export const submitVolunteer = (data) => API.post('/volunteers', data);
 export const submitCollaboration = (data) => API.post('/collaborations', data);
 export const submitContact = (data) => API.post('/contact', data);
+export const registerEvent = (data) => API.post('/events', data);
 
 // -------------------------------------------------------------
 // 2. Public Catalog & Chatbot

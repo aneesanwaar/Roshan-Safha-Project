@@ -1,15 +1,9 @@
 import React, { useState } from 'react';
-import { Sparkles, Users, BookOpen, CheckCircle2, MapPin, Calendar, Send } from 'lucide-react';
+import { Sparkles, Users, BookOpen, CheckCircle2, MapPin, Calendar } from 'lucide-react';
+import EventForm from "../../components/forms/EventForm";
 
 function SummerCirclePage() {
   const [registered, setRegistered] = useState(false);
-  const [participant, setParticipant] = useState({
-    parentName: '',
-    studentName: '',
-    ageGroup: '7-11 Years (Elementary)',
-    phone: '',
-    selectedSession: 'Batch A (July 5 - July 15)'
-  });
 
   const pillars = [
     {
@@ -29,16 +23,11 @@ function SummerCirclePage() {
     }
   ];
 
-  const handleRegister = (e) => {
-    e.preventDefault();
-    setRegistered(true);
-  };
-
   return (
     <div className="min-h-screen bg-slate-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto space-y-10">
         
-        {/* Harmonized Header Matching Donate Books */}
+        {/* Header */}
         <div className="text-center space-y-3">
           <div className="inline-flex items-center gap-1.5 bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1.5 rounded-full">
             <span>🌱</span>
@@ -52,7 +41,7 @@ function SummerCirclePage() {
           </p>
         </div>
 
-        {/* Guidelines / Pillars Grid (Matching Donate Books 3-Card Header) */}
+        {/* Pillars Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {pillars.map((p, idx) => (
             <div key={idx} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-start gap-3">
@@ -92,77 +81,39 @@ function SummerCirclePage() {
             </div>
           </div>
 
-          {/* Registration Box */}
+          {/* Registration Box using EventForm */}
           <div className="bg-white rounded-2xl p-5 text-slate-900 shadow-md">
             {registered ? (
               <div className="text-center py-6 space-y-2">
                 <CheckCircle2 className="w-8 h-8 text-emerald-600 mx-auto" />
-                <h3 className="font-bold text-sm text-slate-900">Seat Reserved!</h3>
-                <p className="text-xs text-slate-600">We will message you on WhatsApp with schedule details.</p>
+                <h3 className="font-bold text-sm text-slate-900">Registration Confirmed!</h3>
+                <p className="text-xs text-slate-600">
+                  We have sent confirmation details to your email address and will reach out with schedule reminders.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setRegistered(false)}
+                  className="text-xs text-emerald-600 font-bold hover:underline pt-2 inline-block cursor-pointer"
+                >
+                  Register another attendee
+                </button>
               </div>
             ) : (
-              <form onSubmit={handleRegister} className="space-y-3">
-                <h3 className="font-bold text-xs sm:text-sm text-slate-900 border-b border-slate-100 pb-2">
-                  Reserve a Free Seat
-                </h3>
-                
-                <div>
-                  <label className="block text-[10px] font-bold text-slate-700 mb-0.5">Guardian Name *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Dr. Rashid Khan"
-                    value={participant.parentName}
-                    onChange={e => setParticipant({ ...participant, parentName: e.target.value })}
-                    className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500"
-                  />
+              <div>
+                <div className="flex items-center justify-between border-b border-slate-100 pb-2 mb-3">
+                  <h3 className="font-bold text-xs sm:text-sm text-slate-900">
+                    Reserve a Free Seat
+                  </h3>
+                  <span className="text-[10px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full font-semibold">
+                    100% Free
+                  </span>
                 </div>
 
-                <div>
-                  <label className="block text-[10px] font-bold text-slate-700 mb-0.5">Student / Child Name *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Ali Rashid"
-                    value={participant.studentName}
-                    onChange={e => setParticipant({ ...participant, studentName: e.target.value })}
-                    className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-700 mb-0.5">Age Group</label>
-                    <select
-                      value={participant.ageGroup}
-                      onChange={e => setParticipant({ ...participant, ageGroup: e.target.value })}
-                      className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2 outline-none"
-                    >
-                      <option value="7-11 Years (Elementary)">7-11 Years</option>
-                      <option value="12-16 Years (Middle/High)">12-16 Years</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-700 mb-0.5">WhatsApp *</label>
-                    <input
-                      type="tel"
-                      required
-                      placeholder="0300 1234567"
-                      value={participant.phone}
-                      onChange={e => setParticipant({ ...participant, phone: e.target.value })}
-                      className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500"
-                    />
-                  </div>
-                </div>
-
-                <button
-                  type="submit"
-                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 rounded-lg text-xs shadow-sm transition mt-1 cursor-pointer"
-                >
-                  Confirm Registration
-                </button>
-              </form>
+                <EventForm 
+                  defaultEventName="SDGs Summer Circle 2026" 
+                  onSuccess={() => setRegistered(true)} 
+                />
+              </div>
             )}
           </div>
         </div>

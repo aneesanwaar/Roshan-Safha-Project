@@ -36,16 +36,18 @@ const donationValidationRules = [
 
 // Based on requirements 
 const volunteerValidationRules = [
-  body('name').notEmpty().withMessage('Name is required'),
-  body('email').isEmail().withMessage('Valid email required'),
+  body('name').trim().notEmpty().withMessage('Name is required'),
+  body('age').isInt({ min: 10, max: 100 }).withMessage('Enter a valid age (minimum 10)'),
+  body('email').trim().isEmail().withMessage('Valid email required'),
   body('phone')
     .trim()
     .notEmpty()
     .withMessage('Phone number is required')
     .matches(pakistaniPhoneRegex)
     .withMessage('Enter a valid Pakistani mobile number (e.g., 03001234567 or +923001234567)'),
-  //   body('age').isInt({ min: 13 }).withMessage('Must be at least 13 years old'),
-  body('skills').notEmpty().withMessage('Please mention your skills or interests')
+  body('city').trim().notEmpty().withMessage('City is required'),
+  body('skills').trim().notEmpty().withMessage('Please mention your skills or interests'),
+  body('availability').trim().notEmpty().withMessage('Availability details are required')
 ];
 
 // conatact form validation rules based on Contact model

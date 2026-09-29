@@ -36,9 +36,6 @@ app.use("/api/contact", contactRoutes); // Registered the new contact endpoint
 app.use("/api/events", eventRoutes); // Registered the new event endpoint
 app.use("/api/collaborations", collabRoutes); // Registered the new collaboration endpoint
 app.use("/api/essays", essayRoutes); // Registered the new essay endpoint
-// // Static Folder for Uploads 
-// // This allows you to visit http://localhost:5000/uploads/essays/yourfile.pdf
-// app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/announcements", announcementRoutes);

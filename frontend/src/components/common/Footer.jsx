@@ -114,10 +114,7 @@ function Footer() {
 
       <div className="border-t border-slate-800 py-6 text-center text-xs text-slate-500 flex flex-wrap items-center justify-center gap-2">
         <span>Copyright © 2026 Roshan Safha. All rights reserved.</span>
-        <span>•</span>
-        <span className="flex items-center gap-1">
-          Made with <Heart className="w-3.5 h-3.5 text-red-500 fill-red-500 inline" /> for community empowerment.
-        </span>
+        
       </div>
     </footer>
   );

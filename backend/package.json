@@ -18,6 +18,7 @@
     "cors": "^2.8.6",
     "docx": "^9.8.0",
     "dotenv": "^17.3.1",
+    "exceljs": "^4.4.0",
     "express": "^5.2.1",
     "express-validator": "^7.3.1",
     "jsonwebtoken": "^9.0.3",
@@ -25,7 +26,9 @@
     "mongoose": "^9.3.0",
     "multer": "^2.1.1",
     "multer-storage-cloudinary": "^4.0.0",
-    "nodemailer": "^8.0.2"
+    "nodemailer": "^8.0.2",
+    "pdfkit": "^0.20.2",
+    "pdfmake": "^0.3.11"
   },
   "devDependencies": {
     "nodemon": "^3.1.14"

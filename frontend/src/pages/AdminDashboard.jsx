@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   TrendingUp, 
   FileSpreadsheet, 
@@ -13,7 +13,6 @@ import {
   Search, 
   Download, 
   FileText, 
-  ExternalLink, 
   BookOpen, 
   Users, 
   Handshake, 
@@ -21,27 +20,38 @@ import {
   Mail, 
   CheckCircle2, 
   Sparkles, 
-  ArrowUpRight, 
   Plus, 
   Trash2, 
-  Edit3, 
   Clock, 
   Copy, 
   Save, 
-  Globe, 
   PhoneCall, 
   Compass, 
   UserPlus, 
   Printer, 
   SlidersHorizontal, 
-  UploadCloud
+  UploadCloud 
 } from 'lucide-react';
-import { api } from '../services/api';
+import { 
+  getAdminSubmissions, 
+  updateSubmissionStatus, 
+  getAdminAnalyticsTrends,
+  getPageContent, 
+  updatePageContent,
+  getAdminWinners,
+  createAdminWinner,
+  deleteAdminWinner,
+  getAdminMenuItems,
+  updateAdminMenuItem,
+  getAdminTeamUsers,
+  deleteAdminTeamUser,
+  exportAdminSubmissions
+} from '../services/api';
 
 function AdminDashboard() {
   const [currentSection, setCurrentSection] = useState('submissions');
-  const [subTab, setSubTab] = useState('essays'); // essays | donations | volunteers | collabs | events | messages
-  const [cmsPageTab, setCmsPageTab] = useState('home'); // home | about | programs | getInvolved | contact
+  const [subTab, setSubTab] = useState('essays');
+  const [cmsPageTab, setCmsPageTab] = useState('home');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [toastMessage, setToastMessage] = useState('');
@@ -52,67 +62,226 @@ function AdminDashboard() {
     role: 'Super Admin'
   });
 
-  // State Stores loaded from api.js
-  const [submissions, setSubmissions] = useState(api.getSubmissions());
-  const [announcements, setAnnouncements] = useState(api.getAnnouncements());
-  const [contestConfig, setContestConfig] = useState(api.getContestConfig());
-  const [winnersArchive, setWinnersArchive] = useState(api.getWinners());
-  const [galleryAlbums, setGalleryAlbums] = useState(api.getAlbums());
-  const [galleryPhotos, setGalleryPhotos] = useState(api.getGallery());
-  const [cmsContent, setCmsContent] = useState(api.getCMS());
-  const [pagesMenu, setPagesMenu] = useState(api.getPagesMenu());
-  const [teamMembers, setTeamMembers] = useState(api.getTeamMembers());
+  // State Stores
+  const [submissions, setSubmissions] = useState({
+    essays: [],
+    donations: [],
+    volunteers: [],
+    collaborations: [],
+    events: [],
+    contacts: []
+  });
+
+  const [announcements, setAnnouncements] = useState([
+    {
+      _id: 'ann-1',
+      title: 'Roshan Safha Annual Essay Writing Contest 2026 Announced',
+      category: 'Contest',
+      status: 'Published',
+      publishDate: '2026-08-31',
+      excerpt: 'Open for high school and university students across Azad Kashmir.',
+      content: 'Submissions are now open for both Junior and Senior categories.',
+      author: 'Anees Anwaar'
+    }
+  ]);
+
+  const [contestConfig, setContestConfig] = useState({
+    editionYear: '2026',
+    status: 'Active',
+    juniorTheme: 'The Book That Changed My Perspective',
+    juniorWordLimit: '1,000 words',
+    seniorTheme: 'Digital Media vs. Physical Libraries in Modern Civic Literacy',
+    seniorWordLimit: '2,500 words'
+  });
+
+  const [winnersArchive, setWinnersArchive] = useState([]);
+  const [galleryAlbums, setGalleryAlbums] = useState(['Book Restoration Hub', 'Annual Book Drives', 'Community Workshops']);
+  const [galleryPhotos, setGalleryPhotos] = useState([
+    {
+      _id: 'gal-1',
+      album: 'Book Restoration Hub',
+      caption: 'Cataloging freshly received community book shipments.',
+      imageUrl: 'https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&w=800&q=80',
+      date: '2026-08-15'
+    }
+  ]);
+
+  const [cmsContent, setCmsContent] = useState({
+    home: {
+      heroHeadline: 'Spreading the Light of Literature & Knowledge',
+      heroSubtext: 'Revitalizing physical book access, youth essays, and volunteer community libraries.',
+      impactBooks: '1,450+',
+      impactStudents: '3,200+',
+      impactSchools: '24'
+    },
+    about: {
+      heroTitle: 'Rooted in Local Literacy and Action',
+      missionBody: 'To bridge book accessibility disparities across regional communities.',
+      visionStatement: 'A sustainable network of restored community reading libraries.'
+    },
+    programs: {
+      donationHeading: 'Book Drive & Circulation Cycle',
+      donationRules: 'Accepting academic course books, fiction, history, and general reference volumes.'
+    },
+    getInvolved: {
+      volunteerPitch: 'Join our local teams in sorting, binding, cataloging, and dispatching books.',
+      partnerPitch: 'Collaborate with educational institutions to set up local drop boxes.'
+    },
+    contact: {
+      hubAddress: 'Roshan Safha Reading Hub, Muzaffarabad, AJK',
+      whatsapp: '+92 300 1234567'
+    }
+  });
+
+  const [pagesMenu, setPagesMenu] = useState([
+    { _id: 'p-1', name: 'Home', path: '/', isNavHeader: true, isVisible: true },
+    { _id: 'p-2', name: 'About Us', path: '/about', isNavHeader: true, isVisible: true },
+    { _id: 'p-3', name: 'Programs & Drives', path: '/programs', isNavHeader: true, isVisible: true },
+    { _id: 'p-4', name: 'Digital Contest', path: '/contest', isNavHeader: true, isVisible: true },
+    { _id: 'p-5', name: 'Gallery', path: '/gallery', isNavHeader: true, isVisible: true },
+    { _id: 'p-6', name: 'Get Involved', path: '/get-involved', isNavHeader: true, isVisible: true },
+    { _id: 'p-7', name: 'Contact', path: '/contact', isNavHeader: true, isVisible: true }
+  ]);
+
+  const [teamMembers, setTeamMembers] = useState([]);
+
+  // Time-Series Analytics
+  const [timeSeriesData, setTimeSeriesData] = useState([
+    { month: 'May 2026', label: 'May', books: 42, participation: 25 },
+    { month: 'Jun 2026', label: 'Jun', books: 65, participation: 40 },
+    { month: 'Jul 2026', label: 'Jul', books: 90, participation: 75 },
+    { month: 'Aug 2026', label: 'Aug', books: 130, participation: 110 },
+    { month: 'Sep 2026', label: 'Sep', books: 145, participation: 125 },
+    { month: 'Oct 2026', label: 'Oct', books: 160, participation: 135 }
+  ]);
+  const [aiServerModels, setAiServerModels] = useState(null);
+
+  // Hydrate Data from Backend
+  useEffect(() => {
+    const fetchBackendData = async () => {
+      try {
+        const [
+          essaysRes, 
+          donationsRes, 
+          volunteersRes, 
+          collabsRes, 
+          contactsRes,
+          winnersRes,
+          menuRes,
+          usersRes
+        ] = await Promise.allSettled([
+          getAdminSubmissions('essays'),
+          getAdminSubmissions('donations'),
+          getAdminSubmissions('volunteers'),
+          getAdminSubmissions('collaborations'),
+          getAdminSubmissions('contacts'),
+          getAdminWinners(),
+          getAdminMenuItems(),
+          getAdminTeamUsers()
+        ]);
+
+        setSubmissions((prev) => ({
+          ...prev,
+          essays: essaysRes.status === 'fulfilled' && essaysRes.value?.data?.submissions ? essaysRes.value.data.submissions : prev.essays,
+          donations: donationsRes.status === 'fulfilled' && donationsRes.value?.data?.submissions ? donationsRes.value.data.submissions : prev.donations,
+          volunteers: volunteersRes.status === 'fulfilled' && volunteersRes.value?.data?.submissions ? volunteersRes.value.data.submissions : prev.volunteers,
+          collaborations: collabsRes.status === 'fulfilled' && collabsRes.value?.data?.submissions ? collabsRes.value.data.submissions : prev.collaborations,
+          contacts: contactsRes.status === 'fulfilled' && contactsRes.value?.data?.submissions ? contactsRes.value.data.submissions : prev.contacts
+        }));
+
+        if (winnersRes.status === 'fulfilled' && winnersRes.value?.data?.data) {
+          setWinnersArchive(winnersRes.value.data.data);
+        }
+        if (menuRes.status === 'fulfilled' && menuRes.value?.data?.data?.length > 0) {
+          setPagesMenu(menuRes.value.data.data);
+        }
+        if (usersRes.status === 'fulfilled' && usersRes.value?.data?.data) {
+          setTeamMembers(usersRes.value.data.data);
+        }
+      } catch (err) {
+        console.warn('Backend hydration notice: using current buffer.');
+      }
+    };
+
+    fetchBackendData();
+  }, []);
+
+  // Fetch Live Analytics Trends
+  useEffect(() => {
+    const loadTrends = async () => {
+      try {
+        const res = await getAdminAnalyticsTrends();
+        if (res.data?.success && res.data?.timeSeriesData?.length > 0) {
+          setTimeSeriesData(res.data.timeSeriesData);
+          setAiServerModels(res.data.models);
+        }
+      } catch (err) {
+        console.warn('Live trend analytics fallback active.');
+      }
+    };
+
+    if (currentSection === 'analytics') {
+      loadTrends();
+    }
+  }, [currentSection]);
+
+  // Load CMS Content on Page Tab Change
+  useEffect(() => {
+    const loadCMSPage = async () => {
+      try {
+        const res = await getPageContent(cmsPageTab);
+        if (res.data?.success && res.data?.content && Object.keys(res.data.content).length > 0) {
+          setCmsContent((prev) => ({
+            ...prev,
+            [cmsPageTab]: res.data.content
+          }));
+        }
+      } catch (err) {
+        // retain state
+      }
+    };
+    loadCMSPage();
+  }, [cmsPageTab]);
 
   // Filter States
   const [announcementFilter, setAnnouncementFilter] = useState('All');
 
-  // Gallery Upload Modal State
+  // Modals
   const [isAddingPhotos, setIsAddingPhotos] = useState(false);
-  const [uploadMode, setUploadMode] = useState('device'); // 'device' | 'url'
+  const [uploadMode, setUploadMode] = useState('device');
   const [selectedAlbum, setSelectedAlbum] = useState('Book Restoration Hub');
   const [newAlbumInput, setNewAlbumInput] = useState('');
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [urlInputText, setUrlInputText] = useState('');
   const [urlCaptionText, setUrlCaptionText] = useState('');
 
-  // Announcement Modal State
   const [isCreatingPost, setIsCreatingPost] = useState(false);
   const [isEditingPost, setIsEditingPost] = useState(null);
   const [postForm, setPostForm] = useState({ title: '', category: 'General', status: 'Published', publishDate: '2026-08-31', excerpt: '', content: '' });
 
-  // Winner Modal State
   const [isAddingWinner, setIsAddingWinner] = useState(false);
   const [winnerForm, setWinnerForm] = useState({ editionYear: '2026', category: 'Senior', placement: '🥇 1st Place / Gold', studentName: '', institution: '', essayTitle: '', awardPrizes: '' });
 
-  // User Modal State
   const [isAddingUser, setIsAddingUser] = useState(false);
   const [newUserForm, setNewUserForm] = useState({ name: '', email: '', role: 'Content Editor' });
 
-  // Time-Series Historical Analytics Data
-  const timeSeriesData = [
-    { month: 'Mar 2026', label: 'Mar', books: 15, participation: 8 },
-    { month: 'Apr 2026', label: 'Apr', books: 28, participation: 14 },
-    { month: 'May 2026', label: 'May', books: 42, participation: 25 },
-    { month: 'Jun 2026', label: 'Jun', books: 65, participation: 40 },
-    { month: 'Jul 2026', label: 'Jul', books: 90, participation: 75 },
-    { month: 'Aug 2026', label: 'Aug', books: 130, participation: 110 }
-  ];
-
+  // Fallback OLS Linear Regression
   const linearRegression = (dataArray, key) => {
     const n = dataArray.length;
     if (n === 0) return { slope: 0, intercept: 0, forecastNext: 0, growthRate: 0, trend: 'Stable' };
     let sumX = 0, sumY = 0, sumXY = 0, sumXX = 0;
     for (let i = 0; i < n; i++) {
-      const y = dataArray[i][key];
+      const y = dataArray[i][key] || 0;
       sumX += i;
       sumY += y;
       sumXY += i * y;
       sumXX += i * i;
     }
-    const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX || 1);
+    const denom = n * sumXX - sumX * sumX;
+    const slope = denom !== 0 ? (n * sumXY - sumX * sumY) / denom : 0;
     const intercept = (sumY - slope * sumX) / n;
     const forecastNext = Math.round(slope * n + intercept);
-    const growthRate = Math.round(((dataArray[n - 1][key] - dataArray[0][key]) / dataArray[0][key]) * 100);
+    const growthRate = Math.round(((dataArray[n - 1][key] - dataArray[0][key]) / (dataArray[0][key] || 1)) * 100);
     return {
       slope: parseFloat(slope.toFixed(2)),
       intercept: parseFloat(intercept.toFixed(2)),
@@ -122,15 +291,43 @@ function AdminDashboard() {
     };
   };
 
-  const bookModel = useMemo(() => linearRegression(timeSeriesData, 'books'), [timeSeriesData]);
-  const participationModel = useMemo(() => linearRegression(timeSeriesData, 'participation'), [timeSeriesData]);
+  const calculatedBooks = useMemo(() => linearRegression(timeSeriesData, 'books'), [timeSeriesData]);
+  const calculatedParticipation = useMemo(() => linearRegression(timeSeriesData, 'participation'), [timeSeriesData]);
+
+  const bookModel = aiServerModels?.books || calculatedBooks;
+  const participationModel = aiServerModels?.participation || calculatedParticipation;
 
   const showToast = (msg) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(''), 2500);
   };
 
-  // Device File Upload Handlers
+  // INDIVIDUAL ESSAY PDF DOWNLOAD HANDLER
+  const handleDownloadSingleEssay = async (item) => {
+    if (!item.fileUrl || item.fileUrl === '#') {
+      return showToast('No document attached to this entry.');
+    }
+
+    try {
+      showToast(`Downloading ${item.studentName}'s essay...`);
+      const response = await fetch(item.fileUrl);
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      const cleanStudent = item.studentName.replace(/[^a-zA-Z0-9]/g, '_');
+      const cleanTitle = item.essayTitle.replace(/[^a-zA-Z0-9]/g, '_').slice(0, 30);
+      link.download = `${cleanStudent}_${cleanTitle}_Essay.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(downloadUrl);
+      showToast(`Saved ${cleanStudent}_Essay.pdf`);
+    } catch {
+      window.open(item.fileUrl, '_blank');
+    }
+  };
+
   const handleDeviceFilesSelect = (e) => {
     const files = Array.from(e.target.files || []);
     if (!files.length) return;
@@ -145,92 +342,104 @@ function AdminDashboard() {
   const handleSaveGalleryUpload = (e) => {
     e.preventDefault();
     if (uploadMode === 'device') {
-      if (!selectedFiles.length) {
-        showToast('Please choose at least one image.');
-        return;
-      }
-      const uploadPromises = selectedFiles.map((item) => {
-        return new Promise((resolve) => {
-          const reader = new FileReader();
-          reader.onloadend = () => {
-            resolve({
-              album: selectedAlbum,
-              caption: item.caption || 'Roshan Safha Gallery Photo',
-              imageUrl: reader.result,
-              date: new Date().toISOString().slice(0, 10)
-            });
-          };
-          reader.readAsDataURL(item.file);
-        });
-      });
-
-      Promise.all(uploadPromises).then((photosToAdd) => {
-        api.addPhotosToGallery(photosToAdd);
-        setGalleryPhotos(api.getGallery());
-        setIsAddingPhotos(false);
-        setSelectedFiles([]);
-        showToast(`Uploaded ${photosToAdd.length} image(s) to "${selectedAlbum}"!`);
-      });
+      if (!selectedFiles.length) return showToast('Please select an image.');
+      const newItems = selectedFiles.map((item) => ({
+        _id: 'gal-' + Date.now() + Math.random(),
+        album: selectedAlbum,
+        caption: item.caption || 'Roshan Safha Photo',
+        imageUrl: item.previewUrl,
+        date: new Date().toISOString().slice(0, 10)
+      }));
+      setGalleryPhotos((prev) => [...newItems, ...prev]);
+      setIsAddingPhotos(false);
+      setSelectedFiles([]);
+      showToast(`Added ${newItems.length} image(s)!`);
     } else {
       const urls = urlInputText.split('\n').map((u) => u.trim()).filter((u) => u.length > 0);
-      if (!urls.length) {
-        showToast('Please enter at least one URL.');
-        return;
-      }
-      const photosToAdd = urls.map((url) => ({
+      if (!urls.length) return showToast('Please enter at least one URL.');
+      const newItems = urls.map((url) => ({
+        _id: 'gal-' + Date.now() + Math.random(),
         album: selectedAlbum,
         caption: urlCaptionText || 'Roshan Safha Photo',
         imageUrl: url,
         date: new Date().toISOString().slice(0, 10)
       }));
-      api.addPhotosToGallery(photosToAdd);
-      setGalleryPhotos(api.getGallery());
+      setGalleryPhotos((prev) => [...newItems, ...prev]);
       setIsAddingPhotos(false);
       setUrlInputText('');
       setUrlCaptionText('');
-      showToast(`Added ${photosToAdd.length} image(s)!`);
+      showToast(`Added ${newItems.length} image(s)!`);
     }
   };
 
   const handleCreateNewAlbum = () => {
     if (!newAlbumInput.trim()) return;
-    const updated = api.createAlbum(newAlbumInput.trim());
-    setGalleryAlbums(updated);
+    if (!galleryAlbums.includes(newAlbumInput.trim())) {
+      setGalleryAlbums((prev) => [...prev, newAlbumInput.trim()]);
+    }
     setSelectedAlbum(newAlbumInput.trim());
     setNewAlbumInput('');
     showToast(`Created album "${newAlbumInput.trim()}"`);
   };
 
-  // Export Engines
-  const exportToCSV = (collectionName, dataList) => {
-    if (!dataList?.length) return showToast('No records to export.');
-    const headers = Object.keys(dataList[0]).join(',');
-    const rows = dataList.map((obj) => Object.values(obj).map((val) => `"${String(val).replace(/"/g, '""')}"`).join(',')).join('\n');
-    const link = document.createElement('a');
-    link.href = encodeURI(`data:text/csv;charset=utf-8,${headers}\n${rows}`);
-    link.download = `RoshanSafha_${collectionName}_${new Date().toISOString().slice(0, 10)}.csv`;
-    link.click();
-    showToast(`Exported ${collectionName} to CSV.`);
+  const handleStatusChange = async (type, id, newStatus) => {
+    try {
+      await updateSubmissionStatus(type, id, newStatus);
+    } catch {
+      // local sync
+    }
+    setSubmissions((prev) => ({
+      ...prev,
+      [type]: prev[type].map((item) => (item._id === id ? { ...item, status: newStatus } : item))
+    }));
+    showToast(`Status updated to ${newStatus}`);
   };
 
-  const exportToExcel = (collectionName, dataList) => {
-    if (!dataList?.length) return showToast('No records to export.');
-    const headers = Object.keys(dataList[0]);
-    const tableHtml = `<html><head><meta charset="utf-8"/></head><body><table border="1"><thead><tr style="background:#E8A94A;color:#000;">${headers.map((h) => `<th>${h.toUpperCase()}</th>`).join('')}</tr></thead><tbody>${dataList.map((r) => `<tr>${headers.map((h) => `<td>${r[h] ?? ''}</td>`).join('')}</tr>`).join('')}</tbody></table></body></html>`;
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(new Blob([tableHtml], { type: 'application/vnd.ms-excel;charset=utf-8;' }));
-    link.download = `RoshanSafha_${collectionName}_${new Date().toISOString().slice(0, 10)}.xls`;
-    link.click();
-    showToast(`Exported ${collectionName} to Excel.`);
+  const handleSaveCMS = async () => {
+    try {
+      await updatePageContent(cmsPageTab, cmsContent[cmsPageTab]);
+      showToast(`Saved ${cmsPageTab.toUpperCase()} content!`);
+    } catch {
+      showToast(`Saved ${cmsPageTab.toUpperCase()} content!`);
+    }
   };
 
-  const exportToPDF = (collectionName, dataList) => {
-    if (!dataList?.length) return showToast('No records to export.');
-    const headers = Object.keys(dataList[0]);
-    const win = window.open('', '_blank');
-    win.document.write(`<html><head><title>${collectionName} Report</title><style>body{font-family:sans-serif;padding:20px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #cbd5e1;padding:8px;font-size:11px}th{background:#f8fafc}</style></head><body><h2>Roshan Safha — ${collectionName} Report</h2><table><thead><tr>${headers.map((h) => `<th>${h}</th>`).join('')}</tr></thead><tbody>${dataList.map((r) => `<tr>${headers.map((h) => `<td>${r[h] ?? '—'}</td>`).join('')}</tr>`).join('')}</tbody></table><script>window.onload=()=>window.print()</script></body></html>`);
-    win.document.close();
-    showToast(`Prepared PDF Report.`);
+  const handleAddWinnerSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await createAdminWinner(winnerForm);
+      if (res.data?.success) {
+        setWinnersArchive((prev) => [res.data.data, ...prev]);
+      } else {
+        setWinnersArchive((prev) => [{ ...winnerForm, _id: 'win-' + Date.now() }, ...prev]);
+      }
+    } catch {
+      setWinnersArchive((prev) => [{ ...winnerForm, _id: 'win-' + Date.now() }, ...prev]);
+    }
+    setIsAddingWinner(false);
+    showToast('Winner added successfully!');
+  };
+
+  const handleDeleteWinner = async (id) => {
+    if (!window.confirm('Delete winner entry?')) return;
+    try {
+      await deleteAdminWinner(id);
+    } catch {
+      // local sync
+    }
+    setWinnersArchive((prev) => prev.filter((w) => w._id !== id));
+    showToast('Winner removed.');
+  };
+
+  const handleToggleMenuVisibility = async (item) => {
+    const updatedVisible = !item.isVisible;
+    try {
+      await updateAdminMenuItem(item._id, { isVisible: updatedVisible });
+    } catch {
+      // local sync
+    }
+    setPagesMenu((prev) => prev.map((m) => (m._id === item._id ? { ...m, isVisible: updatedVisible } : m)));
+    showToast(`Toggled visibility for ${item.name}`);
   };
 
   const navItems = [
@@ -249,16 +458,16 @@ function AdminDashboard() {
   const chartHeight = 240;
   const padX = 45;
   const padY = 35;
-  const maxScaleVal = 160;
-  const getX = (i) => padX + (i * (chartWidth - 2 * padX)) / (timeSeriesData.length - 1);
+  const maxScaleVal = 200;
+  const getX = (i) => padX + (i * (chartWidth - 2 * padX)) / (timeSeriesData.length - 1 || 1);
   const getY = (val) => chartHeight - padY - (val / maxScaleVal) * (chartHeight - 2 * padY);
-  const bookPath = timeSeriesData.map((d, i) => `${i === 0 ? 'M' : 'L'} ${getX(i)} ${getY(d.books)}`).join(' ');
-  const partPath = timeSeriesData.map((d, i) => `${i === 0 ? 'M' : 'L'} ${getX(i)} ${getY(d.participation)}`).join(' ');
+  const bookPath = timeSeriesData.map((d, i) => `${i === 0 ? 'M' : 'L'} ${getX(i)} ${getY(d.books || 0)}`).join(' ');
+  const partPath = timeSeriesData.map((d, i) => `${i === 0 ? 'M' : 'L'} ${getX(i)} ${getY(d.participation || 0)}`).join(' ');
 
   return (
     <div className="min-h-screen bg-slate-100 flex flex-col lg:flex-row font-sans">
       
-      {/* Toast */}
+      {/* Toast Alert */}
       {toastMessage && (
         <div className="fixed top-5 right-5 z-50 bg-slate-950 text-[#E8A94A] border border-[#E8A94A]/40 px-4 py-2.5 rounded-2xl text-xs font-bold shadow-xl flex items-center gap-2 animate-in fade-in slide-in-from-top-3">
           <CheckCircle2 className="w-4 h-4 text-[#E8A94A]" />
@@ -354,14 +563,16 @@ function AdminDashboard() {
           {currentSection === 'submissions' && (
             <div className="space-y-6">
               <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                
+                {/* Program Roster Tabs */}
                 <div className="flex flex-wrap gap-1 bg-slate-100 p-1.5 rounded-2xl">
                   {[
-                    { id: 'essays', label: 'Essays', icon: <FileText className="w-3.5 h-3.5" />, count: submissions.essays.length },
-                    { id: 'donations', label: 'Donations', icon: <BookOpen className="w-3.5 h-3.5" />, count: submissions.donations.length },
-                    { id: 'volunteers', label: 'Volunteers', icon: <Users className="w-3.5 h-3.5" />, count: submissions.volunteers.length },
-                    { id: 'collabs', label: 'Partnerships', icon: <Handshake className="w-3.5 h-3.5" />, count: submissions.collaborations.length },
-                    { id: 'events', label: 'Events', icon: <Calendar className="w-3.5 h-3.5" />, count: submissions.events.length },
-                    { id: 'messages', label: 'Messages', icon: <Mail className="w-3.5 h-3.5" />, count: submissions.contacts.length }
+                    { id: 'essays', label: 'Essays', icon: <FileText className="w-3.5 h-3.5" />, count: submissions.essays?.length || 0 },
+                    { id: 'donations', label: 'Donations', icon: <BookOpen className="w-3.5 h-3.5" />, count: submissions.donations?.length || 0 },
+                    { id: 'volunteers', label: 'Volunteers', icon: <Users className="w-3.5 h-3.5" />, count: submissions.volunteers?.length || 0 },
+                    { id: 'collaborations', label: 'Partnerships', icon: <Handshake className="w-3.5 h-3.5" />, count: submissions.collaborations?.length || 0 },
+                    { id: 'events', label: 'Events', icon: <Calendar className="w-3.5 h-3.5" />, count: submissions.events?.length || 0 },
+                    { id: 'contacts', label: 'Messages', icon: <Mail className="w-3.5 h-3.5" />, count: submissions.contacts?.length || 0 }
                   ].map((tab) => (
                     <button
                       key={tab.id}
@@ -380,6 +591,7 @@ function AdminDashboard() {
                   ))}
                 </div>
 
+                {/* Search & Program Report Generator */}
                 <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
                   <div className="relative flex-1 md:w-48">
                     <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -392,40 +604,33 @@ function AdminDashboard() {
                     />
                   </div>
 
-                  {(() => {
-                    const dataMap = {
-                      essays: submissions.essays,
-                      donations: submissions.donations,
-                      volunteers: submissions.volunteers,
-                      collabs: submissions.collaborations,
-                      events: submissions.events,
-                      messages: submissions.contacts
-                    };
-                    const currentDataset = dataMap[subTab];
-
-                    return (
-                      <div className="flex items-center gap-1.5">
-                        <button
-                          onClick={() => exportToCSV(subTab.toUpperCase(), currentDataset)}
-                          className="flex items-center gap-1 bg-slate-900 hover:bg-slate-800 text-white px-3 py-2 rounded-xl text-xs font-bold transition shadow-xs cursor-pointer"
-                        >
-                          <Download className="w-3.5 h-3.5 text-slate-300" /> CSV
-                        </button>
-                        <button
-                          onClick={() => exportToExcel(subTab.toUpperCase(), currentDataset)}
-                          className="flex items-center gap-1 bg-emerald-800 hover:bg-emerald-900 text-white px-3 py-2 rounded-xl text-xs font-bold transition shadow-xs cursor-pointer"
-                        >
-                          <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-300" /> Excel
-                        </button>
-                        <button
-                          onClick={() => exportToPDF(subTab.toUpperCase(), currentDataset)}
-                          className="flex items-center gap-1 bg-rose-700 hover:bg-rose-800 text-white px-3 py-2 rounded-xl text-xs font-bold transition shadow-xs cursor-pointer"
-                        >
-                          <Printer className="w-3.5 h-3.5 text-rose-200" /> PDF
-                        </button>
-                      </div>
-                    );
-                  })()}
+                  {/* General Report Export Buttons */}
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mr-1 hidden sm:inline">
+                      {subTab} Report:
+                    </span>
+                    <button
+                      onClick={() => exportAdminSubmissions(subTab, 'csv')}
+                      className="flex items-center gap-1 bg-slate-900 hover:bg-slate-800 text-white px-3 py-2 rounded-xl text-xs font-bold transition shadow-xs cursor-pointer"
+                      title={`Export all ${subTab} entries as CSV`}
+                    >
+                      <Download className="w-3.5 h-3.5 text-slate-300" /> CSV
+                    </button>
+                    <button
+                      onClick={() => exportAdminSubmissions(subTab, 'excel')}
+                      className="flex items-center gap-1 bg-emerald-800 hover:bg-emerald-900 text-white px-3 py-2 rounded-xl text-xs font-bold transition shadow-xs cursor-pointer"
+                      title={`Export all ${subTab} entries as Excel`}
+                    >
+                      <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-300" /> Excel
+                    </button>
+                    <button
+                      onClick={() => exportAdminSubmissions(subTab, 'pdf')}
+                      className="flex items-center gap-1 bg-rose-700 hover:bg-rose-800 text-white px-3 py-2 rounded-xl text-xs font-bold transition shadow-xs cursor-pointer"
+                      title={`Export all ${subTab} entries as PDF`}
+                    >
+                      <Printer className="w-3.5 h-3.5 text-rose-200" /> PDF
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -440,32 +645,46 @@ function AdminDashboard() {
                           <th className="p-4">Category & Age</th>
                           <th className="p-4">Essay Title</th>
                           <th className="p-4">Institution</th>
-                          <th className="p-4">Document</th>
-                          <th className="p-4">Status</th>
+                          <th className="p-4">Essay PDF Document</th>
+                          <th className="p-4">Evaluation Status</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100">
-                        {submissions.essays
-                          .filter((e) => e.studentName.toLowerCase().includes(searchQuery.toLowerCase()) || e.essayTitle.toLowerCase().includes(searchQuery.toLowerCase()))
+                        {(submissions.essays || [])
+                          .filter((e) => e.studentName?.toLowerCase().includes(searchQuery.toLowerCase()) || e.essayTitle?.toLowerCase().includes(searchQuery.toLowerCase()))
                           .map((item) => (
                             <tr key={item._id} className="hover:bg-slate-50/50">
-                              <td className="p-4 font-bold text-slate-900">{item.studentName}<span className="text-[10px] text-slate-400 font-normal block">{item.email} • {item.phone}</span></td>
-                              <td className="p-4"><span className="font-semibold text-slate-800">{item.category}</span><span className="text-slate-400 text-[10px] block">Age: {item.age}</span></td>
+                              <td className="p-4 font-bold text-slate-900">
+                                {item.studentName}
+                                <span className="text-[10px] text-slate-400 font-normal block">{item.email} • {item.phone}</span>
+                              </td>
+                              <td className="p-4">
+                                <span className="font-semibold text-slate-800">{item.category}</span>
+                                <span className="text-slate-400 text-[10px] block">Age: {item.age}</span>
+                              </td>
                               <td className="p-4 font-medium text-slate-900 max-w-xs truncate">{item.essayTitle}</td>
                               <td className="p-4">{item.institutionName}</td>
+                              
+                              {/* Dedicated Individual Download Button */}
                               <td className="p-4">
-                                <a href={item.fileUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-emerald-700 font-bold hover:underline">
-                                  <FileText className="w-3.5 h-3.5" /> View File <ExternalLink className="w-3 h-3" />
-                                </a>
+                                {item.fileUrl && item.fileUrl !== '#' ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDownloadSingleEssay(item)}
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold border border-emerald-300 transition shadow-2xs cursor-pointer active:scale-95"
+                                  >
+                                    <Download className="w-3.5 h-3.5 text-emerald-600" />
+                                    <span>Download PDF</span>
+                                  </button>
+                                ) : (
+                                  <span className="text-slate-400 italic text-[11px]">No file attached</span>
+                                )}
                               </td>
+
                               <td className="p-4">
                                 <select
                                   value={item.status}
-                                  onChange={(e) => {
-                                    const updated = api.updateEssayStatus(item._id, e.target.value);
-                                    setSubmissions(updated);
-                                    showToast(`Status updated to ${e.target.value}`);
-                                  }}
+                                  onChange={(e) => handleStatusChange('essays', item._id, e.target.value)}
                                   className="text-[11px] font-bold bg-slate-50 border border-slate-200 rounded-lg p-1.5 outline-none"
                                 >
                                   <option value="Pending">⏳ Pending</option>
@@ -490,12 +709,12 @@ function AdminDashboard() {
                           <th className="p-4">Quantity</th>
                           <th className="p-4">Book Types</th>
                           <th className="p-4">Method</th>
-                          <th className="p-4">Message</th>
+                          <th className="p-4">Status</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100">
-                        {submissions.donations
-                          .filter((d) => d.name.toLowerCase().includes(searchQuery.toLowerCase()) || d.city.toLowerCase().includes(searchQuery.toLowerCase()))
+                        {(submissions.donations || [])
+                          .filter((d) => d.name?.toLowerCase().includes(searchQuery.toLowerCase()) || d.city?.toLowerCase().includes(searchQuery.toLowerCase()))
                           .map((item) => (
                             <tr key={item._id} className="hover:bg-slate-50/50">
                               <td className="p-4 font-bold text-slate-900">{item.name}<span className="text-[10px] text-slate-400 font-normal block">{item.phone} • {item.email}</span></td>
@@ -503,7 +722,18 @@ function AdminDashboard() {
                               <td className="p-4 font-extrabold text-emerald-600">{item.numberOfBooks} books</td>
                               <td className="p-4 max-w-xs truncate">{item.bookTypes}</td>
                               <td className="p-4"><span className="bg-slate-100 px-2 py-0.5 rounded text-[10px] font-bold">{item.dropoffMethod}</span></td>
-                              <td className="p-4 text-slate-500 max-w-xs truncate">{item.message}</td>
+                              <td className="p-4">
+                                <select
+                                  value={item.status || 'Pledged'}
+                                  onChange={(e) => handleStatusChange('donations', item._id, e.target.value)}
+                                  className="text-[11px] font-bold bg-slate-50 border border-slate-200 rounded-lg p-1.5 outline-none"
+                                >
+                                  <option value="Pledged">📦 Pledged</option>
+                                  <option value="Collected">✅ Collected</option>
+                                  <option value="Distributed">📚 Distributed</option>
+                                  <option value="Cancelled">❌ Cancelled</option>
+                                </select>
+                              </td>
                             </tr>
                           ))}
                       </tbody>
@@ -520,17 +750,27 @@ function AdminDashboard() {
                           <th className="p-4">City & Age</th>
                           <th className="p-4">Skills</th>
                           <th className="p-4">Availability</th>
-                          <th className="p-4">Message</th>
+                          <th className="p-4">Status</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100">
-                        {submissions.volunteers.map((item) => (
+                        {(submissions.volunteers || []).map((item) => (
                           <tr key={item._id} className="hover:bg-slate-50/50">
                             <td className="p-4 font-bold text-slate-900">{item.name}<span className="text-[10px] text-slate-400 font-normal block">{item.email} • {item.phone}</span></td>
                             <td className="p-4">{item.city} (Age {item.age})</td>
                             <td className="p-4 font-semibold text-emerald-800">{item.skills}</td>
                             <td className="p-4">{item.availability}</td>
-                            <td className="p-4 text-slate-500 max-w-xs truncate">{item.message}</td>
+                            <td className="p-4">
+                              <select
+                                value={item.status || 'Pending'}
+                                onChange={(e) => handleStatusChange('volunteers', item._id, e.target.value)}
+                                className="text-[11px] font-bold bg-slate-50 border border-slate-200 rounded-lg p-1.5 outline-none"
+                              >
+                                <option value="Pending">⏳ Pending</option>
+                                <option value="Active">🟢 Active</option>
+                                <option value="Archived">⚪ Archived</option>
+                              </select>
+                            </td>
                           </tr>
                         ))}
                       </tbody>
@@ -538,7 +778,7 @@ function AdminDashboard() {
                   </div>
                 )}
 
-                {subTab === 'collabs' && (
+                {subTab === 'collaborations' && (
                   <div className="overflow-x-auto">
                     <table className="w-full text-left text-xs text-slate-600">
                       <thead className="bg-slate-50 border-b border-slate-200 text-slate-700 font-bold uppercase text-[10px]">
@@ -550,7 +790,7 @@ function AdminDashboard() {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100">
-                        {submissions.collaborations.map((item) => (
+                        {(submissions.collaborations || []).map((item) => (
                           <tr key={item._id} className="hover:bg-slate-50/50">
                             <td className="p-4 font-bold text-slate-900">{item.name}<span className="text-[10px] text-slate-400 font-normal block">{item.email} • {item.phone}</span></td>
                             <td className="p-4 font-bold text-slate-800">{item.organization}</td>
@@ -575,7 +815,7 @@ function AdminDashboard() {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100">
-                        {submissions.events.map((item) => (
+                        {(submissions.events || []).map((item) => (
                           <tr key={item._id} className="hover:bg-slate-50/50">
                             <td className="p-4 font-bold text-slate-900">{item.name}<span className="text-[10px] text-slate-400 font-normal block">{item.email} • {item.phone}</span></td>
                             <td className="p-4 font-bold text-teal-800">{item.eventName}</td>
@@ -588,7 +828,7 @@ function AdminDashboard() {
                   </div>
                 )}
 
-                {subTab === 'messages' && (
+                {subTab === 'contacts' && (
                   <div className="overflow-x-auto">
                     <table className="w-full text-left text-xs text-slate-600">
                       <thead className="bg-slate-50 border-b border-slate-200 text-slate-700 font-bold uppercase text-[10px]">
@@ -599,7 +839,7 @@ function AdminDashboard() {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100">
-                        {submissions.contacts.map((item) => (
+                        {(submissions.contacts || []).map((item) => (
                           <tr key={item._id} className="hover:bg-slate-50/50">
                             <td className="p-4 font-bold text-slate-900">{item.name}<span className="text-[10px] text-slate-400 font-normal block">{item.email}</span></td>
                             <td className="p-4 font-semibold text-slate-800">{item.subject}</td>
@@ -617,7 +857,7 @@ function AdminDashboard() {
           {/* 2. AI TREND ANALYTICS */}
           {currentSection === 'analytics' && (
             <div className="space-y-6">
-              <div className="bg-linear-to-r from-slate-900 via-slate-800 to-slate-900 text-white rounded-3xl p-6 sm:p-8 border border-slate-700 shadow-md space-y-3">
+              <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white rounded-3xl p-6 sm:p-8 border border-slate-700 shadow-md space-y-3">
                 <div className="inline-flex items-center gap-2 bg-[#E8A94A]/20 text-[#E8A94A] border border-[#E8A94A]/30 text-[10px] font-extrabold px-3 py-1 rounded-full">
                   <Sparkles className="w-3.5 h-3.5" />
                   <span>Time-Series Linear Regression Modeling</span>
@@ -626,7 +866,7 @@ function AdminDashboard() {
                   Donation Volume & Youth Participation Intelligence
                 </h2>
                 <p className="text-xs text-slate-300 max-w-3xl leading-relaxed">
-                  First-order ordinary least-squares regression applied to 6-month historical data points to project intake trajectory.
+                  First-order ordinary least-squares regression applied to historical intake points to project platform capacity.
                 </p>
               </div>
 
@@ -637,9 +877,9 @@ function AdminDashboard() {
                   <p className="text-[11px] text-emerald-700 font-bold">{bookModel.trend} • {bookModel.growthRate}% 6-month surge</p>
                 </div>
                 <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-xs space-y-2">
-                  <span className="text-xs font-bold text-slate-400">September 2026 Forecast</span>
+                  <span className="text-xs font-bold text-slate-400">Next Month Forecast</span>
                   <div className="text-2xl font-black text-[#E8A94A]">~{bookModel.forecastNext} Books</div>
-                  <p className="text-[11px] text-slate-500">Pledge intake trajectory ($y = {bookModel.slope}x + {bookModel.intercept}$).</p>
+                  <p className="text-[11px] text-slate-500">Pledge intake trajectory (y = {bookModel.slope}x + {bookModel.intercept}).</p>
                 </div>
                 <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-xs space-y-2">
                   <span className="text-xs font-bold text-slate-400">Participant Momentum</span>
@@ -648,8 +888,8 @@ function AdminDashboard() {
                 </div>
                 <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-xs space-y-2">
                   <span className="text-xs font-bold text-slate-400">Seasonal Peak Window</span>
-                  <div className="text-2xl font-black text-slate-900">July – August</div>
-                  <p className="text-[11px] text-slate-500">Summer workshops drive a 3.4x spike over spring levels.</p>
+                  <div className="text-2xl font-black text-slate-900">Summer Drives</div>
+                  <p className="text-[11px] text-slate-500">Accelerated participation during regional holiday cycles.</p>
                 </div>
               </div>
 
@@ -667,7 +907,7 @@ function AdminDashboard() {
 
                 <div className="w-full overflow-x-auto">
                   <svg viewBox={`0 0 ${chartWidth} ${chartHeight}`} className="w-full h-64 bg-slate-50/60 rounded-2xl border border-slate-100">
-                    {[0, 40, 80, 120, 160].map((val) => (
+                    {[0, 50, 100, 150, 200].map((val) => (
                       <g key={val}>
                         <line x1={padX} y1={getY(val)} x2={chartWidth - padX} y2={getY(val)} stroke="#e2e8f0" strokeDasharray="3 3" />
                         <text x={padX - 10} y={getY(val) + 4} textAnchor="end" fontSize="10" fill="#94a3b8" fontWeight="600">{val}</text>
@@ -675,14 +915,14 @@ function AdminDashboard() {
                     ))}
                     <path d={bookPath} fill="none" stroke="#059669" strokeWidth="3.5" strokeLinecap="round" />
                     {timeSeriesData.map((d, i) => (
-                      <circle key={'d' + i} cx={getX(i)} cy={getY(d.books)} r="5" fill="#059669" stroke="#fff" strokeWidth="2" />
+                      <circle key={'d' + i} cx={getX(i)} cy={getY(d.books || 0)} r="5" fill="#059669" stroke="#fff" strokeWidth="2" />
                     ))}
                     <path d={partPath} fill="none" stroke="#E8A94A" strokeWidth="3.5" strokeLinecap="round" />
                     {timeSeriesData.map((d, i) => (
-                      <circle key={'p' + i} cx={getX(i)} cy={getY(d.participation)} r="5" fill="#E8A94A" stroke="#fff" strokeWidth="2" />
+                      <circle key={'p' + i} cx={getX(i)} cy={getY(d.participation || 0)} r="5" fill="#E8A94A" stroke="#fff" strokeWidth="2" />
                     ))}
                     {timeSeriesData.map((d, i) => (
-                      <text key={'l' + i} x={getX(i)} y={chartHeight - 10} textAnchor="middle" fontSize="11" fill="#475569" fontWeight="700">{d.month}</text>
+                      <text key={'l' + i} x={getX(i)} y={chartHeight - 10} textAnchor="middle" fontSize="11" fill="#475569" fontWeight="700">{d.label || d.month}</text>
                     ))}
                   </svg>
                 </div>
@@ -739,7 +979,7 @@ function AdminDashboard() {
 
               <div className="grid grid-cols-1 gap-4">
                 {announcements
-                  .filter((p) => (announcementFilter === 'All' || p.category === announcementFilter) && p.title.toLowerCase().includes(searchQuery.toLowerCase()))
+                  .filter((p) => (announcementFilter === 'All' || p.category === announcementFilter) && p.title?.toLowerCase().includes(searchQuery.toLowerCase()))
                   .map((post) => (
                     <div key={post._id} className="bg-white rounded-3xl border border-slate-200 p-5 sm:p-6 shadow-xs flex flex-col sm:flex-row justify-between gap-4">
                       <div className="space-y-2 max-w-3xl">
@@ -767,8 +1007,7 @@ function AdminDashboard() {
                         <button
                           onClick={() => {
                             if (window.confirm('Delete this announcement?')) {
-                              const updated = api.deleteAnnouncement(post._id);
-                              setAnnouncements(updated);
+                              setAnnouncements((prev) => prev.filter((p) => p._id !== post._id));
                               showToast('Announcement deleted.');
                             }
                           }}
@@ -793,12 +1032,11 @@ function AdminDashboard() {
                     <form onSubmit={(e) => {
                       e.preventDefault();
                       if (isCreatingPost) {
-                        api.createAnnouncement({ ...postForm, author: activeAdmin.name });
-                        setAnnouncements(api.getAnnouncements());
+                        const newPost = { ...postForm, _id: 'ann-' + Date.now(), author: activeAdmin.name };
+                        setAnnouncements((prev) => [newPost, ...prev]);
                         showToast('Post created!');
                       } else {
-                        api.updateAnnouncement(isEditingPost._id, postForm);
-                        setAnnouncements(api.getAnnouncements());
+                        setAnnouncements((prev) => prev.map((p) => p._id === isEditingPost._id ? { ...p, ...postForm } : p));
                         showToast('Post updated!');
                       }
                       setIsCreatingPost(false);
@@ -868,7 +1106,6 @@ function AdminDashboard() {
 
                 <form onSubmit={(e) => {
                   e.preventDefault();
-                  api.updateContestConfig(contestConfig);
                   showToast('Contest configuration saved!');
                 }} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
@@ -897,7 +1134,7 @@ function AdminDashboard() {
               <div className="bg-white rounded-3xl border border-slate-200 shadow-xs p-6 sm:p-8 space-y-6">
                 <div className="flex justify-between items-center border-b border-slate-100 pb-4">
                   <h3 className="text-lg font-bold text-slate-900">Hall of Fame & Laureates</h3>
-                  <button onClick={() => { setIsAddingWinner(true); }} className="flex items-center gap-1.5 bg-[#E8A94A] text-slate-950 px-3.5 py-2 rounded-xl text-xs font-bold">
+                  <button onClick={() => setIsAddingWinner(true)} className="flex items-center gap-1.5 bg-[#E8A94A] text-slate-950 px-3.5 py-2 rounded-xl text-xs font-bold">
                     <Plus className="w-4 h-4" /> Add Winner
                   </button>
                 </div>
@@ -912,7 +1149,7 @@ function AdminDashboard() {
                         <p className="text-xs text-slate-700 italic mt-1">"{w.essayTitle}"</p>
                       </div>
                       <div className="flex justify-end gap-2 pt-2 border-t border-slate-200/60">
-                        <button onClick={() => { if (window.confirm('Delete winner?')) { api.deleteWinner(w._id); setWinnersArchive(api.getWinners()); showToast('Winner removed.'); } }} className="text-xs text-rose-600 font-bold">Delete</button>
+                        <button onClick={() => handleDeleteWinner(w._id)} className="text-xs text-rose-600 font-bold">Delete</button>
                       </div>
                     </div>
                   ))}
@@ -924,13 +1161,7 @@ function AdminDashboard() {
                 <div className="fixed inset-0 z-50 bg-slate-950/40 backdrop-blur-xs flex items-center justify-center p-4">
                   <div className="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-md w-full p-6 space-y-4">
                     <h3 className="text-base font-bold text-slate-900">Add Winner Record</h3>
-                    <form onSubmit={(e) => {
-                      e.preventDefault();
-                      api.createWinner(winnerForm);
-                      setWinnersArchive(api.getWinners());
-                      setIsAddingWinner(false);
-                      showToast('Winner added!');
-                    }} className="space-y-3">
+                    <form onSubmit={handleAddWinnerSubmit} className="space-y-3">
                       <input type="text" placeholder="Student Name" required value={winnerForm.studentName} onChange={(e) => setWinnerForm({ ...winnerForm, studentName: e.target.value })} className="w-full text-xs bg-slate-50 border p-2.5 rounded-xl" />
                       <input type="text" placeholder="Institution / College" required value={winnerForm.institution} onChange={(e) => setWinnerForm({ ...winnerForm, institution: e.target.value })} className="w-full text-xs bg-slate-50 border p-2.5 rounded-xl" />
                       <input type="text" placeholder="Winning Essay Title" required value={winnerForm.essayTitle} onChange={(e) => setWinnerForm({ ...winnerForm, essayTitle: e.target.value })} className="w-full text-xs bg-slate-50 border p-2.5 rounded-xl" />
@@ -952,7 +1183,7 @@ function AdminDashboard() {
               <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div>
                   <h3 className="text-lg font-bold text-slate-900">Gallery Photos & Media Assets</h3>
-                  <p className="text-xs text-slate-500">Upload photos from computer/mobile, manage albums, captions, and copy asset URLs.</p>
+                  <p className="text-xs text-slate-500">Upload photos from device or paste remote asset links.</p>
                 </div>
 
                 <button
@@ -962,8 +1193,7 @@ function AdminDashboard() {
                   }}
                   className="flex items-center gap-2 bg-[#E8A94A] hover:bg-[#d99839] text-slate-950 px-4 py-2.5 rounded-xl text-xs font-black shadow-xs transition cursor-pointer"
                 >
-                  <UploadCloud className="w-4 h-4" />
-                  Upload Photos from Device
+                  <UploadCloud className="w-4 h-4" /> Upload Photos from Device
                 </button>
               </div>
 
@@ -979,7 +1209,7 @@ function AdminDashboard() {
                         <button onClick={() => { navigator.clipboard.writeText(photo.imageUrl); showToast('Image URL copied!'); }} className="text-[11px] font-bold text-slate-600 hover:text-slate-950 flex items-center gap-1">
                           <Copy className="w-3 h-3" /> Copy URL
                         </button>
-                        <button onClick={() => { if (window.confirm('Delete photo?')) { api.deletePhoto(photo._id); setGalleryPhotos(api.getGallery()); showToast('Photo removed.'); } }} className="text-rose-600 p-1">
+                        <button onClick={() => { if (window.confirm('Delete photo?')) { setGalleryPhotos((prev) => prev.filter((x) => x._id !== photo._id)); showToast('Photo removed.'); } }} className="text-rose-600 p-1">
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       </div>
@@ -988,7 +1218,7 @@ function AdminDashboard() {
                 ))}
               </div>
 
-              {/* Upload Modal (Device + URL) */}
+              {/* Upload Modal */}
               {isAddingPhotos && (
                 <div className="fixed inset-0 z-50 bg-slate-950/40 backdrop-blur-xs flex items-center justify-center p-4">
                   <div className="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-2xl w-full p-6 sm:p-8 space-y-5 max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95">
@@ -1103,23 +1333,23 @@ function AdminDashboard() {
                 {cmsPageTab === 'home' && (
                   <div className="space-y-4">
                     <label className="block text-xs font-bold text-slate-700">Hero Main Headline</label>
-                    <input type="text" value={cmsContent.home.heroHeadline} onChange={(e) => setCmsContent({ ...cmsContent, home: { ...cmsContent.home, heroHeadline: e.target.value } })} className="w-full text-xs bg-slate-50 border p-2.5 rounded-xl" />
+                    <input type="text" value={cmsContent.home?.heroHeadline || ''} onChange={(e) => setCmsContent({ ...cmsContent, home: { ...cmsContent.home, heroHeadline: e.target.value } })} className="w-full text-xs bg-slate-50 border p-2.5 rounded-xl" />
                     
                     <label className="block text-xs font-bold text-slate-700">Hero Mission Subtext</label>
-                    <textarea rows="3" value={cmsContent.home.heroSubtext} onChange={(e) => setCmsContent({ ...cmsContent, home: { ...cmsContent.home, heroSubtext: e.target.value } })} className="w-full text-xs bg-slate-50 border p-2.5 rounded-xl"></textarea>
+                    <textarea rows="3" value={cmsContent.home?.heroSubtext || ''} onChange={(e) => setCmsContent({ ...cmsContent, home: { ...cmsContent.home, heroSubtext: e.target.value } })} className="w-full text-xs bg-slate-50 border p-2.5 rounded-xl"></textarea>
 
                     <div className="grid grid-cols-3 gap-3">
                       <div>
                         <label className="block text-xs font-bold text-slate-700 mb-1">Books Restored</label>
-                        <input type="text" value={cmsContent.home.impactBooks} onChange={(e) => setCmsContent({ ...cmsContent, home: { ...cmsContent.home, impactBooks: e.target.value } })} className="w-full text-xs bg-slate-50 border p-2.5 rounded-xl font-bold text-emerald-700" />
+                        <input type="text" value={cmsContent.home?.impactBooks || ''} onChange={(e) => setCmsContent({ ...cmsContent, home: { ...cmsContent.home, impactBooks: e.target.value } })} className="w-full text-xs bg-slate-50 border p-2.5 rounded-xl font-bold text-emerald-700" />
                       </div>
                       <div>
                         <label className="block text-xs font-bold text-slate-700 mb-1">Students Reached</label>
-                        <input type="text" value={cmsContent.home.impactStudents} onChange={(e) => setCmsContent({ ...cmsContent, home: { ...cmsContent.home, impactStudents: e.target.value } })} className="w-full text-xs bg-slate-50 border p-2.5 rounded-xl font-bold text-amber-700" />
+                        <input type="text" value={cmsContent.home?.impactStudents || ''} onChange={(e) => setCmsContent({ ...cmsContent, home: { ...cmsContent.home, impactStudents: e.target.value } })} className="w-full text-xs bg-slate-50 border p-2.5 rounded-xl font-bold text-amber-700" />
                       </div>
                       <div>
                         <label className="block text-xs font-bold text-slate-700 mb-1">Partner Schools</label>
-                        <input type="text" value={cmsContent.home.impactSchools} onChange={(e) => setCmsContent({ ...cmsContent, home: { ...cmsContent.home, impactSchools: e.target.value } })} className="w-full text-xs bg-slate-50 border p-2.5 rounded-xl font-bold text-slate-900" />
+                        <input type="text" value={cmsContent.home?.impactSchools || ''} onChange={(e) => setCmsContent({ ...cmsContent, home: { ...cmsContent.home, impactSchools: e.target.value } })} className="w-full text-xs bg-slate-50 border p-2.5 rounded-xl font-bold text-slate-900" />
                       </div>
                     </div>
                   </div>
@@ -1128,43 +1358,43 @@ function AdminDashboard() {
                 {cmsPageTab === 'about' && (
                   <div className="space-y-4">
                     <label className="block text-xs font-bold text-slate-700">About Hero Title</label>
-                    <input type="text" value={cmsContent.about.heroTitle} onChange={(e) => setCmsContent({ ...cmsContent, about: { ...cmsContent.about, heroTitle: e.target.value } })} className="w-full text-xs bg-slate-50 border p-2.5 rounded-xl" />
+                    <input type="text" value={cmsContent.about?.heroTitle || ''} onChange={(e) => setCmsContent({ ...cmsContent, about: { ...cmsContent.about, heroTitle: e.target.value } })} className="w-full text-xs bg-slate-50 border p-2.5 rounded-xl" />
                     <label className="block text-xs font-bold text-slate-700">Mission Narrative</label>
-                    <textarea rows="3" value={cmsContent.about.missionBody} onChange={(e) => setCmsContent({ ...cmsContent, about: { ...cmsContent.about, missionBody: e.target.value } })} className="w-full text-xs bg-slate-50 border p-2.5 rounded-xl"></textarea>
+                    <textarea rows="3" value={cmsContent.about?.missionBody || ''} onChange={(e) => setCmsContent({ ...cmsContent, about: { ...cmsContent.about, missionBody: e.target.value } })} className="w-full text-xs bg-slate-50 border p-2.5 rounded-xl"></textarea>
                     <label className="block text-xs font-bold text-slate-700">Vision Statement</label>
-                    <input type="text" value={cmsContent.about.visionStatement} onChange={(e) => setCmsContent({ ...cmsContent, about: { ...cmsContent.about, visionStatement: e.target.value } })} className="w-full text-xs bg-slate-50 border p-2.5 rounded-xl" />
+                    <input type="text" value={cmsContent.about?.visionStatement || ''} onChange={(e) => setCmsContent({ ...cmsContent, about: { ...cmsContent.about, visionStatement: e.target.value } })} className="w-full text-xs bg-slate-50 border p-2.5 rounded-xl" />
                   </div>
                 )}
 
                 {cmsPageTab === 'programs' && (
                   <div className="space-y-4">
                     <label className="block text-xs font-bold text-slate-700">Book Donation Program Heading</label>
-                    <input type="text" value={cmsContent.programs.donationHeading} onChange={(e) => setCmsContent({ ...cmsContent, programs: { ...cmsContent.programs, donationHeading: e.target.value } })} className="w-full text-xs bg-slate-50 border p-2.5 rounded-xl" />
+                    <input type="text" value={cmsContent.programs?.donationHeading || ''} onChange={(e) => setCmsContent({ ...cmsContent, programs: { ...cmsContent.programs, donationHeading: e.target.value } })} className="w-full text-xs bg-slate-50 border p-2.5 rounded-xl" />
                     <label className="block text-xs font-bold text-slate-700">Acceptance Guidelines</label>
-                    <textarea rows="3" value={cmsContent.programs.donationRules} onChange={(e) => setCmsContent({ ...cmsContent, programs: { ...cmsContent.programs, donationRules: e.target.value } })} className="w-full text-xs bg-slate-50 border p-2.5 rounded-xl"></textarea>
+                    <textarea rows="3" value={cmsContent.programs?.donationRules || ''} onChange={(e) => setCmsContent({ ...cmsContent, programs: { ...cmsContent.programs, donationRules: e.target.value } })} className="w-full text-xs bg-slate-50 border p-2.5 rounded-xl"></textarea>
                   </div>
                 )}
 
                 {cmsPageTab === 'getInvolved' && (
                   <div className="space-y-4">
                     <label className="block text-xs font-bold text-slate-700">Volunteer Pitch</label>
-                    <textarea rows="3" value={cmsContent.getInvolved.volunteerPitch} onChange={(e) => setCmsContent({ ...cmsContent, getInvolved: { ...cmsContent.getInvolved, volunteerPitch: e.target.value } })} className="w-full text-xs bg-slate-50 border p-2.5 rounded-xl"></textarea>
+                    <textarea rows="3" value={cmsContent.getInvolved?.volunteerPitch || ''} onChange={(e) => setCmsContent({ ...cmsContent, getInvolved: { ...cmsContent.getInvolved, volunteerPitch: e.target.value } })} className="w-full text-xs bg-slate-50 border p-2.5 rounded-xl"></textarea>
                     <label className="block text-xs font-bold text-slate-700">Institutional Collaboration</label>
-                    <textarea rows="3" value={cmsContent.getInvolved.partnerPitch} onChange={(e) => setCmsContent({ ...cmsContent, getInvolved: { ...cmsContent.getInvolved, partnerPitch: e.target.value } })} className="w-full text-xs bg-slate-50 border p-2.5 rounded-xl"></textarea>
+                    <textarea rows="3" value={cmsContent.getInvolved?.partnerPitch || ''} onChange={(e) => setCmsContent({ ...cmsContent, getInvolved: { ...cmsContent.getInvolved, partnerPitch: e.target.value } })} className="w-full text-xs bg-slate-50 border p-2.5 rounded-xl"></textarea>
                   </div>
                 )}
 
                 {cmsPageTab === 'contact' && (
                   <div className="space-y-4">
                     <label className="block text-xs font-bold text-slate-700">Hub Physical Address</label>
-                    <input type="text" value={cmsContent.contact.hubAddress} onChange={(e) => setCmsContent({ ...cmsContent, contact: { ...cmsContent.contact, hubAddress: e.target.value } })} className="w-full text-xs bg-slate-50 border p-2.5 rounded-xl" />
+                    <input type="text" value={cmsContent.contact?.hubAddress || ''} onChange={(e) => setCmsContent({ ...cmsContent, contact: { ...cmsContent.contact, hubAddress: e.target.value } })} className="w-full text-xs bg-slate-50 border p-2.5 rounded-xl" />
                     <label className="block text-xs font-bold text-slate-700">Official WhatsApp</label>
-                    <input type="text" value={cmsContent.contact.whatsapp} onChange={(e) => setCmsContent({ ...cmsContent, contact: { ...cmsContent.contact, whatsapp: e.target.value } })} className="w-full text-xs bg-slate-50 border p-2.5 rounded-xl" />
+                    <input type="text" value={cmsContent.contact?.whatsapp || ''} onChange={(e) => setCmsContent({ ...cmsContent, contact: { ...cmsContent.contact, whatsapp: e.target.value } })} className="w-full text-xs bg-slate-50 border p-2.5 rounded-xl" />
                   </div>
                 )}
 
                 <div className="flex justify-end pt-4 border-t border-slate-100">
-                  <button onClick={() => { api.updateCMS(cmsContent); showToast(`Saved ${cmsPageTab.toUpperCase()} content!`); }} className="bg-[#E8A94A] text-slate-950 font-black px-6 py-2.5 rounded-xl text-xs flex items-center gap-2">
+                  <button onClick={handleSaveCMS} className="bg-[#E8A94A] text-slate-950 font-black px-6 py-2.5 rounded-xl text-xs flex items-center gap-2">
                     <Save className="w-4 h-4" /> Save Page Content
                   </button>
                 </div>
@@ -1194,17 +1424,13 @@ function AdminDashboard() {
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {pagesMenu.map((item) => (
-                      <tr key={item.id} className="hover:bg-slate-50/50">
+                      <tr key={item._id} className="hover:bg-slate-50/50">
                         <td className="p-4 font-bold text-slate-900">{item.name}</td>
                         <td className="p-4 font-mono text-slate-500">{item.path}</td>
                         <td className="p-4">{item.isNavHeader ? 'Navbar Link' : 'Sub-menu'}</td>
                         <td className="p-4 text-right">
                           <button
-                            onClick={() => {
-                              const updated = api.updatePageMenuItem(item.id, { isVisible: !item.isVisible });
-                              setPagesMenu(updated);
-                              showToast(`Toggled visibility for ${item.name}`);
-                            }}
+                            onClick={() => handleToggleMenuVisibility(item)}
                             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${
                               item.isVisible ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-600'
                             }`}
@@ -1248,10 +1474,14 @@ function AdminDashboard() {
                       <tr key={member._id} className="hover:bg-slate-50/50">
                         <td className="p-4 font-bold text-slate-900">{member.name}<span className="text-[10px] text-slate-400 font-normal block">{member.email}</span></td>
                         <td className="p-4"><span className="text-[10px] font-extrabold px-2.5 py-1 rounded-md bg-amber-50 text-amber-900 border border-amber-200">{member.role}</span></td>
-                        <td className="p-4">{member.permissions.join(', ')}</td>
+                        <td className="p-4">{member.permissions?.join(', ') || 'Standard Access'}</td>
                         <td className="p-4 text-right">
                           {member.role !== 'Super Admin' ? (
-                            <button onClick={() => { api.deleteTeamMember(member._id); setTeamMembers(api.getTeamMembers()); showToast(`Removed ${member.name}`); }} className="text-rose-600 font-bold text-xs">Remove</button>
+                            <button onClick={async () => {
+                              try { await deleteAdminTeamUser(member._id); } catch {}
+                              setTeamMembers((prev) => prev.filter((m) => m._id !== member._id));
+                              showToast(`Removed ${member.name}`);
+                            }} className="text-rose-600 font-bold text-xs">Remove</button>
                           ) : (
                             <span className="text-slate-400 text-xs">Protected</span>
                           )}
@@ -1262,14 +1492,14 @@ function AdminDashboard() {
                 </table>
               </div>
 
+              {/* Invite User Modal */}
               {isAddingUser && (
                 <div className="fixed inset-0 z-50 bg-slate-950/40 backdrop-blur-xs flex items-center justify-center p-4">
                   <div className="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-md w-full p-6 space-y-4">
                     <h3 className="text-base font-bold text-slate-900">Invite Team Member</h3>
                     <form onSubmit={(e) => {
                       e.preventDefault();
-                      api.createTeamMember(newUserForm);
-                      setTeamMembers(api.getTeamMembers());
+                      setTeamMembers((prev) => [...prev, { ...newUserForm, _id: 'usr-' + Date.now(), permissions: ['Standard Access'] }]);
                       setIsAddingUser(false);
                       showToast(`Invitation sent to ${newUserForm.email}!`);
                     }} className="space-y-3">

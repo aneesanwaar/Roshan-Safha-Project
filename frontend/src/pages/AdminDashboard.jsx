@@ -297,6 +297,45 @@ function AdminDashboard() {
   const bookModel = aiServerModels?.books || calculatedBooks;
   const participationModel = aiServerModels?.participation || calculatedParticipation;
 
+  // Fully Dynamic AI Decision Support Recommendations Engine
+  const getRecommendation = () => {
+    const booksForecast = bookModel?.forecast_next ?? bookModel?.forecastNext ?? 0;
+    const participationForecast = participationModel?.forecast_next ?? participationModel?.forecastNext ?? 0;
+    const trend = bookModel?.trend || 'Steady Growth';
+
+    if (booksForecast >= 50) {
+      return {
+        urgency: 'High Intake Surge',
+        badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-300',
+        text: `Surge Alert: Projected intake is high (~${booksForecast} books). Recommend scheduling dedicated volunteer sorting shifts this weekend and contacting local distribution centers to avoid storage bottlenecks.`
+      };
+    }
+
+    if (booksForecast >= 20) {
+      return {
+        urgency: 'Steady Operations',
+        badgeColor: 'bg-amber-100 text-amber-900 border-amber-300',
+        text: `Healthy Trajectory: Collection volume shows ${trend} (~${booksForecast} books projected). Standard weekly drop-box collections and existing shelf space are sufficient.`
+      };
+    }
+
+    if (participationForecast > 10) {
+      return {
+        urgency: 'Contest Inflow Priority',
+        badgeColor: 'bg-blue-100 text-blue-900 border-blue-300',
+        text: `High Contest Engagement: Student submissions are accelerating (~${participationForecast} projected). Prioritize evaluators to review pending essays in the roster.`
+      };
+    }
+
+    return {
+      urgency: 'Outreach Opportunity',
+      badgeColor: 'bg-slate-100 text-slate-800 border-slate-300',
+      text: `Pace is currently moderate (~${booksForecast} books projected). Recommend launching an institutional book drive announcement or social awareness campaign to increase community donations.`
+    };
+  };
+
+  const advice = getRecommendation();
+
   const showToast = (msg) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(''), 2500);
@@ -854,54 +893,121 @@ function AdminDashboard() {
             </div>
           )}
 
-          {/* 2. AI TREND ANALYTICS */}
+          {/* 2. AI TREND ANALYTICS - EXECUTIVE & PLAIN LANGUAGE */}
           {currentSection === 'analytics' && (
             <div className="space-y-6">
-              <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white rounded-3xl p-6 sm:p-8 border border-slate-700 shadow-md space-y-3">
+              {/* Header Banner */}
+              <div className="bg-linear-to-r from-slate-900 via-slate-800 to-slate-900 text-white rounded-3xl p-6 sm:p-8 border border-slate-700 shadow-md space-y-3">
                 <div className="inline-flex items-center gap-2 bg-[#E8A94A]/20 text-[#E8A94A] border border-[#E8A94A]/30 text-[10px] font-extrabold px-3 py-1 rounded-full">
                   <Sparkles className="w-3.5 h-3.5" />
-                  <span>Time-Series Linear Regression Modeling</span>
+                  <span>AI Decision-Support System</span>
                 </div>
                 <h2 className="text-xl sm:text-2xl font-black text-white">
-                  Donation Volume & Youth Participation Intelligence
+                  Community Growth & Demand Forecast
                 </h2>
-                <p className="text-xs text-slate-300 max-w-3xl leading-relaxed">
-                  First-order ordinary least-squares regression applied to historical intake points to project platform capacity.
+                <p className="text-xs text-slate-300 max-w-2xl leading-relaxed">
+                  Real-time projections calculated from recent donation and essay intake records to assist with inventory planning and outreach.
                 </p>
               </div>
 
+              {/* Executive Plain-English Metric Cards */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                
+                {/* 1. Book Donation Growth */}
                 <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-xs space-y-2">
-                  <span className="text-xs font-bold text-slate-400">Intake Velocity (Slope)</span>
-                  <div className="text-2xl font-black text-slate-900">+{bookModel.slope} <span className="text-xs font-bold text-slate-400">books/mo</span></div>
-                  <p className="text-[11px] text-emerald-700 font-bold">{bookModel.trend} • {bookModel.growthRate}% 6-month surge</p>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-400">Monthly Book Inflow</span>
+                    <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800">
+                      {bookModel?.trend || 'Steady'}
+                    </span>
+                  </div>
+                  <div className="text-2xl font-black text-slate-900">
+                    +{Math.round(bookModel?.slope || 0)} <span className="text-xs font-normal text-slate-500">books / mo</span>
+                  </div>
+                  <p className="text-[11px] text-slate-600">
+                    Gaining approx. <strong className="text-emerald-700">{Math.max(1, Math.round(bookModel?.slope || 0))} more books</strong> every month compared to the previous month.
+                  </p>
                 </div>
+
+                {/* 2. Expected Next Month */}
                 <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-xs space-y-2">
-                  <span className="text-xs font-bold text-slate-400">Next Month Forecast</span>
-                  <div className="text-2xl font-black text-[#E8A94A]">~{bookModel.forecastNext} Books</div>
-                  <p className="text-[11px] text-slate-500">Pledge intake trajectory (y = {bookModel.slope}x + {bookModel.intercept}).</p>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-400">Next Month's Target</span>
+                    <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-amber-100 text-amber-900">
+                      Projected
+                    </span>
+                  </div>
+                  <div className="text-2xl font-black text-[#E8A94A]">
+                    ~{bookModel?.forecast_next ?? bookModel?.forecastNext ?? 0} <span className="text-xs font-normal text-slate-500">Books</span>
+                  </div>
+                  <p className="text-[11px] text-slate-600">
+                    Estimated books to prepare shelf capacity and volunteer sorting for next month.
+                  </p>
                 </div>
+
+                {/* 3. Student Participation Trend */}
                 <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-xs space-y-2">
-                  <span className="text-xs font-bold text-slate-400">Participant Momentum</span>
-                  <div className="text-2xl font-black text-slate-900">+{participationModel.slope} <span className="text-xs font-bold text-slate-400">entries/mo</span></div>
-                  <p className="text-[11px] text-blue-700 font-bold">~{participationModel.forecastNext} projected next entries</p>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-400">Contest Participation</span>
+                    <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-blue-100 text-blue-800">
+                      Youth Reach
+                    </span>
+                  </div>
+                  <div className="text-2xl font-black text-slate-900">
+                    ~{participationModel?.forecast_next ?? participationModel?.forecastNext ?? 0} <span className="text-xs font-normal text-slate-500">Submissions</span>
+                  </div>
+                  <p className="text-[11px] text-slate-600">
+                    Projected submissions for active essay competitions based on current signup pace.
+                  </p>
                 </div>
+
+                {/* 4. Operations Health */}
                 <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-xs space-y-2">
-                  <span className="text-xs font-bold text-slate-400">Seasonal Peak Window</span>
-                  <div className="text-2xl font-black text-slate-900">Summer Drives</div>
-                  <p className="text-[11px] text-slate-500">Accelerated participation during regional holiday cycles.</p>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-400">Community Engagement</span>
+                    <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-purple-100 text-purple-800">
+                      Overall Health
+                    </span>
+                  </div>
+                  <div className="text-2xl font-black text-slate-900">
+                    {bookModel?.growth_rate ?? bookModel?.growthRate ?? 0}% <span className="text-xs font-normal text-slate-500">Growth</span>
+                  </div>
+                  <p className="text-[11px] text-slate-600">
+                    Total volume increase across Muzaffarabad over the past 6-month cycle.
+                  </p>
                 </div>
+
               </div>
 
+              {/* Dynamic Plain Language Action Recommendation Box */}
+              <div className="bg-amber-50/70 border border-amber-200/80 rounded-3xl p-5 space-y-2">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-extrabold uppercase tracking-wider text-amber-950 flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-[#E8A94A]" /> AI Management Recommendation
+                  </h4>
+                  <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${advice.badgeColor}`}>
+                    {advice.urgency}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-700 leading-relaxed">
+                  {advice.text}
+                </p>
+              </div>
+
+              {/* Chart Visualization */}
               <div className="bg-white rounded-3xl border border-slate-200 shadow-xs p-6 sm:p-8 space-y-6">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
                   <div>
-                    <h3 className="text-base font-bold text-slate-900">Time-Series Trajectory</h3>
-                    <p className="text-xs text-slate-500">Comparing physical book pledges vs. student contest entries.</p>
+                    <h3 className="text-base font-bold text-slate-900">6-Month Intake History</h3>
+                    <p className="text-xs text-slate-500">Track book donations alongside contest registrations.</p>
                   </div>
                   <div className="flex items-center gap-5 text-xs font-bold">
-                    <div className="flex items-center gap-1.5 text-emerald-800"><span className="w-3 h-3 rounded-full bg-emerald-600"></span> Book Donations</div>
-                    <div className="flex items-center gap-1.5 text-[#E8A94A]"><span className="w-3 h-3 rounded-full bg-[#E8A94A]"></span> Contest Registrations</div>
+                    <div className="flex items-center gap-1.5 text-emerald-800">
+                      <span className="w-3 h-3 rounded-full bg-emerald-600"></span> Book Donations
+                    </div>
+                    <div className="flex items-center gap-1.5 text-[#E8A94A]">
+                      <span className="w-3 h-3 rounded-full bg-[#E8A94A]"></span> Contest Registrations
+                    </div>
                   </div>
                 </div>
 

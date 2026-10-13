@@ -1,14 +1,54 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ChevronDown, Menu, X, BookOpen } from 'lucide-react';
 import logoImg from '../../assets/logo.png';
+import { getPublicMenuItems } from "../../services/api";
+
+const DEFAULT_NAV_ITEMS = [
+  { _id: 'p-1', name: 'Home', path: '/', isVisible: true },
+  { _id: 'p-2', name: 'About Us', path: '/about', isVisible: true },
+  { _id: 'p-3', name: 'Programs', path: '/programs', isVisible: true, isDropdown: true },
+  { _id: 'p-4', name: 'Gallery', path: '/gallery', isVisible: true },
+  { _id: 'p-5', name: 'Announcements', path: '/announcements', isVisible: true },
+  { _id: 'p-6', name: 'Get Involved', path: '/get-involved', isVisible: true },
+  { _id: 'p-7', name: 'Contact Us', path: '/contact', isVisible: true }
+];
 
 function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [navItems, setNavItems] = useState(DEFAULT_NAV_ITEMS);
   const location = useLocation();
 
   const isActive = (path) => location.pathname === path;
+
+  // Hydrate live menu items from MongoDB
+  useEffect(() => {
+    const fetchMenu = async () => {
+      try {
+        const res = await getPublicMenuItems();
+        const serverItems = res.data?.data || res.data || [];
+        if (Array.isArray(serverItems) && serverItems.length > 0) {
+          // Merge server items with default structure to preserve routes & icons
+          const activeMap = new Map(serverItems.map((item) => [item.path || item.name, item.isVisible]));
+          
+          setNavItems((prev) =>
+            prev.map((item) => {
+              const serverVisible = activeMap.get(item.path) ?? activeMap.get(item.name);
+              return serverVisible !== undefined ? { ...item, isVisible: serverVisible } : item;
+            })
+          );
+        }
+      } catch {
+        // Retain default active items on network fallback
+      }
+    };
+
+    fetchMenu();
+  }, [location.pathname]);
+
+  // Only render active/visible items
+  const visibleNavItems = navItems.filter((item) => item.isVisible !== false);
 
   return (
     <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-xs">
@@ -31,120 +71,73 @@ function Navbar() {
 
         {/* Desktop Navigation */}
         <nav className="hidden lg:flex items-center gap-6 xl:gap-8 text-sm font-semibold text-slate-700">
-          <Link 
-            to="/" 
-            className={`transition py-1 border-b-2 ${
-              isActive('/') 
-                ? 'border-[#E8A94A] text-slate-900 font-bold' 
-                : 'border-transparent hover:text-slate-900 hover:border-slate-300'
-            }`}
-          >
-            Home
-          </Link>
-          
-          <Link 
-            to="/about" 
-            className={`transition py-1 border-b-2 ${
-              isActive('/about') 
-                ? 'border-[#E8A94A] text-slate-900 font-bold' 
-                : 'border-transparent hover:text-slate-900 hover:border-slate-300'
-            }`}
-          >
-            About Us
-          </Link>
+          {visibleNavItems.map((item) => {
+            if (item.isDropdown) {
+              return (
+                <div key={item._id} className="relative" onMouseLeave={() => setDropdownOpen(false)}>
+                  <button 
+                    onMouseEnter={() => setDropdownOpen(true)}
+                    onClick={() => setDropdownOpen(!dropdownOpen)}
+                    className="flex items-center gap-1 hover:text-slate-900 transition py-2 cursor-pointer"
+                  >
+                    Programs <ChevronDown className="w-4 h-4 text-slate-400" />
+                  </button>
 
-          {/* Programs Dropdown */}
-          <div className="relative" onMouseLeave={() => setDropdownOpen(false)}>
-            <button 
-              onMouseEnter={() => setDropdownOpen(true)}
-              onClick={() => setDropdownOpen(!dropdownOpen)}
-              className="flex items-center gap-1 hover:text-slate-900 transition py-2 cursor-pointer"
-            >
-              Programs <ChevronDown className="w-4 h-4 text-slate-400" />
-            </button>
+                  {dropdownOpen && (
+                    <div 
+                      className="absolute top-full left-0 w-64 bg-white border border-slate-200 rounded-2xl shadow-xl py-3 px-2 space-y-1 animate-in fade-in slide-in-from-top-2"
+                    >
+                      <Link 
+                        to="/programs/donate-books" 
+                        onClick={() => setDropdownOpen(false)} 
+                        className="block px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-amber-50 hover:text-amber-900 rounded-xl transition"
+                      >
+                        🎁 Donate Books (Donor Portal)
+                      </Link>
+                      <Link 
+                        to="/programs/book-catalog" 
+                        onClick={() => setDropdownOpen(false)} 
+                        className="block px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-amber-50 hover:text-amber-900 rounded-xl transition"
+                      >
+                        📚 Available Books Catalog
+                      </Link>
+                      <Link 
+                        to="/programs/essays" 
+                        onClick={() => setDropdownOpen(false)} 
+                        className="block px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-amber-50 hover:text-amber-900 rounded-xl transition"
+                      >
+                        ✍️ Annual Essay Contests & Archive
+                      </Link>
+                      <Link 
+                        to="/programs/summer-circle" 
+                        onClick={() => setDropdownOpen(false)} 
+                        className="block px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-amber-50 hover:text-amber-900 rounded-xl transition"
+                      >
+                        🌱 SDGs Summer Circle
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              );
+            }
 
-            {dropdownOpen && (
-              <div 
-                className="absolute top-full left-0 w-64 bg-white border border-slate-200 rounded-2xl shadow-xl py-3 px-2 space-y-1 animate-in fade-in slide-in-from-top-2"
+            return (
+              <Link 
+                key={item._id}
+                to={item.path} 
+                className={`transition py-1 border-b-2 ${
+                  isActive(item.path) 
+                    ? 'border-[#E8A94A] text-slate-900 font-bold' 
+                    : 'border-transparent hover:text-slate-900 hover:border-slate-300'
+                }`}
               >
-                <Link 
-                  to="/programs/donate-books" 
-                  onClick={() => setDropdownOpen(false)} 
-                  className="block px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-amber-50 hover:text-amber-900 rounded-xl transition"
-                >
-                  🎁 Donate Books (Donor Portal)
-                </Link>
-                <Link 
-                  to="/programs/book-catalog" 
-                  onClick={() => setDropdownOpen(false)} 
-                  className="block px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-amber-50 hover:text-amber-900 rounded-xl transition"
-                >
-                  📚 Available Books Catalog
-                </Link>
-                <Link 
-                  to="/programs/essays" 
-                  onClick={() => setDropdownOpen(false)} 
-                  className="block px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-amber-50 hover:text-amber-900 rounded-xl transition"
-                >
-                  ✍️ Annual Essay Contests & Archive
-                </Link>
-                <Link 
-                  to="/programs/summer-circle" 
-                  onClick={() => setDropdownOpen(false)} 
-                  className="block px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-amber-50 hover:text-amber-900 rounded-xl transition"
-                >
-                  🌱 SDGs Summer Circle
-                </Link>
-              </div>
-            )}
-          </div>
-
-          <Link 
-            to="/gallery" 
-            className={`transition py-1 border-b-2 ${
-              isActive('/gallery') 
-                ? 'border-[#E8A94A] text-slate-900 font-bold' 
-                : 'border-transparent hover:text-slate-900 hover:border-slate-300'
-            }`}
-          >
-            Gallery
-          </Link>
-
-          <Link 
-            to="/announcements" 
-            className={`transition py-1 border-b-2 ${
-              isActive('/announcements') 
-                ? 'border-[#E8A94A] text-slate-900 font-bold' 
-                : 'border-transparent hover:text-slate-900 hover:border-slate-300'
-            }`}
-          >
-            Announcements
-          </Link>
-
-          <Link 
-            to="/get-involved" 
-            className={`transition py-1 border-b-2 ${
-              isActive('/get-involved') 
-                ? 'border-[#E8A94A] text-slate-900 font-bold' 
-                : 'border-transparent hover:text-slate-900 hover:border-slate-300'
-            }`}
-          >
-            Get Involved
-          </Link>
-
-          <Link 
-            to="/contact" 
-            className={`transition py-1 border-b-2 ${
-              isActive('/contact') 
-                ? 'border-[#E8A94A] text-slate-900 font-bold' 
-                : 'border-transparent hover:text-slate-900 hover:border-slate-300'
-            }`}
-          >
-            Contact Us
-          </Link>
+                {item.name}
+              </Link>
+            );
+          })}
         </nav>
 
-        {/* Action CTA Button with #E8A94A brand color */}
+        {/* Action CTA Button */}
         <div className="hidden lg:flex items-center">
           <Link 
             to="/programs/donate-books" 
@@ -168,24 +161,36 @@ function Navbar() {
 
       {/* Mobile Drawer */}
       {mobileOpen && (
-        <div className="lg:hidden bg-white border-b border-slate-200 px-6 py-5 space-y-3 text-sm font-semibold text-slate-700">
-          <Link to="/" onClick={() => setMobileOpen(false)} className="block py-1">Home</Link>
-          <Link to="/about" onClick={() => setMobileOpen(false)} className="block py-1">About Us</Link>
-          <div className="pl-3 border-l-2 border-[#E8A94A] space-y-2 py-1 text-xs text-slate-600">
-            <Link to="/programs/donate-books" onClick={() => setMobileOpen(false)} className="block">🎁 Donate Books (Donor Portal)</Link>
-            <Link to="/programs/book-catalog" onClick={() => setMobileOpen(false)} className="block">📚 Available Books Catalog</Link>
-            <Link to="/programs/essays" onClick={() => setMobileOpen(false)} className="block">✍️ Essay Contests</Link>
-            <Link to="/programs/summer-circle" onClick={() => setMobileOpen(false)} className="block">🌱 SDGs Summer Circle</Link>
-          </div>
-          <Link to="/gallery" onClick={() => setMobileOpen(false)} className="block py-1">Gallery</Link>
-          <Link to="/announcements" onClick={() => setMobileOpen(false)} className="block py-1">Announcements</Link>
-          <Link to="/get-involved" onClick={() => setMobileOpen(false)} className="block py-1">Get Involved</Link>
-          <Link to="/contact" onClick={() => setMobileOpen(false)} className="block py-1">Contact Us</Link>
+        <div className="lg:hidden bg-white border-b border-slate-200 px-6 py-5 space-y-3 text-sm font-semibold text-slate-700 animate-in slide-in-from-top-2">
+          {visibleNavItems.map((item) => {
+            if (item.isDropdown) {
+              return (
+                <div key={item._id} className="pl-3 border-l-2 border-[#E8A94A] space-y-2 py-1 text-xs text-slate-600">
+                  <span className="font-bold text-slate-800 block text-xs">Programs:</span>
+                  <Link to="/programs/donate-books" onClick={() => setMobileOpen(false)} className="block">🎁 Donate Books (Donor Portal)</Link>
+                  <Link to="/programs/book-catalog" onClick={() => setMobileOpen(false)} className="block">📚 Available Books Catalog</Link>
+                  <Link to="/programs/essays" onClick={() => setMobileOpen(false)} className="block">✍️ Essay Contests</Link>
+                  <Link to="/programs/summer-circle" onClick={() => setMobileOpen(false)} className="block">🌱 SDGs Summer Circle</Link>
+                </div>
+              );
+            }
+
+            return (
+              <Link 
+                key={item._id} 
+                to={item.path} 
+                onClick={() => setMobileOpen(false)} 
+                className="block py-1 hover:text-[#E8A94A]"
+              >
+                {item.name}
+              </Link>
+            );
+          })}
           
           <div className="pt-2">
             <Link 
               to="/programs/donate-books" 
-              onClick={() => setMobileOpen(false)}
+              onClick={() => setMobileOpen(false)} 
               className="flex items-center justify-center gap-2 bg-[#E8A94A] text-slate-950 px-4 py-2.5 rounded-xl text-xs font-extrabold w-full"
             >
               <BookOpen className="w-4 h-4" />

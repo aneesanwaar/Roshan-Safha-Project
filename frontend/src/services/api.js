@@ -73,6 +73,12 @@ export const deleteAdminWinner = (id) => API.delete(`/admin/winners/${id}`);
 export const getAdminMenuItems = () => API.get('/admin/menu');
 export const updateAdminMenuItem = (id, data) => API.put(`/admin/menu/${id}`, data);
 
+// Navigation Menu
+export const getPublicMenuItems = () => API.get('/admin/menu');
+
+// Public CMS content fetcher
+export const getPublicPageContent = (page) => API.get(`/admin/cms/${page}`);
+
 // User & Role Management
 export const getAdminTeamUsers = () => API.get('/admin/users');
 export const deleteAdminTeamUser = (id) => API.delete(`/admin/users/${id}`);

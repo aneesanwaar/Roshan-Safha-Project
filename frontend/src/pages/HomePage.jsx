@@ -1,10 +1,40 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { BookOpen, Trophy, Users, Sparkles, ArrowRight, BookCheck } from 'lucide-react';
+import { getPublicPageContent } from '../services/api';
+
+const DEFAULT_HOME_CONTENT = {
+  heroHeadline: 'Second Chances for Everyone & Everything',
+  heroSubtext: 'Roshan Safha is dedicated to restoring books, igniting creative minds through essay competitions, and driving community literacy across Muzaffarabad and beyond.',
+  impactBooks: '1,450+',
+  impactStudents: '3,800+',
+  impactSchools: '52+'
+};
 
 function HomePage() {
+  const [content, setContent] = useState(DEFAULT_HOME_CONTENT);
+
+  // Fetch live CMS content from MongoDB on page load
+  useEffect(() => {
+    const fetchCmsData = async () => {
+      try {
+        const res = await getPublicPageContent('home');
+        if (res.data?.success && res.data?.content && Object.keys(res.data.content).length > 0) {
+          setContent((prev) => ({
+            ...prev,
+            ...res.data.content
+          }));
+        }
+      } catch (err) {
+        console.warn('Using default Home CMS content fallback');
+      }
+    };
+
+    fetchCmsData();
+  }, []);
+
   return (
-    <div className="min-h-screen relative overflow-hidden space-y-16 sm:space-y-24 pb-20">
+    <div className="min-h-screen relative overflow-hidden space-y-16 sm:space-y-24 pb-20 font-sans">
       
       {/* 1. Ambient Green Glow Top Shadow */}
       <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
@@ -20,15 +50,14 @@ function HomePage() {
           <span>Empowering Youth & Literacy in Azad Kashmir</span>
         </div>
 
-        {/* Main Headline */}
-        <h1 className="text-4xl sm:text-6xl font-black tracking-tight text-slate-950 leading-tight">
-          Second Chances for <br className="hidden sm:inline" />
-          <span className="text-emerald-700">Everyone & Everything</span>
+        {/* Dynamic Main Headline */}
+        <h1 className="text-4xl sm:text-6xl font-black tracking-tight text-slate-950 leading-tight max-w-4xl mx-auto">
+          {content.heroHeadline}
         </h1>
 
-        {/* Subtext Quote */}
+        {/* Dynamic Subtext Quote */}
         <p className="text-base sm:text-lg text-slate-600 font-medium max-w-2xl mx-auto italic leading-relaxed">
-          "Roshan Safha is dedicated to restoring books, igniting creative minds through essay competitions, and driving community literacy across Muzaffarabad and beyond."
+          "{content.heroSubtext}"
         </p>
 
         {/* Primary Action Buttons */}
@@ -67,22 +96,28 @@ function HomePage() {
 
       </section>
 
-      {/* 3. Impact Counters */}
+      {/* 3. Dynamic Impact Counters */}
       <section className="px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 bg-white border border-slate-200/80 p-8 rounded-3xl shadow-xs">
           
           <div className="text-center space-y-1">
-            <div className="text-3xl sm:text-4xl font-black text-emerald-700">1,450+</div>
+            <div className="text-3xl sm:text-4xl font-black text-emerald-700">
+              {content.impactBooks}
+            </div>
             <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Books Restored & Distributed</p>
           </div>
 
           <div className="text-center space-y-1 border-y sm:border-y-0 sm:border-x border-slate-200 py-4 sm:py-0">
-            <div className="text-3xl sm:text-4xl font-black text-[#E8A94A]">3,800+</div>
+            <div className="text-3xl sm:text-4xl font-black text-[#E8A94A]">
+              {content.impactStudents}
+            </div>
             <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Students Supported</p>
           </div>
 
           <div className="text-center space-y-1">
-            <div className="text-3xl sm:text-4xl font-black text-slate-900">52+</div>
+            <div className="text-3xl sm:text-4xl font-black text-slate-900">
+              {content.impactSchools}
+            </div>
             <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Partner Schools & Colleges</p>
           </div>
 

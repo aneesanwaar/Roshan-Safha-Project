@@ -18,7 +18,16 @@ const {
 } = require("../controllers/adminController");
 const { protect } = require("../middleware/authMiddleware");
 
-// All admin routes protected by JWT
+// ==========================================
+// PUBLIC READ-ONLY ROUTES (Site Visitors)
+// ==========================================
+router.get("/cms/:page", getPageContent);
+router.get("/menu", getMenuItems);
+router.get("/winners", getWinners);
+
+// ==========================================
+// ALL SUBSEQUENT ROUTES REQUIRE ADMIN JWT
+// ==========================================
 router.use(protect);
 
 // 1. Overview & Submissions Operations
@@ -30,17 +39,14 @@ router.get("/submissions/export", exportSubmissions);
 // 2. AI Decision-Support & Trends
 router.get("/analytics/trends", getAnalyticsTrends);
 
-// 3. Multi-Page CMS
-router.get("/cms/:page", getPageContent);
+// 3. Multi-Page CMS (Admin Edit)
 router.put("/cms/:page", updatePageContent);
 
-// 4. Past Winners Archive
-router.get("/winners", getWinners);
+// 4. Past Winners Archive (Admin Edit)
 router.post("/winners", createWinner);
 router.delete("/winners/:id", deleteWinner);
 
-// 5. Menu & Navigation Management
-router.get("/menu", getMenuItems);
+// 5. Menu & Navigation Management (Admin Edit)
 router.put("/menu/:id", updateMenuItem);
 
 // 6. Team Roles & Access Control

@@ -46,6 +46,20 @@ export const updateSubmissionStatus = (type, id, status) =>
   API.patch(`/admin/submissions/${type}/${id}/status`, { status });
 export const getAdminAnalyticsTrends = () => API.get('/admin/analytics/trends');
 
+// -------------------------------------------------------------
+// 4. Admin Gallery Management Endpoints
+// -------------------------------------------------------------
+export const getAdminGalleryPhotos = () => API.get('/gallery');
+
+export const uploadAdminGalleryPhoto = (formData) =>
+  API.post('/gallery', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+
+export const deleteAdminGalleryPhoto = (id) => API.delete(`/gallery/${id}`);
+// Public Gallery fetch
+export const getPublicGalleryPhotos = () => API.get('/gallery');
+
 // CMS Endpoints
 export const getPageContent = (page) => API.get(`/admin/cms/${page}`);
 export const updatePageContent = (page, content) => API.put(`/admin/cms/${page}`, { content });

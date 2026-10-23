@@ -1,224 +1,735 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { ChevronDown, Menu, X, BookOpen } from 'lucide-react';
-import logoImg from '../../assets/logo.png';
-import { getPublicMenuItems } from '../../services/api';
+import React, { useState, useEffect, useRef } from "react";
+import { Link, useLocation } from "react-router-dom";
+import {
+  ChevronDown,
+  Menu,
+  X,
+  BookOpen,
+  ArrowUpRight,
+  Heart,
+  LibraryBig,
+  PenLine,
+  Leaf,
+} from "lucide-react";
+
+import logoImg from "../../assets/logo.png";
+import { getPublicMenuItems } from "../../services/api";
+
+/* ==========================================
+   DEFAULT NAVIGATION
+========================================== */
 
 const DEFAULT_NAV_ITEMS = [
-  { _id: 'p-1', name: 'Home', path: '/', isVisible: true },
-  { _id: 'p-2', name: 'About Us', path: '/about', isVisible: true },
-  { _id: 'p-3', name: 'Programs', path: '/programs', isVisible: true, isDropdown: true },
-  { _id: 'p-4', name: 'Gallery', path: '/gallery', isVisible: true },
-  { _id: 'p-5', name: 'Announcements', path: '/announcements', isVisible: true },
-  { _id: 'p-6', name: 'Get Involved', path: '/get-involved', isVisible: true },
-  { _id: 'p-7', name: 'Contact Us', path: '/contact', isVisible: true }
+  { _id: "p-1", name: "Home", path: "/", isVisible: true },
+  { _id: "p-2", name: "About Us", path: "/about", isVisible: true },
+  {
+    _id: "p-3",
+    name: "Programs",
+    path: "/programs",
+    isVisible: true,
+    isDropdown: true,
+  },
+  { _id: "p-4", name: "Gallery", path: "/gallery", isVisible: true },
+  {
+    _id: "p-5",
+    name: "Announcements",
+    path: "/announcements",
+    isVisible: true,
+  },
+  {
+    _id: "p-6",
+    name: "Get Involved",
+    path: "/get-involved",
+    isVisible: true,
+  },
+  { _id: "p-7", name: "Contact Us", path: "/contact", isVisible: true },
 ];
+
+/* ==========================================
+   PROGRAM LINKS
+========================================== */
+
+const PROGRAM_LINKS = [
+  {
+    name: "Book Donations",
+    description: "Give books a second life.",
+    path: "/programs/donate-books",
+    icon: Heart,
+    color: "text-[#276B56]",
+    bg: "bg-[#E7EEE5]",
+  },
+  {
+    name: "Available Books",
+    description: "Explore books ready to share.",
+    path: "/programs/book-catalog",
+    icon: LibraryBig,
+    color: "text-[#B77A26]",
+    bg: "bg-[#FFF1D9]",
+  },
+  {
+    name: "Essay Contests",
+    description: "Inspiring young voices.",
+    path: "/programs/essays",
+    icon: PenLine,
+    color: "text-[#276B56]",
+    bg: "bg-[#E7EEE5]",
+  },
+  {
+    name: "SDGs Summer Circle",
+    description: "Learning for a better tomorrow.",
+    path: "/programs/summer-circle",
+    icon: Leaf,
+    color: "text-[#B77A26]",
+    bg: "bg-[#FFF1D9]",
+  },
+];
+
+/* ==========================================
+   NAVBAR COMPONENT
+========================================== */
 
 function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [mobileProgramsOpen, setMobileProgramsOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [navItems, setNavItems] = useState(DEFAULT_NAV_ITEMS);
+  const [scrolled, setScrolled] = useState(false);
+
   const location = useLocation();
+  const dropdownRef = useRef(null);
+
+  /* ------------------------------------------
+     ACTIVE ROUTE
+  ------------------------------------------ */
 
   const isActive = (path) => {
-    if (path === '/') return location.pathname === '/';
-    return location.pathname.startsWith(path);
+    if (path === "/") {
+      return location.pathname === "/";
+    }
+
+    return (
+      location.pathname === path ||
+      location.pathname.startsWith(`${path}/`)
+    );
   };
 
+  /* ------------------------------------------
+     FETCH MENU VISIBILITY FROM BACKEND
+  ------------------------------------------ */
+
   useEffect(() => {
+    let cancelled = false;
+
     const fetchMenu = async () => {
       try {
         const res = await getPublicMenuItems();
+
         const serverItems = res.data?.data || res.data || [];
-        if (Array.isArray(serverItems) && serverItems.length > 0) {
-          const activeMap = new Map(serverItems.map((item) => [item.path || item.name, item.isVisible]));
+
+        if (
+          !cancelled &&
+          Array.isArray(serverItems) &&
+          serverItems.length > 0
+        ) {
+          const activeMap = new Map(
+            serverItems.map((item) => [
+              item.path || item.name,
+              item.isVisible,
+            ])
+          );
+
           setNavItems((prev) =>
             prev.map((item) => {
-              const serverVisible = activeMap.get(item.path) ?? activeMap.get(item.name);
-              return serverVisible !== undefined ? { ...item, isVisible: serverVisible } : item;
+              const serverVisible =
+                activeMap.get(item.path) ??
+                activeMap.get(item.name);
+
+              return serverVisible !== undefined
+                ? { ...item, isVisible: serverVisible }
+                : item;
             })
           );
         }
-      } catch {
-        // Safe fallback
+      } catch (error) {
+        // Keep default navigation if the API is unavailable.
+        console.error("Unable to load public navigation:", error);
       }
     };
+
     fetchMenu();
+
+    return () => {
+      cancelled = true;
+    };
   }, [location.pathname]);
 
-  const visibleNavItems = navItems.filter((item) => item.isVisible !== false);
+  /* ------------------------------------------
+     CLOSE MENUS WHEN ROUTE CHANGES
+  ------------------------------------------ */
+
+  useEffect(() => {
+    setMobileOpen(false);
+    setMobileProgramsOpen(false);
+    setDropdownOpen(false);
+  }, [location.pathname]);
+
+  /* ------------------------------------------
+     DETECT SCROLL
+  ------------------------------------------ */
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+
+    handleScroll();
+
+    window.addEventListener("scroll", handleScroll, {
+      passive: true,
+    });
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
+
+  /* ------------------------------------------
+     CLOSE DESKTOP DROPDOWN ON OUTSIDE CLICK
+  ------------------------------------------ */
+
+  useEffect(() => {
+    const handleOutsideClick = (event) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target)
+      ) {
+        setDropdownOpen(false);
+      }
+    };
+
+    const handleEscape = (event) => {
+      if (event.key === "Escape") {
+        setDropdownOpen(false);
+        setMobileOpen(false);
+        setMobileProgramsOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleOutsideClick);
+    document.addEventListener("keydown", handleEscape);
+
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, []);
+
+  /* ------------------------------------------
+     PREVENT BACKGROUND SCROLL ON MOBILE
+  ------------------------------------------ */
+
+  useEffect(() => {
+    if (!mobileOpen) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [mobileOpen]);
+
+  const visibleNavItems = navItems.filter(
+    (item) => item.isVisible !== false
+  );
+
+  const closeMobileMenu = () => {
+    setMobileOpen(false);
+    setMobileProgramsOpen(false);
+  };
 
   return (
-    <header className="sticky top-0 z-50 bg-[#FBFBFA]/90 backdrop-blur-md border-b border-stone-200/80 shadow-xs">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-6">
-        
-        {/* Brand Logo */}
-        <Link 
-          to="/" 
-          className="flex items-center gap-3 select-none py-1 group shrink-0"
-          aria-label="Roshan Safha Home"
+    <header
+      className={`
+        sticky top-0 z-50 w-full
+        border-b border-[#E6DFD3]
+        bg-[#FFF9EF]/95 backdrop-blur-xl
+        transition-all duration-300
+        ${
+          scrolled
+            ? "shadow-[0_8px_30px_rgba(25,62,50,0.08)]"
+            : "shadow-none"
+        }
+      `}
+    >
+      {/* ======================================
+          DESKTOP / MAIN NAVBAR
+      ====================================== */}
+
+      <div className="rs-container">
+        <div
+          className={`
+            flex items-center justify-between gap-4
+            transition-all duration-300
+            ${scrolled ? "h-[76px]" : "h-[88px]"}
+          `}
         >
-          <img 
-            src={logoImg} 
-            alt="Roshan Safha Logo" 
-            draggable="false"
-            onContextMenu={(e) => e.preventDefault()}
-            className="h-12 sm:h-14 w-auto object-contain transition-transform duration-200 group-hover:scale-102"
-          />
-        </Link>
+          {/* LOGO */}
 
-        {/* Desktop Navigation */}
-        <nav className="hidden lg:flex items-center gap-1.5 bg-stone-100/90 p-1.5 rounded-full border border-stone-200/80">
-          {visibleNavItems.map((item) => {
-            if (item.isDropdown) {
-              return (
-                <div key={item._id} className="relative" onMouseLeave={() => setDropdownOpen(false)}>
-                  <button 
-                    onMouseEnter={() => setDropdownOpen(true)}
-                    onClick={() => setDropdownOpen(!dropdownOpen)}
-                    className="flex items-center gap-1.5 px-4 py-1.5 text-xs font-bold text-stone-700 hover:text-stone-950 rounded-full transition cursor-pointer"
-                  >
-                    <span>Programs</span>
-                    <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${dropdownOpen ? 'rotate-180 text-emerald-700' : 'text-stone-400'}`} />
-                  </button>
-
-                  {dropdownOpen && (
-                    <div 
-                      className="absolute top-full left-0 mt-2 w-72 bg-white border border-stone-200 rounded-2xl shadow-xl p-2.5 space-y-1 animate-in fade-in zoom-in-95 duration-100"
-                    >
-                      <Link 
-                        to="/programs/donate-books" 
-                        onClick={() => setDropdownOpen(false)} 
-                        className="group flex items-start gap-2.5 p-2.5 rounded-xl hover:bg-emerald-50 transition"
-                      >
-                        <span className="text-base">🎁</span>
-                        <div>
-                          <p className="text-xs font-bold text-stone-900 group-hover:text-emerald-800">Donate Books</p>
-                          <p className="text-[10px] text-stone-500">Pledge physical curriculum or library volumes</p>
-                        </div>
-                      </Link>
-
-                      <Link 
-                        to="/programs/book-catalog" 
-                        onClick={() => setDropdownOpen(false)} 
-                        className="group flex items-start gap-2.5 p-2.5 rounded-xl hover:bg-amber-50 transition"
-                      >
-                        <span className="text-base">📚</span>
-                        <div>
-                          <p className="text-xs font-bold text-stone-900 group-hover:text-amber-800">Available Books Catalog</p>
-                          <p className="text-[10px] text-stone-500">Search free restored volumes by category</p>
-                        </div>
-                      </Link>
-
-                      <Link 
-                        to="/programs/essays" 
-                        onClick={() => setDropdownOpen(false)} 
-                        className="group flex items-start gap-2.5 p-2.5 rounded-xl hover:bg-stone-50 transition"
-                      >
-                        <span className="text-base">✍️</span>
-                        <div>
-                          <p className="text-xs font-bold text-stone-900 group-hover:text-emerald-800">Annual Essay Contests</p>
-                          <p className="text-[10px] text-stone-500">Guidelines, themes, and past laureates</p>
-                        </div>
-                      </Link>
-
-                      <Link 
-                        to="/programs/summer-circle" 
-                        onClick={() => setDropdownOpen(false)} 
-                        className="group flex items-start gap-2.5 p-2.5 rounded-xl hover:bg-stone-50 transition"
-                      >
-                        <span className="text-base">🌱</span>
-                        <div>
-                          <p className="text-xs font-bold text-stone-900 group-hover:text-emerald-800">SDGs Summer Circle</p>
-                          <p className="text-[10px] text-stone-500">Youth environmental & literacy workshops</p>
-                        </div>
-                      </Link>
-                    </div>
-                  )}
-                </div>
-              );
-            }
-
-            const active = isActive(item.path);
-
-            return (
-              <Link 
-                key={item._id}
-                to={item.path} 
-                className={`relative px-4 py-1.5 rounded-full text-xs font-bold transition duration-150 ${
-                  active 
-                    ? 'bg-white text-emerald-800 shadow-xs' 
-                    : 'text-stone-600 hover:text-stone-950 hover:bg-white/60'
-                }`}
-              >
-                {item.name}
-              </Link>
-            );
-          })}
-        </nav>
-
-        {/* Action Button */}
-        <div className="hidden lg:flex items-center gap-3">
-          <Link 
-            to="/programs/donate-books" 
-            className="flex items-center gap-2 bg-emerald-800 hover:bg-emerald-900 text-white px-5 py-2.5 rounded-full text-xs font-bold shadow-xs hover:shadow-md transition active:scale-95 cursor-pointer"
+          <Link
+            to="/"
+            className="flex shrink-0 items-center gap-3"
+            aria-label="Roshan Safha — Home"
+            onClick={closeMobileMenu}
           >
-            <BookOpen className="w-3.5 h-3.5" />
-            <span>Donate Books</span>
+            <img
+              src={logoImg}
+              alt="Roshan Safha"
+              className="
+                h-[58px] w-auto max-w-[170px]
+                object-contain
+                transition-transform duration-300
+                hover:scale-[1.03]
+                sm:h-[66px]
+              "
+            />
           </Link>
-        </div>
 
-        {/* Mobile Toggle */}
-        <button 
-          onClick={() => setMobileOpen(!mobileOpen)}
-          className="lg:hidden p-2 text-stone-700 hover:bg-stone-100 rounded-xl transition cursor-pointer"
-          aria-label="Toggle navigation menu"
-        >
-          {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-        </button>
+          {/* ==================================
+              DESKTOP NAVIGATION
+          ================================== */}
 
-      </div>
+          <nav
+            className="
+              hidden xl:flex
+              items-center gap-1
+            "
+            aria-label="Main navigation"
+          >
+            {visibleNavItems.map((item) => {
+              /* PROGRAMS DROPDOWN */
 
-      {/* Mobile Drawer */}
-      {mobileOpen && (
-        <div className="lg:hidden bg-white border-b border-stone-200 px-6 py-5 space-y-3 text-sm font-semibold text-stone-700">
-          {visibleNavItems.map((item) => {
-            if (item.isDropdown) {
+              if (item.isDropdown) {
+                return (
+                  <div
+                    key={item._id}
+                    ref={dropdownRef}
+                    className="relative"
+                    onMouseEnter={() => setDropdownOpen(true)}
+                    onMouseLeave={() => setDropdownOpen(false)}
+                  >
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setDropdownOpen((prev) => !prev)
+                      }
+                      aria-expanded={dropdownOpen}
+                      aria-haspopup="true"
+                      aria-controls="desktop-programs-menu"
+                      className={`
+                        relative flex items-center gap-1.5
+                        rounded-full px-3.5 py-2.5
+                        text-[13px] font-semibold
+                        transition-all duration-200
+                        ${
+                          isActive("/programs")
+                            ? "bg-[#E7EEE5] text-[#276B56]"
+                            : "text-[#493D32] hover:bg-[#E7EEE5] hover:text-[#276B56]"
+                        }
+                      `}
+                    >
+                      {item.name}
+
+                      <ChevronDown
+                        size={15}
+                        strokeWidth={2}
+                        className={`
+                          transition-transform duration-200
+                          ${dropdownOpen ? "rotate-180" : ""}
+                        `}
+                      />
+                    </button>
+
+                    {/* DROPDOWN PANEL */}
+
+                    {dropdownOpen && (
+                      <div
+                        id="desktop-programs-menu"
+                        className="
+                          absolute left-1/2 top-full
+                          w-[330px] -translate-x-1/2
+                          pt-3
+                        "
+                      >
+                        <div
+                          className="
+                            overflow-hidden rounded-[22px]
+                            border border-[#E6DFD3]
+                            bg-white p-3
+                            shadow-[0_20px_60px_rgba(25,62,50,0.14)]
+                          "
+                        >
+                          <div className="px-3 pb-3 pt-2">
+                            <p
+                              className="
+                                text-[10px] font-bold
+                                uppercase tracking-[0.18em]
+                                text-[#B77A26]
+                              "
+                            >
+                              Our Initiatives
+                            </p>
+
+                            <p
+                              className="
+                                mt-1 text-sm font-semibold
+                                text-[#342719]
+                              "
+                            >
+                              Explore our programs
+                            </p>
+                          </div>
+
+                          <div className="space-y-1">
+                            {PROGRAM_LINKS.map((program) => {
+                              const Icon = program.icon;
+
+                              return (
+                                <Link
+                                  key={program.path}
+                                  to={program.path}
+                                  onClick={() =>
+                                    setDropdownOpen(false)
+                                  }
+                                  className="
+                                    group flex items-center
+                                    gap-3 rounded-2xl p-3
+                                    transition-colors duration-200
+                                    hover:bg-[#FFF9EF]
+                                  "
+                                >
+                                  <span
+                                    className={`
+                                      flex h-11 w-11 shrink-0
+                                      items-center justify-center
+                                      rounded-xl
+                                      ${program.bg}
+                                      ${program.color}
+                                    `}
+                                  >
+                                    <Icon size={20} strokeWidth={1.8} />
+                                  </span>
+
+                                  <span className="min-w-0 flex-1">
+                                    <span
+                                      className="
+                                        block text-[13px] font-bold
+                                        text-[#342719]
+                                        group-hover:text-[#276B56]
+                                      "
+                                    >
+                                      {program.name}
+                                    </span>
+
+                                    <span
+                                      className="
+                                        mt-0.5 block text-[11px]
+                                        text-[#71685B]
+                                      "
+                                    >
+                                      {program.description}
+                                    </span>
+                                  </span>
+
+                                  <ArrowUpRight
+                                    size={16}
+                                    className="
+                                      text-[#A9A094]
+                                      transition-transform
+                                      group-hover:-translate-y-0.5
+                                      group-hover:translate-x-0.5
+                                      group-hover:text-[#276B56]
+                                    "
+                                  />
+                                </Link>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              }
+
+              /* NORMAL NAVIGATION LINK */
+
+              const active = isActive(item.path);
+
               return (
-                <div key={item._id} className="pl-3 border-l-2 border-emerald-600 space-y-2 py-1 text-xs text-stone-600">
-                  <span className="font-bold text-stone-900 block text-xs">Programs:</span>
-                  <Link to="/programs/donate-books" onClick={() => setMobileOpen(false)} className="block py-1">🎁 Donate Books</Link>
-                  <Link to="/programs/book-catalog" onClick={() => setMobileOpen(false)} className="block py-1">📚 Available Catalog</Link>
-                  <Link to="/programs/essays" onClick={() => setMobileOpen(false)} className="block py-1">✍️ Essay Contests</Link>
-                  <Link to="/programs/summer-circle" onClick={() => setMobileOpen(false)} className="block py-1">🌱 SDGs Summer Circle</Link>
-                </div>
+                <Link
+                  key={item._id}
+                  to={item.path}
+                  aria-current={active ? "page" : undefined}
+                  className={`
+                    relative rounded-full
+                    px-3.5 py-2.5
+                    text-[13px] font-semibold
+                    transition-all duration-200
+                    ${
+                      active
+                        ? "bg-[#E7EEE5] text-[#276B56]"
+                        : "text-[#493D32] hover:bg-[#E7EEE5] hover:text-[#276B56]"
+                    }
+                  `}
+                >
+                  {item.name}
+                </Link>
               );
-            }
+            })}
+          </nav>
 
-            return (
-              <Link 
-                key={item._id} 
-                to={item.path} 
-                onClick={() => setMobileOpen(false)} 
-                className={`block py-1.5 font-bold transition ${
-                  isActive(item.path) ? 'text-emerald-800 font-black' : 'hover:text-stone-950'
-                }`}
-              >
-                {item.name}
-              </Link>
-            );
-          })}
-          
-          <div className="pt-3 border-t border-stone-100">
-            <Link 
-              to="/programs/donate-books" 
-              onClick={() => setMobileOpen(false)} 
-              className="flex items-center justify-center gap-2 bg-emerald-800 text-white px-4 py-2.5 rounded-full text-xs font-bold shadow-xs w-full"
+          {/* ==================================
+              DESKTOP CTA
+          ================================== */}
+
+          <div className="hidden xl:flex shrink-0 items-center">
+            <Link
+              to="/programs/donate-books"
+              className="
+                group inline-flex items-center
+                justify-center gap-2
+                rounded-full bg-[#276B56]
+                px-5 py-3
+                text-[12px] font-bold text-white
+                shadow-[0_5px_15px_rgba(39,107,86,0.18)]
+                transition-all duration-300
+                hover:-translate-y-0.5
+                hover:bg-[#193E32]
+                hover:shadow-[0_10px_25px_rgba(39,107,86,0.22)]
+              "
             >
-              <BookOpen className="w-4 h-4" />
-              <span>Donate Books</span>
+              <BookOpen size={17} strokeWidth={2} />
+
+              Donate Books
+
+              <ArrowUpRight
+                size={15}
+                className="
+                  transition-transform duration-200
+                  group-hover:translate-x-0.5
+                  group-hover:-translate-y-0.5
+                "
+              />
             </Link>
           </div>
+
+          {/* ==================================
+              MOBILE / TABLET TOGGLE
+          ================================== */}
+
+          <button
+            type="button"
+            onClick={() => setMobileOpen((prev) => !prev)}
+            className="
+              flex h-11 w-11 shrink-0
+              items-center justify-center
+              rounded-xl border border-[#E6DFD3]
+              bg-white text-[#276B56]
+              transition-colors
+              hover:bg-[#E7EEE5]
+              xl:hidden
+            "
+            aria-label={
+              mobileOpen
+                ? "Close navigation menu"
+                : "Open navigation menu"
+            }
+            aria-expanded={mobileOpen}
+            aria-controls="mobile-navigation"
+          >
+            {mobileOpen ? (
+              <X size={23} strokeWidth={2} />
+            ) : (
+              <Menu size={23} strokeWidth={2} />
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* ======================================
+          MOBILE / TABLET NAVIGATION
+      ====================================== */}
+
+      {mobileOpen && (
+        <div
+          id="mobile-navigation"
+          className="
+            absolute left-0 right-0 top-full
+            max-h-[calc(100dvh-76px)]
+            overflow-y-auto
+            border-t border-[#E6DFD3]
+            bg-[#FFF9EF]
+            shadow-[0_20px_40px_rgba(25,62,50,0.12)]
+            xl:hidden
+          "
+        >
+          <nav
+            className="rs-container py-5"
+            aria-label="Mobile navigation"
+          >
+            <div className="space-y-1">
+              {visibleNavItems.map((item) => {
+                /* MOBILE PROGRAMS ACCORDION */
+
+                if (item.isDropdown) {
+                  return (
+                    <div key={item._id}>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setMobileProgramsOpen((prev) => !prev)
+                        }
+                        aria-expanded={mobileProgramsOpen}
+                        aria-controls="mobile-programs-menu"
+                        className={`
+                          flex w-full items-center
+                          justify-between rounded-xl
+                          px-4 py-3.5 text-left
+                          text-sm font-semibold
+                          transition-colors
+                          ${
+                            isActive("/programs")
+                              ? "bg-[#E7EEE5] text-[#276B56]"
+                              : "text-[#493D32] hover:bg-[#E7EEE5]"
+                          }
+                        `}
+                      >
+                        {item.name}
+
+                        <ChevronDown
+                          size={18}
+                          className={`
+                            transition-transform duration-200
+                            ${
+                              mobileProgramsOpen
+                                ? "rotate-180"
+                                : ""
+                            }
+                          `}
+                        />
+                      </button>
+
+                      {mobileProgramsOpen && (
+                        <div
+                          id="mobile-programs-menu"
+                          className="
+                            ml-4 mt-1 space-y-1
+                            border-l-2 border-[#E8A94A]
+                            pl-3
+                          "
+                        >
+                          {PROGRAM_LINKS.map((program) => {
+                            const Icon = program.icon;
+
+                            return (
+                              <Link
+                                key={program.path}
+                                to={program.path}
+                                onClick={closeMobileMenu}
+                                className={`
+                                  flex items-center gap-3
+                                  rounded-xl px-3 py-3
+                                  text-[13px] font-medium
+                                  transition-colors
+                                  ${
+                                    isActive(program.path)
+                                      ? "bg-[#E7EEE5] text-[#276B56]"
+                                      : "text-[#493D32] hover:bg-[#E7EEE5]"
+                                  }
+                                `}
+                              >
+                                <Icon
+                                  size={18}
+                                  className="text-[#276B56]"
+                                />
+
+                                {program.name}
+                              </Link>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                }
+
+                /* MOBILE NORMAL LINK */
+
+                const active = isActive(item.path);
+
+                return (
+                  <Link
+                    key={item._id}
+                    to={item.path}
+                    onClick={closeMobileMenu}
+                    aria-current={active ? "page" : undefined}
+                    className={`
+                      block rounded-xl px-4 py-3.5
+                      text-sm font-semibold
+                      transition-colors
+                      ${
+                        active
+                          ? "bg-[#E7EEE5] text-[#276B56]"
+                          : "text-[#493D32] hover:bg-[#E7EEE5] hover:text-[#276B56]"
+                      }
+                    `}
+                  >
+                    {item.name}
+                  </Link>
+                );
+              })}
+            </div>
+
+            {/* MOBILE CTA */}
+
+            <div className="mt-5 border-t border-[#E6DFD3] pt-5">
+              <Link
+                to="/programs/donate-books"
+                onClick={closeMobileMenu}
+                className="
+                  flex w-full items-center
+                  justify-center gap-2
+                  rounded-full bg-[#276B56]
+                  px-5 py-3.5
+                  text-sm font-bold text-white
+                  transition-colors
+                  hover:bg-[#193E32]
+                "
+              >
+                <BookOpen size={18} />
+
+                Donate Books
+
+                <ArrowUpRight size={17} />
+              </Link>
+            </div>
+
+            {/* MOBILE BRAND MESSAGE */}
+
+            <div className="mt-6 pb-2 text-center">
+              <p
+                className="
+                  text-[11px] font-medium
+                  leading-relaxed text-[#71685B]
+                "
+              >
+                Because second chances are for
+                <br />
+                everyone and everything.
+              </p>
+            </div>
+          </nav>
         </div>
       )}
     </header>

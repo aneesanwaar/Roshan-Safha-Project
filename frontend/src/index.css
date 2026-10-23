@@ -1,5 +1,7 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap');
 
+/* Brand colors */
 /* Professional Brand Logo Protection */
 .brand-logo-img {
   -webkit-user-drag: none;
@@ -31,5 +33,165 @@
     color: #0f172a;
     font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
     -webkit-font-smoothing: antialiased;
+  }
+}
+
+/* ==========================================
+   ROSHAN SAFHA — GLOBAL DESIGN SYSTEM
+   ========================================== */
+
+
+:root {
+  --rs-primary: #276b56;
+  --rs-primary-dark: #193e32;
+  --rs-secondary: #e8a94a;
+
+  --rs-background: #fff9ef;
+  --rs-surface: #ffffff;
+  --rs-surface-soft: #e7eee5;
+
+  --rs-text: #342719;
+  --rs-text-muted: #71685b;
+  --rs-border: #e6dfd3;
+
+  --rs-radius-sm: 8px;
+  --rs-radius-md: 16px;
+  --rs-radius-lg: 24px;
+
+  --rs-shadow:
+    0 12px 35px rgba(25, 62, 50, 0.08);
+}
+
+/* Typography */
+body {
+  margin: 0;
+  background-color: var(--rs-background);
+  color: var(--rs-text);
+  font-family: 'DM Sans', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: 'Playfair Display', Georgia, serif;
+}
+
+/* Global interaction styles */
+button,
+a,
+input,
+textarea,
+select {
+  font-family: inherit;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button {
+  cursor: pointer;
+}
+
+a {
+  transition:
+    color 0.2s ease,
+    background-color 0.2s ease;
+}
+
+/* Accessible keyboard focus */
+:focus-visible {
+  outline: 3px solid var(--rs-secondary);
+  outline-offset: 3px;
+}
+
+/* Consistent selection color */
+::selection {
+  background-color: var(--rs-secondary);
+  color: var(--rs-primary-dark);
+}
+
+/* Reusable layout container */
+.rs-container {
+  width: min(1200px, calc(100% - 40px));
+  margin-inline: auto;
+}
+
+/* Reusable primary button */
+.rs-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+
+  padding: 14px 24px;
+  border: none;
+  border-radius: var(--rs-radius-sm);
+
+  background: var(--rs-primary);
+  color: white;
+
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+.rs-btn-primary:hover {
+  background: var(--rs-primary-dark);
+  transform: translateY(-2px);
+}
+
+/* Reusable outline button */
+.rs-btn-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+
+  padding: 13px 23px;
+  border: 1px solid var(--rs-primary);
+  border-radius: var(--rs-radius-sm);
+
+  background: transparent;
+  color: var(--rs-primary);
+
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+.rs-btn-outline:hover {
+  background: var(--rs-primary);
+  color: white;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .rs-container {
+    width: calc(100% - 32px);
+  }
+}
+
+/* Reduced-motion accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
   }
 }

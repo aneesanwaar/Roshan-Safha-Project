@@ -79,6 +79,9 @@ export const getPublicMenuItems = () => API.get('/admin/menu');
 // Public CMS content fetcher
 export const getPublicPageContent = (page) => API.get(`/admin/cms/${page}`);
 
+// Contact Form Submission
+export const submitContactMessage = (data) => API.post('/contact', data);
+
 // User & Role Management
 export const getAdminTeamUsers = () => API.get('/admin/users');
 export const deleteAdminTeamUser = (id) => API.delete(`/admin/users/${id}`);

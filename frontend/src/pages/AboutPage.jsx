@@ -1,70 +1,107 @@
-import React from 'react';
-import { BookOpen, Target, Globe, Award, Sparkles, MapPin, Calendar, Heart } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Compass, Target, Eye, Sparkles, HeartHandshake, BookOpen } from 'lucide-react';
+import { getPublicPageContent } from '../services/api';
+
+const DEFAULT_ABOUT_CONTENT = {
+  heroTitle: 'Rooted in Local Literacy and Action',
+  missionBody: 'To bridge book accessibility disparities across regional communities by restoring textbooks, creating sustainable local mini-libraries, and supporting student literacy across Azad Jammu and Kashmir.',
+  visionStatement: 'A sustainable network of restored community reading libraries where every curious child, student, and educator has immediate access to rich, mind-expanding literature.'
+};
 
 function AboutPage() {
-  const sdgs = [
-    { number: "04", title: "Quality Education", desc: "Equipping underserved children with restored textbooks, literary guides, and educational access." },
-    { number: "10", title: "Reduced Inequalities", desc: "Bridging the resource gap between urban centers and regional school districts across Azad Kashmir." },
-    { number: "12", title: "Responsible Consumption", desc: "Promoting circular paper conservation by restoring damaged books instead of discarding them." }
-  ];
+  const [content, setContent] = useState(DEFAULT_ABOUT_CONTENT);
+
+  useEffect(() => {
+    const fetchAboutCms = async () => {
+      try {
+        const res = await getPublicPageContent('about');
+        if (res.data?.success && res.data?.content && Object.keys(res.data.content).length > 0) {
+          setContent((prev) => ({
+            ...prev,
+            ...res.data.content
+          }));
+        }
+      } catch (err) {
+        console.warn('Using default About CMS content');
+      }
+    };
+    fetchAboutCms();
+  }, []);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-16">
+    <div className="min-h-screen bg-slate-50 py-12 px-4 sm:px-6 lg:px-8 font-sans space-y-16">
       
-      {/* 1. Header & Mission Summary */}
-      <section className="text-center max-w-3xl mx-auto space-y-4">
-        <div className="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 px-3.5 py-1.5 rounded-full text-xs font-bold border border-emerald-200">
-          <Sparkles className="w-3.5 h-3.5 text-emerald-600" /> Established in 2025 • Muzaffarabad, AJK
+      {/* Hero Section */}
+      <section className="max-w-4xl mx-auto text-center space-y-4">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-bold shadow-2xs">
+          <Compass className="w-3.5 h-3.5 text-emerald-600" />
+          <span>Our Story & Guiding Principles</span>
         </div>
-        <h1 className="text-4xl sm:text-5xl font-black text-slate-900 tracking-tight">
-          Our Mission & Story
+        <h1 className="text-3xl sm:text-5xl font-black text-slate-900 tracking-tight leading-tight">
+          {content.heroTitle}
         </h1>
-        <p className="text-slate-600 text-base leading-relaxed">
-          Roshan Safha was founded on a simple conviction: <em>second chances are for everyone and everything</em>. We transform worn, neglected books into catalysts of literacy and empower youth through creative self-expression.
+        <p className="text-sm sm:text-base text-slate-600 max-w-2xl mx-auto leading-relaxed">
+          Founded with a clear belief: no valuable book should be thrown away, and no eager reader should be left without access to learning.
         </p>
       </section>
 
-      {/* 2. Founder Section */}
-      <section className="bg-white border border-slate-200 rounded-3xl p-8 sm:p-12 shadow-sm">
-        <div className="grid md:grid-cols-3 gap-8 items-center">
-          <div className="aspect-square rounded-2xl overflow-hidden bg-slate-100 border border-slate-200 shadow-inner flex items-center justify-center">
-            <img 
-              src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=600&q=80" 
-              alt="Aamna Saleem Khan - Founder" 
-              className="w-full h-full object-cover"
-            />
-          </div>
-          <div className="md:col-span-2 space-y-4">
-            <span className="text-xs font-bold uppercase tracking-wider text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-md">
-              Founder & Initiative Lead
-            </span>
-            <h2 className="text-2xl sm:text-3xl font-bold text-slate-900">Aamna Saleem Khan</h2>
-            <p className="text-slate-600 text-sm leading-relaxed">
-              "Starting Roshan Safha in Muzaffarabad was rooted in the realization that thousands of books sit unused or lightly damaged in storerooms while eager young students lack access to basic syllabus materials and creative outlets. By pairing book restoration with annual writing competitions, we foster both educational equity and literary confidence".
-            </p>
-            <div className="flex flex-wrap items-center gap-4 text-xs font-semibold text-slate-500 pt-2 border-t border-slate-100">
-              <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5 text-emerald-600" /> Muzaffarabad, AJK, Pakistan</span>
-              <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5 text-emerald-600" /> Founded 2025</span>
+      {/* Mission & Vision Cards */}
+      <section className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
+        
+        {/* Mission Card */}
+        <div className="bg-white p-8 sm:p-10 rounded-3xl border border-slate-200/90 shadow-xs space-y-4 flex flex-col justify-between">
+          <div className="space-y-4">
+            <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-black">
+              <Target className="w-6 h-6" />
             </div>
+            <h2 className="text-xl sm:text-2xl font-black text-slate-900">Our Mission</h2>
+            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+              {content.missionBody}
+            </p>
+          </div>
+          <div className="pt-4 border-t border-slate-100 flex items-center gap-2 text-xs font-bold text-emerald-800">
+            <HeartHandshake className="w-4 h-4" /> Community-Powered Literacy
           </div>
         </div>
+
+        {/* Vision Card */}
+        <div className="bg-white p-8 sm:p-10 rounded-3xl border border-slate-200/90 shadow-xs space-y-4 flex flex-col justify-between">
+          <div className="space-y-4">
+            <div className="w-12 h-12 rounded-2xl bg-amber-50 text-[#E8A94A] flex items-center justify-center font-black">
+              <Eye className="w-6 h-6" />
+            </div>
+            <h2 className="text-xl sm:text-2xl font-black text-slate-900">Our Vision</h2>
+            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+              {content.visionStatement}
+            </p>
+          </div>
+          <div className="pt-4 border-t border-slate-100 flex items-center gap-2 text-xs font-bold text-amber-800">
+            <Sparkles className="w-4 h-4 text-[#E8A94A]" /> A Brighter Academic Future
+          </div>
+        </div>
+
       </section>
 
-      {/* 3. SDG Alignment */}
-      <section className="space-y-6">
+      {/* Core Values Strip */}
+      <section className="max-w-6xl mx-auto bg-slate-900 text-white rounded-3xl p-8 sm:p-12 border border-slate-800 space-y-6">
         <div className="text-center max-w-xl mx-auto space-y-2">
-          <h2 className="text-2xl sm:text-3xl font-bold text-slate-900">United Nations SDG Alignment</h2>
-          <p className="text-xs text-slate-500">How our grassroots programs map directly to sustainable development goals.</p>
+          <h3 className="text-lg sm:text-xl font-bold text-white">The Values We Stand By</h3>
+          <p className="text-xs text-slate-400">Integrity, volunteer transparency, and resource stewardship guide every book collected and repaired.</p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-6">
-          {sdgs.map((sdg, idx) => (
-            <div key={idx} className="bg-white border border-slate-200 rounded-3xl p-6 space-y-3 shadow-sm hover:border-emerald-300 transition">
-              <span className="text-3xl font-black text-emerald-600">SDG {sdg.number}</span>
-              <h3 className="text-lg font-bold text-slate-900">{sdg.title}</h3>
-              <p className="text-xs text-slate-600 leading-relaxed">{sdg.desc}</p>
-            </div>
-          ))}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-4 text-center">
+          <div className="space-y-2">
+            <span className="text-2xl font-black text-[#E8A94A]">100% Free</span>
+            <p className="text-xs text-slate-300">Books are lent or gifted without any rental fees or charges to regional students.</p>
+          </div>
+          <div className="space-y-2 border-y sm:border-y-0 sm:border-x border-slate-800 py-4 sm:py-0">
+            <span className="text-2xl font-black text-emerald-400">Zero Waste</span>
+            <p className="text-xs text-slate-300">Damaged bindings are reinforced and rebound rather than discarded into paper mills.</p>
+          </div>
+          <div className="space-y-2">
+            <span className="text-2xl font-black text-teal-400">Civic Youth</span>
+            <p className="text-xs text-slate-300">Volunteer sorting drives give secondary students practical community responsibility.</p>
+          </div>
         </div>
       </section>
 

@@ -1,51 +1,139 @@
-const jwt = require('jsonwebtoken');
-const User = require('../models/User');
+const jwt = require("jsonwebtoken");
+const User = require("../models/User");
 
+/**
+ * Verify an administrator's JWT and load their account.
+ */
 const protect = async (req, res, next) => {
-  let token;
+  try {
+    const authorization = req.headers.authorization;
 
-  // 1. Check if the "Authorization" header exists and starts with "Bearer"
-  if (
-    req.headers.authorization &&
-    req.headers.authorization.startsWith('Bearer')
-  ) {
-    try {
-      // 2. Get the token from the header (Bearer <token_string>)
-      token = req.headers.authorization.split(' ')[1];
-
-      // 3. Verify the token using your secret key from .env
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-      // 4. Find the user in DB and attach to the request (excluding password)
-      req.user = await User.findById(decoded.id).select('-password');
-
-      // 5. Ensure user still exists in the database
-      if (!req.user) {
-        return res.status(401).json({ error: 'User no longer exists, token invalid.' });
-      }
-
-      return next(); // Move to the next function (the Controller)
-    } catch (error) {
-      console.error('JWT Verification Error:', error.message);
-      return res.status(401).json({ error: 'Not authorized, token failed.' });
+    // Require the exact format: Bearer <token>
+    if (typeof authorization !== "string") {
+      return res.status(401).json({
+        success: false,
+        error: "Not authorized, no token found.",
+      });
     }
-  }
 
-  // If no Bearer token was provided in headers
-  if (!token) {
-    return res.status(401).json({ error: 'Not authorized, no token found.' });
+    const parts = authorization.trim().split(/\s+/);
+
+    if (
+      parts.length !== 2 ||
+      parts[0] !== "Bearer" ||
+      !parts[1]
+    ) {
+      return res.status(401).json({
+        success: false,
+        error: "Not authorized, invalid authorization header.",
+      });
+    }
+
+    const token = parts[1];
+
+    const secret = process.env.JWT_SECRET;
+
+    if (!secret || secret.trim().length < 32) {
+      console.error("Authentication configuration error: invalid JWT_SECRET.");
+
+      return res.status(500).json({
+        success: false,
+        error: "Authentication service unavailable.",
+      });
+    }
+
+    // Accept only the algorithm used by generateToken.js.
+    const decoded = jwt.verify(token, secret, {
+      algorithms: ["HS256"],
+    });
+
+    if (!decoded || typeof decoded.id !== "string") {
+      return res.status(401).json({
+        success: false,
+        error: "Not authorized, invalid token.",
+      });
+    }
+
+    // Retrieve the current account without its password hash.
+    const user = await User.findById(decoded.id).select("-password");
+
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        error: "Not authorized, account unavailable.",
+      });
+    }
+
+    // Immediately reject disabled accounts.
+    if (user.isActive === false) {
+      return res.status(401).json({
+        success: false,
+        error: "Not authorized, account unavailable.",
+      });
+    }
+
+    // Reject accounts without a recognized administrative role.
+    const validRoles = ["founder", "admin", "editor"];
+
+    if (!validRoles.includes(user.role)) {
+      return res.status(403).json({
+        success: false,
+        error: "Access denied.",
+      });
+    }
+
+    req.user = user;
+
+    return next();
+  } catch (error) {
+    // Expected authentication failures.
+    if (
+      error.name === "TokenExpiredError" ||
+      error.name === "JsonWebTokenError" ||
+      error.name === "NotBeforeError"
+    ) {
+      return res.status(401).json({
+        success: false,
+        error: "Not authorized, invalid or expired token.",
+      });
+    }
+
+    // Invalid user IDs should not produce server errors.
+    if (error.name === "CastError") {
+      return res.status(401).json({
+        success: false,
+        error: "Not authorized, invalid token.",
+      });
+    }
+
+    // Unexpected failures go to the global error handler.
+    return next(error);
   }
 };
 
-// Role-based Access Control Guard (e.g. authorizeRoles('admin', 'Super Admin'))
+/**
+ * Restrict access to specified administrative roles.
+ *
+ * Usage:
+ * router.get("/example", protect, authorizeRoles("founder"), controller);
+ */
 const authorizeRoles = (...roles) => {
   return (req, res, next) => {
-    if (!req.user || !roles.includes(req.user.role)) {
-      return res.status(403).json({
-        error: `User role '${req.user ? req.user.role : 'Unknown'}' is not authorized to access this resource.`
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        error: "Authentication required.",
       });
     }
-    next();
+
+    if (!roles.includes(req.user.role)) {
+      return res.status(403).json({
+        success: false,
+        error: "You do not have permission to access this resource.",
+      });
+    }
+
+    return next();
   };
 };
 

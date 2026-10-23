@@ -1,53 +1,90 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 
-const userSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: true,
-  },
-  email: {
-    type: String,
-    required: true,
-    unique: true, // Only one admin account with this email
-    lowercase: true,
-  },
-  password: {
-    type: String,
-    required: true,
-  },
-  role: {
-    type: String,
-    default: "admin", // Default role for the Founder (Aamna Saleem Khan)
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
-});
+const userSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: [true, "Name is required."],
+      trim: true,
+      maxlength: [100, "Name cannot exceed 100 characters."],
+    },
 
-// --- SECURITY HOOK ---
-// --- SECURITY HOOK ---
-// In modern Mongoose, async hooks don't need the 'next' parameter
+    email: {
+      type: String,
+      required: [true, "Email is required."],
+      unique: true,
+      lowercase: true,
+      trim: true,
+      maxlength: [254, "Email address is too long."],
+      match: [
+        /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+        "Please provide a valid email address.",
+      ],
+    },
+
+    password: {
+      type: String,
+      required: [true, "Password is required."],
+      select: false,
+    },
+
+    role: {
+      type: String,
+      enum: {
+        values: ["founder", "admin", "editor"],
+        message: "Invalid administrative role.",
+      },
+      default: "editor",
+      required: true,
+    },
+
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+/**
+ * Hash passwords before saving a user document.
+ */
 userSchema.pre("save", async function () {
-  // 1. Only encrypt if the password is new or being changed
   if (!this.isModified("password")) {
-    return; // Just return, don't call next()
+    return;
   }
 
-  try {
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
-    // No next() call here! The 'async' handles it.
-  } catch (error) {
-    throw error; // Throw the error so Mongoose catches it
+  if (typeof this.password !== "string" || this.password.length < 12) {
+    throw new Error("Password must contain at least 12 characters.");
   }
+
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
 });
 
-// --- HELPER METHOD ---
-// This is used in the AuthController to check login credentials
+/**
+ * Compare a plaintext password against the stored hash.
+ */
 userSchema.methods.matchPassword = async function (enteredPassword) {
-  return await bcrypt.compare(enteredPassword, this.password);
+  if (!this.password || typeof enteredPassword !== "string") {
+    return false;
+  }
+
+  return bcrypt.compare(enteredPassword, this.password);
 };
+
+/**
+ * Exclude password hashes from JSON responses.
+ */
+userSchema.set("toJSON", {
+  transform: function (doc, ret) {
+    delete ret.password;
+    delete ret.__v;
+    return ret;
+  },
+});
 
 module.exports = mongoose.model("User", userSchema);

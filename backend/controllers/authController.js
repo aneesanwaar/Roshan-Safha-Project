@@ -1,63 +1,114 @@
 const User = require("../models/User");
 const generateToken = require("../utils/generateToken");
 
-// @desc    Register a new admin (Founder)
-// @route   POST /api/auth/register
-exports.registerUser = async (req, res, next) => {
-  const { name, email, password } = req.body;
-
-  try {
-    // Check if admin already exists
-    const userExists = await User.findOne({ email });
-
-    if (userExists) {
-      return res.status(400).json({ error: "Admin with this email already exists" });
-    }
-
-    // Create user (The Model's .pre('save') hook will encrypt the password automatically)
-    const user = await User.create({
-      name,
-      email,
-      password,
-    });
-
-    if (user) {
-      res.status(201).json({
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        token: generateToken(user._id), // Send the digital key immediately
-      });
-    }
-  } catch (error) {
-    // res.status(500).json({ error: error.message });
-    // Instead of res.status, pass the error to the global error handler
-    next(error);
-  }
+/**
+ * @desc    Register an administrative user
+ * @route   POST /api/auth/register
+ * @access  Disabled
+ *
+ * Administrative accounts must be created through a
+ * founder-authorized account-management workflow.
+ */
+exports.registerUser = async (req, res) => {
+  return res.status(403).json({
+    success: false,
+    error: "Public administrator registration is disabled.",
+  });
 };
 
-// @desc    Auth user & get token (Login)
-// @route   POST /api/auth/login
+/**
+ * @desc    Authenticate an existing administrative user
+ * @route   POST /api/auth/login
+ * @access  Public
+ */
 exports.loginUser = async (req, res, next) => {
-  const { email, password } = req.body;
-
   try {
-    const user = await User.findOne({ email });
+    const { email, password } = req.body || {};
 
-    // Use the .matchPassword() method we created in the Model
-    if (user && (await user.matchPassword(password))) {
-      res.json({
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        token: generateToken(user._id),
+    // Validate the request before querying the database.
+    if (
+      typeof email !== "string" ||
+      typeof password !== "string" ||
+      !email.trim() ||
+      !password
+    ) {
+      return res.status(400).json({
+        success: false,
+        error: "A valid email and password are required.",
       });
-    } else {
-      res.status(401).json({ error: "Invalid email or password" });
     }
+
+    const normalizedEmail = email.trim().toLowerCase();
+
+    // Reject unusually large inputs.
+    if (
+      normalizedEmail.length > 254 ||
+      password.length > 1024
+    ) {
+      return res.status(400).json({
+        success: false,
+        error: "Invalid login credentials.",
+      });
+    }
+
+    /**
+     * The User model now excludes passwords from
+     * queries by default.
+     *
+     * Explicitly retrieve the password hash only
+     * for authentication.
+     */
+    const user = await User.findOne({
+      email: normalizedEmail,
+    }).select("+password");
+
+    // Use a generic error to avoid revealing account existence.
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        error: "Invalid email or password.",
+      });
+    }
+
+    // Reject accounts that have been disabled.
+    if (user.isActive === false) {
+      return res.status(401).json({
+        success: false,
+        error: "Invalid email or password.",
+      });
+    }
+
+    // Verify the submitted password.
+    const isPasswordValid = await user.matchPassword(password);
+
+    if (!isPasswordValid) {
+      return res.status(401).json({
+        success: false,
+        error: "Invalid email or password.",
+      });
+    }
+
+    // Only recognized administrative roles may log in.
+    const allowedRoles = ["founder", "admin", "editor"];
+
+    if (!allowedRoles.includes(user.role)) {
+      return res.status(403).json({
+        success: false,
+        error: "This account is not authorized for administrative access.",
+      });
+    }
+
+    // Generate a JWT using our updated token utility.
+    const token = generateToken(user._id);
+
+    return res.status(200).json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      token,
+    });
   } catch (error) {
-    // res.status(500).json({ error: error.message });
-    // Instead of res.status, pass the error to the global error handler
-    next(error);
+    return next(error);
   }
 };

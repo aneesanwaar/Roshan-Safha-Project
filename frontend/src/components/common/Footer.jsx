@@ -1,120 +1,516 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { Mail, Phone, MapPin, Heart } from 'lucide-react';
-import logoImg from '../../assets/logo.png';
+import React from "react";
+import { Link } from "react-router-dom";
+import {
+  Mail,
+  Phone,
+  MapPin,
+  ArrowUpRight,
+  ArrowRight,
+  Heart,
+  BookOpen,
+} from "lucide-react";
 
-function InstagramIcon({ className = "w-4 h-4" }) {
+import logoImg from "../../assets/logo.png";
+
+function InstagramIcon({ size = 18 }) {
   return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
-      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
-      <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <rect x="2" y="2" width="20" height="20" rx="5" />
+      <circle cx="12" cy="12" r="4" />
+      <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
     </svg>
   );
 }
 
-function LinkedinIcon({ className = "w-4 h-4" }) {
+function LinkedinIcon({ size = 18 }) {
   return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path>
-      <rect x="2" y="9" width="4" height="12"></rect>
-      <circle cx="4" cy="4" r="2"></circle>
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <rect x="2" y="2" width="20" height="20" rx="3" />
+      <path d="M7 10v7" />
+      <path d="M7 7v.01" />
+      <path d="M11 17v-7" />
+      <path d="M11 13a3 3 0 0 1 6 0v4" />
     </svg>
   );
 }
+
+/* ==========================================
+   FOOTER NAVIGATION LINKS
+========================================== */
+
+const QUICK_LINKS = [
+  { name: "Home", path: "/" },
+  { name: "About Us", path: "/about" },
+  { name: "Gallery", path: "/gallery" },
+  { name: "Announcements", path: "/announcements" },
+  { name: "Get Involved", path: "/get-involved" },
+  { name: "Contact Us", path: "/contact" },
+];
+
+const PROGRAM_LINKS = [
+  { name: "Donate Books", path: "/programs/donate-books" },
+  { name: "Available Books", path: "/programs/book-catalog" },
+  { name: "Essay Contests", path: "/programs/essays" },
+  { name: "SDGs Summer Circle", path: "/programs/summer-circle" },
+];
+
+/* ==========================================
+   SOCIAL LINKS
+
+   Replace these URLs with the organization's
+   official profiles when available.
+========================================== */
+
+const SOCIAL_LINKS = [
+  {
+    name: "Instagram",
+    url: "https://www.instagram.com/",
+    icon: InstagramIcon,
+  },
+  {
+    name: "LinkedIn",
+    url: "https://www.linkedin.com/",
+    icon: LinkedinIcon,
+  },
+];
+
+/* ==========================================
+   REUSABLE FOOTER LINK
+========================================== */
+
+function FooterLink({ to, children }) {
+  return (
+    <Link
+      to={to}
+      className="
+        group inline-flex items-center gap-2
+        text-[13px] leading-relaxed
+        text-[#D3E1D8]
+        transition-colors duration-200
+        hover:text-[#F3BD65]
+      "
+    >
+      <span
+        className="
+          h-1 w-1 rounded-full
+          bg-[#E8A94A]
+          opacity-0 transition-opacity
+          group-hover:opacity-100
+        "
+      />
+
+      <span>{children}</span>
+    </Link>
+  );
+}
+
+/* ==========================================
+   FOOTER COMPONENT
+========================================== */
 
 function Footer() {
+  const currentYear = new Date().getFullYear();
+
   return (
-    <footer className="bg-slate-900 text-slate-400 border-t border-slate-800 text-sm">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 grid grid-cols-1 md:grid-cols-4 gap-10">
-        
-        {/* Brand Column with Clean Crisp Logo Badge */}
-        <div className="space-y-4 md:col-span-1">
-          <Link 
-            to="/" 
-            className="inline-flex items-center bg-white/95 hover:bg-white px-3.5 py-2 rounded-2xl shadow-sm border border-slate-700/50 transition-transform hover:scale-102 group mb-1"
-          >
-            <img 
-              src={logoImg} 
-              alt="Roshan Safha Logo" 
-              className="h-12 sm:h-14 w-auto object-contain"
-            />
-          </Link>
+    <footer className="relative overflow-hidden bg-[#193E32] text-white">
+      {/* Decorative background circles */}
 
-          <p className="text-xs text-slate-300 italic leading-relaxed">
-            “Roshan Safha-because second chances are for everyone and everything.”
-          </p>
+      <div
+        aria-hidden="true"
+        className="
+          pointer-events-none absolute
+          -right-32 -top-32
+          h-[420px] w-[420px]
+          rounded-full border
+          border-white/5
+        "
+      />
 
-          <div className="flex items-center gap-3 pt-2">
-            <a 
-              href="https://instagram.com" 
-              target="_blank" 
-              rel="noreferrer" 
-              className="p-2 bg-slate-800 hover:bg-emerald-600 hover:text-white rounded-xl transition text-slate-400"
-              aria-label="Instagram"
+      <div
+        aria-hidden="true"
+        className="
+          pointer-events-none absolute
+          -right-16 -top-16
+          h-[290px] w-[290px]
+          rounded-full border
+          border-white/5
+        "
+      />
+
+      
+      {/* ======================================
+          MAIN FOOTER CONTENT
+      ====================================== */}
+
+      <div className="relative rs-container">
+        <div
+          className="
+            grid grid-cols-1
+            gap-12 py-14
+            sm:grid-cols-2
+            lg:grid-cols-12
+            lg:gap-10 lg:py-20
+          "
+        >
+          {/* ==================================
+              BRAND COLUMN
+          ================================== */}
+
+          <div className="sm:col-span-2 lg:col-span-4">
+            <Link
+              to="/"
+              aria-label="Roshan Safha — Home"
+              className="
+                inline-flex items-center
+                rounded-2xl
+                bg-[#FFF9EF]
+                px-4 py-3
+                shadow-[0_8px_25px_rgba(0,0,0,0.08)]
+                transition-transform duration-300
+                hover:-translate-y-1
+              "
             >
-              <InstagramIcon className="w-4 h-4" />
-            </a>
-            <a 
-              href="https://linkedin.com" 
-              target="_blank" 
-              rel="noreferrer" 
-              className="p-2 bg-slate-800 hover:bg-emerald-600 hover:text-white rounded-xl transition text-slate-400"
-              aria-label="LinkedIn"
+              <img
+                src={logoImg}
+                alt="Roshan Safha Logo"
+                className="
+                  h-[62px] w-auto
+                  max-w-[190px]
+                  object-contain
+                "
+              />
+            </Link>
+
+            <p
+              className="
+                mt-6 max-w-xs
+                font-serif text-lg
+                italic leading-relaxed
+                text-[#F3BD65]
+              "
             >
-              <LinkedinIcon className="w-4 h-4" />
-            </a>
+              “Because second chances are for
+              everyone and everything.”
+            </p>
+
+            <p
+              className="
+                mt-4 max-w-xs
+                text-[13px] leading-7
+                text-[#D3E1D8]
+              "
+            >
+              A community-driven initiative
+              dedicated to giving books a second
+              life and creating meaningful
+              learning opportunities for children.
+            </p>
+
+            {/* SOCIAL ICONS */}
+
+            <div className="mt-7 flex items-center gap-3">
+              {SOCIAL_LINKS.map((social) => {
+                const Icon = social.icon;
+
+                return (
+                  <a
+                    key={social.name}
+                    href={social.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={`Visit Roshan Safha on ${social.name}`}
+                    className="
+                      flex h-10 w-10
+                      items-center justify-center
+                      rounded-full
+                      border border-white/15
+                      bg-white/5
+                      text-[#D3E1D8]
+                      transition-all duration-200
+                      hover:-translate-y-1
+                      hover:border-[#E8A94A]
+                      hover:bg-[#E8A94A]
+                      hover:text-[#193E32]
+                    "
+                  >
+                    <Icon size={18} strokeWidth={1.8} />
+                  </a>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* ==================================
+              QUICK LINKS COLUMN
+          ================================== */}
+
+          <div className="lg:col-span-2">
+            <h3
+              className="
+                mb-6 text-[12px]
+                font-bold uppercase
+                tracking-[0.16em]
+                text-[#F3BD65]
+              "
+            >
+              Explore
+            </h3>
+
+            <ul className="space-y-3.5">
+              {QUICK_LINKS.map((link) => (
+                <li key={link.path}>
+                  <FooterLink to={link.path}>
+                    {link.name}
+                  </FooterLink>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* ==================================
+              PROGRAMS COLUMN
+          ================================== */}
+
+          <div className="lg:col-span-3">
+            <h3
+              className="
+                mb-6 text-[12px]
+                font-bold uppercase
+                tracking-[0.16em]
+                text-[#F3BD65]
+              "
+            >
+              Our Programs
+            </h3>
+
+            <ul className="space-y-3.5">
+              {PROGRAM_LINKS.map((link) => (
+                <li key={link.path}>
+                  <FooterLink to={link.path}>
+                    {link.name}
+                  </FooterLink>
+                </li>
+              ))}
+            </ul>
+
+            <Link
+              to="/programs/donate-books"
+              className="
+                group mt-7 inline-flex
+                items-center gap-2
+                text-[12px] font-bold
+                text-[#F3BD65]
+                transition-colors
+                hover:text-white
+              "
+            >
+              <BookOpen size={16} />
+
+              Give a Book
+
+              <ArrowRight
+                size={15}
+                className="
+                  transition-transform
+                  group-hover:translate-x-1
+                "
+              />
+            </Link>
+          </div>
+
+          {/* ==================================
+              CONTACT COLUMN
+          ================================== */}
+
+          <div className="lg:col-span-3">
+            <h3
+              className="
+                mb-6 text-[12px]
+                font-bold uppercase
+                tracking-[0.16em]
+                text-[#F3BD65]
+              "
+            >
+              Get in Touch
+            </h3>
+
+            <ul className="space-y-5">
+              {/* EMAIL */}
+
+              <li className="flex items-start gap-3">
+                <span
+                  className="
+                    mt-0.5 flex h-9 w-9
+                    shrink-0 items-center
+                    justify-center rounded-xl
+                    bg-white/10 text-[#F3BD65]
+                  "
+                >
+                  <Mail size={17} />
+                </span>
+
+                <div>
+                  <p className="mb-1 text-[11px] text-[#B4C9BD]">
+                    Email Us
+                  </p>
+
+                  <a
+                    href="mailto:roshansafha@gmail.com"
+                    className="
+                      break-all text-[13px]
+                      text-[#F2F7F3]
+                      transition-colors
+                      hover:text-[#F3BD65]
+                    "
+                  >
+                    roshansafha@gmail.com
+                  </a>
+                </div>
+              </li>
+
+              {/* PHONE */}
+
+              <li className="flex items-start gap-3">
+                <span
+                  className="
+                    mt-0.5 flex h-9 w-9
+                    shrink-0 items-center
+                    justify-center rounded-xl
+                    bg-white/10 text-[#F3BD65]
+                  "
+                >
+                  <Phone size={17} />
+                </span>
+
+                <div>
+                  <p className="mb-1 text-[11px] text-[#B4C9BD]">
+                    Call Us
+                  </p>
+
+                  <a
+                    href="tel:+923005966967"
+                    className="
+                      text-[13px] text-[#F2F7F3]
+                      transition-colors
+                      hover:text-[#F3BD65]
+                    "
+                  >
+                    +92 300 5966967
+                  </a>
+                </div>
+              </li>
+
+              {/* LOCATION */}
+
+              <li className="flex items-start gap-3">
+                <span
+                  className="
+                    mt-0.5 flex h-9 w-9
+                    shrink-0 items-center
+                    justify-center rounded-xl
+                    bg-white/10 text-[#F3BD65]
+                  "
+                >
+                  <MapPin size={17} />
+                </span>
+
+                <div>
+                  <p className="mb-1 text-[11px] text-[#B4C9BD]">
+                    Based In
+                  </p>
+
+                  <p
+                    className="
+                      max-w-[220px]
+                      text-[13px] leading-6
+                      text-[#F2F7F3]
+                    "
+                  >
+                    Muzaffarabad,
+                    <br />
+                    Azad Jammu & Kashmir,
+                    <br />
+                    Pakistan
+                  </p>
+                </div>
+              </li>
+            </ul>
           </div>
         </div>
-
-        {/* Quick Links */}
-        <div>
-          <h4 className="text-xs font-bold uppercase text-slate-200 tracking-wider mb-4">Site Navigation</h4>
-          <ul className="space-y-2.5 text-xs">
-            <li><Link to="/" className="hover:text-white transition">Home</Link></li>
-            <li><Link to="/about" className="hover:text-white transition">About Us (Our Story & SDGs)</Link></li>
-            <li><Link to="/gallery" className="hover:text-white transition">Photo Gallery & Restoration</Link></li>
-            <li><Link to="/announcements" className="hover:text-white transition">Announcements & News</Link></li>
-            <li><Link to="/get-involved" className="hover:text-white transition">Get Involved (Volunteer / Partner)</Link></li>
-          </ul>
-        </div>
-
-        {/* Programs */}
-        <div>
-          <h4 className="text-xs font-bold uppercase text-slate-200 tracking-wider mb-4">Core Programs</h4>
-          <ul className="space-y-2.5 text-xs">
-            <li><Link to="/programs/donate-books" className="hover:text-white transition">Donate Books (Pledge Portal)</Link></li>
-            <li><Link to="/programs/book-catalog" className="hover:text-white transition">Available Books Catalog</Link></li>
-            <li><Link to="/programs/essays" className="hover:text-white transition">Annual Essay Contests</Link></li>
-            <li><Link to="/programs/summer-circle" className="hover:text-white transition">SDGs Summer Circle</Link></li>
-            <li><Link to="/contact" className="hover:text-white transition">Contact & Helpdesk</Link></li>
-          </ul>
-        </div>
-
-        {/* Contact Info */}
-        <div>
-          <h4 className="text-xs font-bold uppercase text-slate-200 tracking-wider mb-4">Contact Details</h4>
-          <ul className="space-y-3 text-xs">
-            <li className="flex items-center gap-2.5">
-              <Mail className="w-4 h-4 text-emerald-500 shrink-0" />
-              <a href="mailto:roshansafha@gmail.com" className="hover:text-white transition">roshansafha@gmail.com</a>
-            </li>
-            <li className="flex items-center gap-2.5">
-              <Phone className="w-4 h-4 text-emerald-500 shrink-0" />
-              <a href="tel:+923005966967" className="hover:text-white transition">+92 300 5966967</a>
-            </li>
-            <li className="flex items-start gap-2.5">
-              <MapPin className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-              <span>Muzaffarabad, Azad Jammu & Kashmir, Pakistan</span>
-            </li>
-          </ul>
-        </div>
-
       </div>
 
-      <div className="border-t border-slate-800 py-6 text-center text-xs text-slate-500 flex flex-wrap items-center justify-center gap-2">
-        <span>Copyright © 2026 Roshan Safha. All rights reserved.</span>
-        
+      {/* ======================================
+          BOTTOM BAR
+      ====================================== */}
+
+      <div className="relative border-t border-white/10">
+        <div className="rs-container">
+          <div
+            className="
+              flex flex-col gap-4
+              py-6 text-center
+              md:flex-row
+              md:items-center
+              md:justify-between
+              md:text-left
+            "
+          >
+            <p className="text-[12px] text-[#B4C9BD]">
+              © {currentYear} Roshan Safha.
+              All rights reserved.
+            </p>
+
+            <div
+              className="
+                flex flex-wrap items-center
+                justify-center gap-5
+                md:justify-end
+              "
+            >
+              <Link
+                to="/privacy-policy"
+                className="
+                  text-[12px] text-[#B4C9BD]
+                  transition-colors
+                  hover:text-[#F3BD65]
+                "
+              >
+                Privacy Policy
+              </Link>
+
+              <Link
+                to="/terms"
+                className="
+                  text-[12px] text-[#B4C9BD]
+                  transition-colors
+                  hover:text-[#F3BD65]
+                "
+              >
+                Terms & Conditions
+              </Link>
+            </div>
+          </div>
+        </div>
       </div>
     </footer>
   );

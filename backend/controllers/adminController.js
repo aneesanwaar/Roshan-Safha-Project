@@ -437,28 +437,168 @@ exports.getAnalyticsTrends = async (req, res) => {
 // -------------------------------------------------------------
 // 6. CMS ENDPOINTS
 // -------------------------------------------------------------
+// -------------------------------------------------------------
+// 6. CMS ENDPOINTS
+// -------------------------------------------------------------
+
+const ALLOWED_CMS_PAGES = new Set([
+  "home",
+  "about",
+  "programs",
+  "getInvolved",
+  "contact",
+]);
+
+const isPlainObject = (value) =>
+  value !== null &&
+  typeof value === "object" &&
+  !Array.isArray(value) &&
+  Object.getPrototypeOf(value) === Object.prototype;
+
+/**
+ * Safely merges CMS content.
+ *
+ * Existing fields are preserved unless the incoming content
+ * explicitly replaces them.
+ *
+ * Arrays are replaced rather than merged.
+ */
+const mergeCmsContent = (existing, incoming) => {
+  const result = { ...existing };
+
+  for (const [key, value] of Object.entries(incoming)) {
+    if (
+      ["__proto__", "prototype", "constructor"].includes(key)
+    ) {
+      throw new Error("Invalid CMS content key.");
+    }
+
+    if (isPlainObject(value) && isPlainObject(result[key])) {
+      result[key] = mergeCmsContent(result[key], value);
+    } else {
+      result[key] = value;
+    }
+  }
+
+  return result;
+};
+
+// GET /api/admin/cms/:page
 exports.getPageContent = async (req, res) => {
   try {
     const { page } = req.params;
+
+    if (!ALLOWED_CMS_PAGES.has(page)) {
+      return res.status(400).json({
+        success: false,
+        error: "Invalid CMS page.",
+      });
+    }
+
     const contentDoc = await SiteContent.findOne({ page });
-    return res.status(200).json({ success: true, page, content: contentDoc ? contentDoc.content : {} });
+
+    return res.status(200).json({
+      success: true,
+      page,
+      content: contentDoc ? contentDoc.content : {},
+    });
   } catch (error) {
-    return res.status(500).json({ error: "Failed to retrieve page content." });
+    console.error("Get CMS Content Error:", error);
+
+    return res.status(500).json({
+      success: false,
+      error: "Failed to retrieve page content.",
+    });
   }
 };
 
+// PUT /api/admin/cms/:page
 exports.updatePageContent = async (req, res) => {
   try {
     const { page } = req.params;
-    const { content } = req.body;
-    const updated = await SiteContent.findOneAndUpdate(
-      { page },
-      { content, lastUpdatedBy: req.user ? req.user._id : null },
-      { upsert: true, new: true, runValidators: true }
-    );
-    return res.status(200).json({ success: true, data: updated });
+    const { content } = req.body || {};
+
+    if (!ALLOWED_CMS_PAGES.has(page)) {
+      return res.status(400).json({
+        success: false,
+        error: "Invalid CMS page.",
+      });
+    }
+
+    if (!isPlainObject(content)) {
+      return res.status(400).json({
+        success: false,
+        error: "CMS content must be a JSON object.",
+      });
+    }
+
+    const existingDoc = await SiteContent.findOne({ page });
+
+    const existingContent = isPlainObject(existingDoc?.content)
+      ? existingDoc.content
+      : {};
+
+    let mergedContent;
+
+    try {
+      mergedContent = mergeCmsContent(existingContent, content);
+    } catch {
+      return res.status(400).json({
+        success: false,
+        error: "CMS content contains invalid keys.",
+      });
+    }
+
+    if (
+      Buffer.byteLength(JSON.stringify(mergedContent), "utf8") >
+      200 * 1024
+    ) {
+      return res.status(413).json({
+        success: false,
+        error: "CMS content exceeds the 200 KB limit.",
+      });
+    }
+
+    let updated;
+
+    if (existingDoc) {
+      existingDoc.content = mergedContent;
+      existingDoc.lastUpdatedBy = req.user._id;
+
+      updated = await existingDoc.save();
+    } else {
+      updated = await SiteContent.create({
+        page,
+        content: mergedContent,
+        lastUpdatedBy: req.user._id,
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: updated,
+    });
   } catch (error) {
-    return res.status(500).json({ error: "Failed to update page content." });
+    console.error("Update CMS Content Error:", error);
+
+    if (error.name === "ValidationError") {
+      return res.status(400).json({
+        success: false,
+        error: "Invalid CMS content.",
+      });
+    }
+
+    if (error.code === 11000) {
+      return res.status(409).json({
+        success: false,
+        error: "CMS content was updated concurrently. Please retry.",
+      });
+    }
+
+    return res.status(500).json({
+      success: false,
+      error: "Failed to update page content.",
+    });
   }
 };
 

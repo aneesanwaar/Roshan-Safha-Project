@@ -108,7 +108,7 @@ exports.loginUser = async (req, res, next) => {
       role: user.role,
       token,
     });
-  } catch (error) {
+  } catch (error) { 
     return next(error);
   }
 };

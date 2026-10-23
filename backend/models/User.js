@@ -85,6 +85,6 @@ userSchema.set("toJSON", {
     delete ret.__v;
     return ret;
   },
-});
+}); 
 
 module.exports = mongoose.model("User", userSchema);

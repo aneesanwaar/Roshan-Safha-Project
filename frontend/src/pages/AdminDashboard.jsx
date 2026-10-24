@@ -578,29 +578,45 @@ function AdminDashboard() {
 
   const handleAddWinnerSubmit = async (e) => {
     e.preventDefault();
+
     try {
       const res = await createAdminWinner(winnerForm);
-      if (res.data?.success) {
-        setWinnersArchive((prev) => [res.data.data, ...prev]);
-      } else {
-        setWinnersArchive((prev) => [{ ...winnerForm, _id: 'win-' + Date.now() }, ...prev]);
+
+      if (!res.data?.success || !res.data?.data) {
+        throw new Error("Backend did not confirm winner creation.");
       }
-    } catch {
-      setWinnersArchive((prev) => [{ ...winnerForm, _id: 'win-' + Date.now() }, ...prev]);
+
+      // Add the winner only after successful database creation.
+      setWinnersArchive((prev) => [res.data.data, ...prev]);
+
+      setIsAddingWinner(false);
+      showToast("Winner recorded successfully!");
+    } catch (error) {
+      console.error("Failed to create winner:", error);
+      showToast("Failed to record winner. Please try again.");
     }
-    setIsAddingWinner(false);
-    showToast('Winner recorded successfully!');
   };
 
   const handleDeleteWinner = async (id) => {
-    if (!window.confirm('Delete winner entry?')) return;
+    if (!window.confirm("Delete winner entry?")) return;
+
     try {
-      await deleteAdminWinner(id);
-    } catch {
-      // local sync
+      const res = await deleteAdminWinner(id);
+
+      if (!res.data?.success) {
+        throw new Error("Backend did not confirm winner deletion.");
+      }
+
+      // Remove the winner only after successful database deletion.
+      setWinnersArchive((prev) =>
+        prev.filter((w) => w._id !== id)
+      );
+
+      showToast("Winner removed.");
+    } catch (error) {
+      console.error("Failed to delete winner:", error);
+      showToast("Failed to remove winner. Please try again.");
     }
-    setWinnersArchive((prev) => prev.filter((w) => w._id !== id));
-    showToast('Winner removed.');
   };
 
   const handleToggleMenuVisibility = async (item) => {

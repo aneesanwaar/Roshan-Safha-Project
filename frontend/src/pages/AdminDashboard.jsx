@@ -469,14 +469,21 @@ function AdminDashboard() {
   const handleStatusChange = async (type, id, newStatus) => {
     try {
       await updateSubmissionStatus(type, id, newStatus);
-    } catch {
-      // local sync
+
+      // Update the dashboard only after the backend succeeds.
+      setSubmissions((prev) => ({
+        ...prev,
+        [type]: prev[type].map((item) =>
+          item._id === id ? { ...item, status: newStatus } : item
+        ),
+      }));
+
+      showToast(`Status updated to ${newStatus}`);
+    } catch (error) {
+      console.error("Failed to update submission status:", error);
+
+      showToast("Failed to update status. Please try again.");
     }
-    setSubmissions((prev) => ({
-      ...prev,
-      [type]: prev[type].map((item) => (item._id === id ? { ...item, status: newStatus } : item))
-    }));
-    showToast(`Status updated to ${newStatus}`);
   };
   const handleCmsImageUpload = async (slot, file) => {
     if (!file) return;

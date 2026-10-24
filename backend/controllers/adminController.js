@@ -134,7 +134,7 @@ exports.getSubmissions = async (req, res) => {
 
     const query = {};
     if (search.trim()) {
-      const regex = { $regex: search.trim(),$options: "i" };
+      const regex = { $regex: search.trim(), $options: "i" };
       if (type.startsWith("essay")) {
         query.$or = [{ studentName: regex }, { essayTitle: regex }, { institutionName: regex }, { email: regex }];
       } else if (type.startsWith("donation")) {
@@ -186,7 +186,7 @@ exports.updateSubmissionStatus = async (req, res) => {
     const updated = await Model.findByIdAndUpdate(
       id,
       { status },
-      { new: true, runValidators: true }
+      { returnDocument: "after", runValidators: true }
     );
 
     if (!updated) {
@@ -376,7 +376,7 @@ exports.getAnalyticsTrends = async (req, res) => {
 
     const [donationStats, essayStats] = await Promise.all([
       Donation.aggregate([
-        { $match: { createdAt: {$gte: sixMonthsAgo } } },
+        { $match: { createdAt: { $gte: sixMonthsAgo } } },
         {
           $group: {
             _id: { year: { $year: "$createdAt" }, month: { $month: "$createdAt" } },
@@ -386,11 +386,13 @@ exports.getAnalyticsTrends = async (req, res) => {
         { $sort: { "_id.year": 1, "_id.month": 1 } }
       ]),
       Essay.aggregate([
-        { $match: { createdAt: {$gte: sixMonthsAgo } } },
+        { $match: { createdAt: { $gte: sixMonthsAgo } } },
         {
           $group: {
             _id: { year: { $year: "$createdAt" }, month: { $month: "$createdAt" } },
-            totalParticipants: { $sum: 1 }           }         },         {$sort: { "_id.year": 1, "_id.month": 1 } }
+            totalParticipants: { $sum: 1 }
+          }
+        }, { $sort: { "_id.year": 1, "_id.month": 1 } }
       ])
     ]);
 
@@ -651,12 +653,14 @@ exports.updateMenuItem = async (req, res) => {
     const isObjectId = mongoose.Types.ObjectId.isValid(id);
     let updated;
     if (isObjectId) {
-      updated = await MenuItem.findByIdAndUpdate(id, req.body, { new: true });
+      updated = await MenuItem.findByIdAndUpdate(id, req.body, {
+        returnDocument: "after",
+      });
     } else {
       updated = await MenuItem.findOneAndUpdate(
         { $or: [{ path: req.body.path }, { name: req.body.name }] },
         req.body,
-        { upsert: true, new: true }
+        { upsert: true, returnDocument: "after" }
       );
     }
     return res.status(200).json({ success: true, data: updated });

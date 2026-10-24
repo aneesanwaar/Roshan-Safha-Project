@@ -45,7 +45,6 @@ import {
   getAdminMenuItems,
   updateAdminMenuItem,
   getAdminTeamUsers,
-  deleteAdminTeamUser,
   exportAdminSubmissions,
   getAdminGalleryPhotos,
   uploadAdminGalleryPhoto,
@@ -1995,8 +1994,14 @@ function AdminDashboard() {
                   <h3 className="text-lg font-bold text-slate-900">User Roles & Access Control</h3>
                   <p className="text-xs text-slate-500">Manage multiple team member roles and permissions.</p>
                 </div>
-                <button onClick={() => setIsAddingUser(true)} className="flex items-center gap-1.5 bg-[#E8A94A] text-slate-950 px-4 py-2.5 rounded-xl text-xs font-bold cursor-pointer">
-                  <UserPlus className="w-4 h-4" /> Invite Member
+                <button
+                  type="button"
+                  disabled
+                  title="Team invitations will be available after role-based access controls are implemented."
+                  className="flex items-center gap-1.5 rounded-xl bg-slate-100 px-4 py-2.5 text-xs font-bold text-slate-400 cursor-not-allowed"
+                >
+                  <UserPlus className="w-4 h-4" />
+                  Invitations unavailable
                 </button>
               </div>
 
@@ -2017,15 +2022,12 @@ function AdminDashboard() {
                         <td className="p-4"><span className="text-[10px] font-extrabold px-2.5 py-1 rounded-md bg-amber-50 text-amber-900 border border-amber-200">{member.role}</span></td>
                         <td className="p-4">{member.permissions?.join(', ') || 'Standard Access'}</td>
                         <td className="p-4 text-right">
-                          {member.role !== 'Super Admin' ? (
-                            <button onClick={async () => {
-                              try { await deleteAdminTeamUser(member._id); } catch { }
-                              setTeamMembers((prev) => prev.filter((m) => m._id !== member._id));
-                              showToast(`Removed ${member.name}`);
-                            }} className="text-rose-600 font-bold text-xs cursor-pointer">Remove</button>
-                          ) : (
-                            <span className="text-slate-400 text-xs">Protected</span>
-                          )}
+                          <span
+                            className="inline-flex items-center rounded-lg border border-slate-200 bg-slate-100 px-3 py-1.5 text-[11px] font-semibold text-slate-500"
+                            title="Team account management will be enabled after role-based permissions are implemented."
+                          >
+                            Management disabled
+                          </span>
                         </td>
                       </tr>
                     ))}

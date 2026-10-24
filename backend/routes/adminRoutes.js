@@ -16,7 +16,6 @@ const {
   getMenuItems,
   updateMenuItem,
   getTeamUsers,
-  deleteTeamUser,
 } = require("../controllers/adminController");
 
 const { protect } = require("../middleware/authMiddleware");
@@ -141,15 +140,21 @@ router.delete("/winners/:id", deleteWinner);
 router.put("/menu/:id", updateMenuItem);
 
 // ==========================================
-// 6. TEAM MANAGEMENT
+// 6. TEAM MANAGEMENT (READ-ONLY)
 // ==========================================
 
-// Existing routes retained for compatibility.
-// Founder-specific permissions will be implemented
-// before production deployment.
+// Team account creation, deletion, and role changes
+// are disabled until proper role-based access
+// controls and account-protection rules are implemented.
 
 router.get("/users", getTeamUsers);
 
-//router.delete("/users/:id", deleteTeamUser);
+// Explicitly reject account deletion requests.
+router.delete("/users/:id", (req, res) => {
+  return res.status(403).json({
+    success: false,
+    error: "Team account deletion is currently disabled.",
+  });
+});
 
 module.exports = router;

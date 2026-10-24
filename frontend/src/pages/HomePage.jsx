@@ -151,6 +151,47 @@ function safeText(value, fallback = '') {
     : fallback;
 }
 
+/**
+ * Accepts a CMS image reference only when it has a valid
+ * HTTPS Cloudinary URL.
+ *
+ * Local images remain the fallback when no CMS image exists.
+ */
+function getCmsImageUrl(imageReference) {
+  if (
+    !imageReference ||
+    typeof imageReference !== 'object' ||
+    Array.isArray(imageReference)
+  ) {
+    return null;
+  }
+
+  const url = imageReference.url;
+
+  if (typeof url !== 'string' || !url.trim()) {
+    return null;
+  }
+
+  try {
+    const parsedUrl = new URL(url.trim());
+
+    if (
+      parsedUrl.protocol !== 'https:' ||
+      parsedUrl.hostname !== 'res.cloudinary.com'
+    ) {
+      return null;
+    }
+
+    if (!parsedUrl.pathname.startsWith('/')) {
+      return null;
+    }
+
+    return parsedUrl.toString();
+  } catch {
+    return null;
+  }
+}
+
 function safeStatistic(value) {
   if (typeof value === 'number' && Number.isFinite(value)) {
     return value > 0 ? String(value) : null;
@@ -210,14 +251,12 @@ function truncateText(value, limit = 135) {
 function SectionLabel({ children, light = false }) {
   return (
     <span
-      className={`inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.22em] ${
-        light ? 'text-[#F1C77F]' : 'text-[#276B56]'
-      }`}
+      className={`inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.22em] ${light ? 'text-[#F1C77F]' : 'text-[#276B56]'
+        }`}
     >
       <span
-        className={`h-[2px] w-6 ${
-          light ? 'bg-[#E8A94A]' : 'bg-[#E8A94A]'
-        }`}
+        className={`h-[2px] w-6 ${light ? 'bg-[#E8A94A]' : 'bg-[#E8A94A]'
+          }`}
       />
       {children}
     </span>
@@ -345,7 +384,28 @@ export default function HomePage() {
   const [announcements, setAnnouncements] = useState([]);
   const [announcementsLoading, setAnnouncementsLoading] = useState(true);
 
-  const images = useMemo(() => getImageCollection(), []);
+  const fallbackImages = useMemo(() => getImageCollection(), []);
+
+  const images = useMemo(() => {
+    const cmsImages =
+      content.images &&
+        typeof content.images === 'object' &&
+        !Array.isArray(content.images)
+        ? content.images
+        : {};
+
+    return {
+      hero: getCmsImageUrl(cmsImages.hero) || fallbackImages.hero,
+
+      books: getCmsImageUrl(cmsImages.books) || fallbackImages.books,
+
+      essays: getCmsImageUrl(cmsImages.essays) || fallbackImages.essays,
+
+      summer: getCmsImageUrl(cmsImages.summer) || fallbackImages.summer,
+
+      story: getCmsImageUrl(cmsImages.story) || fallbackImages.story,
+    };
+  }, [content.images, fallbackImages]);
 
   useEffect(() => {
     let active = true;
@@ -599,13 +659,12 @@ export default function HomePage() {
             </div>
 
             <div
-              className={`grid gap-6 text-center ${
-                impactStats.length === 3
+              className={`grid gap-6 text-center ${impactStats.length === 3
                   ? 'sm:grid-cols-3'
                   : impactStats.length === 2
                     ? 'sm:grid-cols-2'
                     : 'grid-cols-1'
-              }`}
+                }`}
             >
               {impactStats.map((stat) => (
                 <div

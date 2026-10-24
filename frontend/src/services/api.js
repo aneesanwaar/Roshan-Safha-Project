@@ -60,9 +60,26 @@ export const deleteAdminGalleryPhoto = (id) => API.delete(`/gallery/${id}`);
 // Public Gallery fetch
 export const getPublicGalleryPhotos = () => API.get('/gallery');
 
-// CMS Endpoints
-export const getPageContent = (page) => API.get(`/admin/cms/${page}`);
-export const updatePageContent = (page, content) => API.put(`/admin/cms/${page}`, { content });
+// -------------------------------------------------------------
+// CMS Content & Image Management
+// -------------------------------------------------------------
+
+export const getPageContent = (page) =>
+  API.get(`/admin/cms/${page}`);
+
+export const updatePageContent = (page, content) =>
+  API.put(`/admin/cms/${page}`, { content });
+
+export const uploadCmsImage = (file) => {
+  const formData = new FormData();
+  formData.append('image', file);
+
+  return API.post('/admin/cms/upload-image', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+};
 
 // Winners Endpoints
 export const getAdminWinners = () => API.get('/admin/winners');
@@ -100,16 +117,15 @@ export const exportAdminSubmissions = async (type, format = 'excel') => {
         format === 'excel'
           ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
           : format === 'pdf'
-          ? 'application/pdf'
-          : 'text/csv',
+            ? 'application/pdf'
+            : 'text/csv',
     });
 
     const downloadUrl = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = downloadUrl;
-    link.download = `RoshanSafha_${type}_${new Date().toISOString().slice(0, 10)}.${
-      format === 'excel' ? 'xlsx' : format === 'pdf' ? 'pdf' : 'csv'
-    }`;
+    link.download = `RoshanSafha_${type}_${new Date().toISOString().slice(0, 10)}.${format === 'excel' ? 'xlsx' : format === 'pdf' ? 'pdf' : 'csv'
+      }`;
     document.body.appendChild(link);
     link.click();
     link.remove();

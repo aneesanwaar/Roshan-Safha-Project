@@ -1,43 +1,44 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { 
-  TrendingUp, 
-  FileSpreadsheet, 
-  Megaphone, 
-  Trophy, 
-  Image as ImageIcon, 
-  LayoutTemplate, 
-  ShieldCheck, 
-  LogOut, 
-  Menu, 
-  X, 
-  Search, 
-  Download, 
-  FileText, 
-  BookOpen, 
-  Users, 
-  Handshake, 
-  Calendar, 
-  Mail, 
-  CheckCircle2, 
-  Sparkles, 
-  Plus, 
-  Trash2, 
-  Clock, 
-  Copy, 
-  Save, 
-  PhoneCall, 
-  Compass, 
-  UserPlus, 
-  Printer, 
-  SlidersHorizontal, 
-  UploadCloud 
+import {
+  TrendingUp,
+  FileSpreadsheet,
+  Megaphone,
+  Trophy,
+  Image as ImageIcon,
+  LayoutTemplate,
+  ShieldCheck,
+  LogOut,
+  Menu,
+  X,
+  Search,
+  Download,
+  FileText,
+  BookOpen,
+  Users,
+  Handshake,
+  Calendar,
+  Mail,
+  CheckCircle2,
+  Sparkles,
+  Plus,
+  Trash2,
+  Clock,
+  Copy,
+  Save,
+  PhoneCall,
+  Compass,
+  UserPlus,
+  Printer,
+  SlidersHorizontal,
+  UploadCloud
 } from 'lucide-react';
-import { 
-  getAdminSubmissions, 
-  updateSubmissionStatus, 
+import {
+  getAdminSubmissions,
+  updateSubmissionStatus,
   getAdminAnalyticsTrends,
-  getPageContent, 
+  getPageContent,
   updatePageContent,
+  uploadCmsImage,
   getAdminWinners,
   createAdminWinner,
   deleteAdminWinner,
@@ -55,6 +56,10 @@ function AdminDashboard() {
   const [currentSection, setCurrentSection] = useState('analytics');
   const [subTab, setSubTab] = useState('essays');
   const [cmsPageTab, setCmsPageTab] = useState('contact');
+  // Homepage CMS image management
+  const [cmsImageUploading, setCmsImageUploading] = useState(null);
+  const [cmsImageSaving, setCmsImageSaving] = useState(false);
+  const [cmsImagePreviews, setCmsImagePreviews] = useState({});
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [toastMessage, setToastMessage] = useState('');
@@ -163,10 +168,10 @@ function AdminDashboard() {
     const fetchBackendData = async () => {
       try {
         const [
-          essaysRes, 
-          donationsRes, 
-          volunteersRes, 
-          collabsRes, 
+          essaysRes,
+          donationsRes,
+          volunteersRes,
+          collabsRes,
           contactsRes,
           winnersRes,
           menuRes,
@@ -474,13 +479,84 @@ function AdminDashboard() {
     }));
     showToast(`Status updated to ${newStatus}`);
   };
+  const handleCmsImageUpload = async (slot, file) => {
+    if (!file) return;
+
+    const allowedTypes = ['image/jpeg', 'image/png'];
+    const maxSize = 5 * 1024 * 1024;
+
+    if (!allowedTypes.includes(file.type)) {
+      showToast('Please select a JPG or PNG image.');
+      return;
+    }
+
+    if (file.size > maxSize) {
+      showToast('Image size must not exceed 5 MB.');
+      return;
+    }
+
+    setCmsImageUploading(slot);
+
+    try {
+      const response = await uploadCmsImage(file);
+      const uploaded = response.data?.data;
+
+      if (!response.data?.success || !uploaded?.url || !uploaded?.publicId) {
+        throw new Error('Invalid upload response.');
+      }
+
+      setCmsContent((prev) => ({
+        ...prev,
+        home: {
+          ...prev.home,
+          images: {
+            ...(prev.home?.images || {}),
+            [slot]: {
+              url: uploaded.url,
+              publicId: uploaded.publicId,
+            },
+          },
+        },
+      }));
+
+      setCmsImagePreviews((prev) => ({
+        ...prev,
+        [slot]: uploaded.url,
+      }));
+
+      showToast('Image uploaded. Click Save Page Content to publish it.');
+    } catch (error) {
+      console.error('CMS image upload failed:', error);
+      showToast(error.response?.data?.error || 'Image upload failed.');
+    } finally {
+      setCmsImageUploading(null);
+    }
+  };
 
   const handleSaveCMS = async () => {
+    if (cmsImageUploading || cmsImageSaving) return;
+
+    setCmsImageSaving(true);
+
     try {
-      await updatePageContent(cmsPageTab, cmsContent[cmsPageTab]);
-      showToast(`Saved ${cmsPageTab.toUpperCase()} content to database!`);
-    } catch {
-      showToast(`Saved ${cmsPageTab.toUpperCase()} content to database!`);
+      const response = await updatePageContent(
+        cmsPageTab,
+        cmsContent[cmsPageTab]
+      );
+
+      if (!response.data?.success) {
+        throw new Error('CMS save was not confirmed.');
+      }
+
+      showToast(`${cmsPageTab.toUpperCase()} content saved successfully!`);
+    } catch (error) {
+      console.error('CMS save failed:', error);
+      showToast(
+        error.response?.data?.error ||
+        'Failed to save page content. Your changes are not published.'
+      );
+    } finally {
+      setCmsImageSaving(false);
     }
   };
 
@@ -556,7 +632,7 @@ function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-slate-100 flex flex-col lg:flex-row font-sans">
-      
+
       {/* Toast Alert */}
       {toastMessage && (
         <div className="fixed top-5 right-5 z-50 bg-slate-950 text-[#E8A94A] border border-[#E8A94A]/40 px-4 py-2.5 rounded-2xl text-xs font-bold shadow-xl flex items-center gap-2 animate-in fade-in slide-in-from-top-3">
@@ -566,9 +642,8 @@ function AdminDashboard() {
       )}
 
       {/* Sidebar Navigation */}
-      <aside className={`fixed lg:sticky top-0 left-0 z-40 h-screen w-72 bg-slate-900 text-slate-200 flex flex-col justify-between border-r border-slate-800 transition-transform duration-200 ${
-        sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-      }`}>
+      <aside className={`fixed lg:sticky top-0 left-0 z-40 h-screen w-72 bg-slate-900 text-slate-200 flex flex-col justify-between border-r border-slate-800 transition-transform duration-200 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+        }`}>
         <div className="p-6 space-y-6 overflow-y-auto">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
@@ -606,11 +681,10 @@ function AdminDashboard() {
                   setCurrentSection(item.id);
                   setSidebarOpen(false);
                 }}
-                className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition cursor-pointer ${
-                  currentSection === item.id
-                    ? 'bg-[#E8A94A] text-slate-950 shadow-sm'
-                    : 'text-slate-300 hover:bg-slate-800 hover:text-white'
-                }`}
+                className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition cursor-pointer ${currentSection === item.id
+                  ? 'bg-[#E8A94A] text-slate-950 shadow-sm'
+                  : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                  }`}
               >
                 {item.icon}
                 <span>{item.label}</span>
@@ -849,14 +923,14 @@ function AdminDashboard() {
                       </g>
                     ))}
 
-                    <line 
-                      x1={getX(timeSeriesData.length - 1)} 
-                      y1={getY(timeSeriesData[timeSeriesData.length - 1]?.books || 0)} 
-                      x2={chartWidth - padX} 
-                      y2={getY(bookModel?.forecast_next ?? bookModel?.forecastNext ?? 0)} 
-                      stroke="#059669" 
-                      strokeWidth="2.5" 
-                      strokeDasharray="4 4" 
+                    <line
+                      x1={getX(timeSeriesData.length - 1)}
+                      y1={getY(timeSeriesData[timeSeriesData.length - 1]?.books || 0)}
+                      x2={chartWidth - padX}
+                      y2={getY(bookModel?.forecast_next ?? bookModel?.forecastNext ?? 0)}
+                      stroke="#059669"
+                      strokeWidth="2.5"
+                      strokeDasharray="4 4"
                     />
 
                     {timeSeriesData.map((d, i) => (
@@ -890,9 +964,8 @@ function AdminDashboard() {
                         setSubTab(tab.id);
                         setSearchQuery('');
                       }}
-                      className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
-                        subTab === tab.id ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'
-                      }`}
+                      className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${subTab === tab.id ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                        }`}
                     >
                       {tab.icon}
                       <span>{tab.label}</span>
@@ -1327,17 +1400,17 @@ function AdminDashboard() {
                       <span className="text-[10px] font-extrabold text-[#E8A94A]">{photo.album || 'General'}</span>
                       <p className="text-xs text-slate-700 font-medium line-clamp-2">{photo.caption || photo.title}</p>
                       <div className="flex items-center justify-between pt-2 border-t border-slate-100">
-                        <button 
-                          onClick={() => { 
-                            navigator.clipboard.writeText(photo.imageUrl); 
-                            showToast('Cloudinary URL copied!'); 
-                          }} 
+                        <button
+                          onClick={() => {
+                            navigator.clipboard.writeText(photo.imageUrl);
+                            showToast('Cloudinary URL copied!');
+                          }}
                           className="text-[11px] font-bold text-slate-600 hover:text-slate-950 flex items-center gap-1"
                         >
                           <Copy className="w-3 h-3" /> Copy URL
                         </button>
-                        <button 
-                          onClick={() => handleDeletePhoto(photo._id)} 
+                        <button
+                          onClick={() => handleDeletePhoto(photo._id)}
                           className="text-rose-600 hover:text-rose-800 p-1 cursor-pointer"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -1357,9 +1430,9 @@ function AdminDashboard() {
                         <h3 className="text-base font-bold text-slate-900">Upload Photos to Cloudinary</h3>
                         <p className="text-xs text-slate-500">Stored dynamically in Cloudinary CDN and MongoDB.</p>
                       </div>
-                      <button 
-                        onClick={() => !isUploading && setIsAddingPhotos(false)} 
-                        disabled={isUploading} 
+                      <button
+                        onClick={() => !isUploading && setIsAddingPhotos(false)}
+                        disabled={isUploading}
                         className="p-1 text-slate-400 hover:text-slate-700 rounded-lg cursor-pointer"
                       >
                         <X className="w-5 h-5" />
@@ -1369,24 +1442,24 @@ function AdminDashboard() {
                     <div className="space-y-2">
                       <label className="block text-xs font-bold text-slate-700">Target Album</label>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        <select 
-                          value={selectedAlbum} 
-                          onChange={(e) => setSelectedAlbum(e.target.value)} 
+                        <select
+                          value={selectedAlbum}
+                          onChange={(e) => setSelectedAlbum(e.target.value)}
                           className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5 font-bold text-slate-800"
                         >
                           {galleryAlbums.map((alb) => (<option key={alb} value={alb}>{alb}</option>))}
                         </select>
                         <div className="flex gap-1">
-                          <input 
-                            type="text" 
-                            placeholder="+ New Album..." 
-                            value={newAlbumInput} 
-                            onChange={(e) => setNewAlbumInput(e.target.value)} 
-                            className="w-full text-xs bg-slate-50 border rounded-xl p-2" 
+                          <input
+                            type="text"
+                            placeholder="+ New Album..."
+                            value={newAlbumInput}
+                            onChange={(e) => setNewAlbumInput(e.target.value)}
+                            className="w-full text-xs bg-slate-50 border rounded-xl p-2"
                           />
-                          <button 
-                            type="button" 
-                            onClick={handleCreateNewAlbum} 
+                          <button
+                            type="button"
+                            onClick={handleCreateNewAlbum}
                             className="bg-slate-900 text-white px-3 py-1 rounded-xl text-xs font-bold shrink-0 cursor-pointer"
                           >
                             Add
@@ -1399,16 +1472,16 @@ function AdminDashboard() {
                       <div className="border-2 border-dashed border-slate-300 hover:border-amber-400 bg-slate-50 rounded-2xl p-6 text-center space-y-2 transition">
                         <UploadCloud className="w-8 h-8 text-slate-400 mx-auto" />
                         <p className="text-xs font-bold text-slate-700">Click below to browse photos from your computer or phone</p>
-                        <input 
-                          type="file" 
-                          multiple 
-                          accept="image/*" 
-                          id="device-picker-admin" 
-                          onChange={handleDeviceFilesSelect} 
-                          className="hidden" 
+                        <input
+                          type="file"
+                          multiple
+                          accept="image/*"
+                          id="device-picker-admin"
+                          onChange={handleDeviceFilesSelect}
+                          className="hidden"
                         />
-                        <label 
-                          htmlFor="device-picker-admin" 
+                        <label
+                          htmlFor="device-picker-admin"
                           className="inline-block bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold px-4 py-2 rounded-xl cursor-pointer"
                         >
                           Select Images
@@ -1420,18 +1493,18 @@ function AdminDashboard() {
                           {selectedFiles.map((item, idx) => (
                             <div key={idx} className="flex items-center gap-2 p-2 bg-slate-50 border border-slate-200 rounded-xl">
                               <img src={item.previewUrl} alt="prev" className="w-10 h-10 rounded-lg object-cover" />
-                              <input 
-                                type="text" 
-                                value={item.caption} 
+                              <input
+                                type="text"
+                                value={item.caption}
                                 onChange={(e) => {
                                   const val = e.target.value;
                                   setSelectedFiles(selectedFiles.map((f, i) => i === idx ? { ...f, caption: val } : f));
-                                }} 
-                                className="flex-1 text-xs bg-white border p-1.5 rounded-lg" 
+                                }}
+                                className="flex-1 text-xs bg-white border p-1.5 rounded-lg"
                               />
-                              <button 
-                                type="button" 
-                                onClick={() => setSelectedFiles(selectedFiles.filter((_, i) => i !== idx))} 
+                              <button
+                                type="button"
+                                onClick={() => setSelectedFiles(selectedFiles.filter((_, i) => i !== idx))}
                                 className="text-rose-500 p-1 cursor-pointer"
                               >
                                 <Trash2 className="w-4 h-4" />
@@ -1442,17 +1515,17 @@ function AdminDashboard() {
                       )}
 
                       <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
-                        <button 
-                          type="button" 
-                          onClick={() => setIsAddingPhotos(false)} 
-                          disabled={isUploading} 
+                        <button
+                          type="button"
+                          onClick={() => setIsAddingPhotos(false)}
+                          disabled={isUploading}
                           className="px-4 py-2 text-xs font-bold text-slate-600 cursor-pointer"
                         >
                           Cancel
                         </button>
-                        <button 
-                          type="submit" 
-                          disabled={isUploading || selectedFiles.length === 0} 
+                        <button
+                          type="submit"
+                          disabled={isUploading || selectedFiles.length === 0}
                           className="bg-[#E8A94A] hover:bg-[#d99839] disabled:opacity-50 text-slate-950 font-black px-5 py-2.5 rounded-xl text-xs cursor-pointer flex items-center gap-2"
                         >
                           {isUploading ? (
@@ -1491,9 +1564,8 @@ function AdminDashboard() {
                     <button
                       key={tab.id}
                       onClick={() => setCmsPageTab(tab.id)}
-                      className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
-                        cmsPageTab === tab.id ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600'
-                      }`}
+                      className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${cmsPageTab === tab.id ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600'
+                        }`}
                     >
                       {tab.icon}
                       <span>{tab.label}</span>
@@ -1503,13 +1575,13 @@ function AdminDashboard() {
               </div>
 
               <div className="bg-white rounded-3xl border border-slate-200 shadow-xs p-6 sm:p-8 space-y-4">
-                
+
                 {/* Homepage Tab */}
                 {cmsPageTab === 'home' && (
                   <div className="space-y-4">
                     <label className="block text-xs font-bold text-slate-700">Hero Main Headline</label>
                     <input type="text" value={cmsContent.home?.heroHeadline || ''} onChange={(e) => setCmsContent({ ...cmsContent, home: { ...cmsContent.home, heroHeadline: e.target.value } })} className="w-full text-xs bg-slate-50 border p-2.5 rounded-xl" />
-                    
+
                     <label className="block text-xs font-bold text-slate-700">Hero Mission Subtext</label>
                     <textarea rows="3" value={cmsContent.home?.heroSubtext || ''} onChange={(e) => setCmsContent({ ...cmsContent, home: { ...cmsContent.home, heroSubtext: e.target.value } })} className="w-full text-xs bg-slate-50 border p-2.5 rounded-xl"></textarea>
 
@@ -1525,6 +1597,164 @@ function AdminDashboard() {
                       <div>
                         <label className="block text-xs font-bold text-slate-700 mb-1">Partner Schools</label>
                         <input type="text" value={cmsContent.home?.impactSchools || ''} onChange={(e) => setCmsContent({ ...cmsContent, home: { ...cmsContent.home, impactSchools: e.target.value } })} className="w-full text-xs bg-slate-50 border p-2.5 rounded-xl font-bold text-slate-900" />
+                      </div>
+                    </div>
+                    {/* Homepage Image Management */}
+                    <div className="mt-8 pt-7 border-t border-slate-200 space-y-5">
+                      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                        <div>
+                          <div className="flex items-center gap-2 mb-2">
+                            <ImageIcon className="w-5 h-5 text-emerald-700" />
+                            <h3 className="text-lg font-black text-slate-900">
+                              Homepage Image Library
+                            </h3>
+                          </div>
+
+                          <p className="text-xs text-slate-500 leading-relaxed max-w-xl">
+                            Manage the five featured images displayed on your homepage.
+                            Uploading stores an image in Cloudinary. Click
+                            <strong> Save Page Content </strong>
+                            afterward to publish your changes.
+                          </p>
+                        </div>
+
+                        <span className="self-start text-[10px] font-bold px-3 py-1.5 rounded-full bg-amber-50 text-amber-900 border border-amber-200">
+                          Upload → Preview → Publish
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+                        {[
+                          {
+                            slot: 'hero',
+                            title: 'Hero Banner',
+                            description: 'Main visual at the top of the homepage.',
+                          },
+                          {
+                            slot: 'books',
+                            title: 'Book Restoration',
+                            description: 'Image for the book restoration program.',
+                          },
+                          {
+                            slot: 'essays',
+                            title: 'Essay Program',
+                            description: 'Image for student essays and competitions.',
+                          },
+                          {
+                            slot: 'summer',
+                            title: 'SDG Summer Circle',
+                            description: 'Image for the summer learning program.',
+                          },
+                          {
+                            slot: 'story',
+                            title: 'Our Story',
+                            description: 'Image supporting the organization story.',
+                          },
+                        ].map(({ slot, title, description }) => {
+                          const imageUrl =
+                            cmsImagePreviews[slot] ||
+                            cmsContent.home?.images?.[slot]?.url ||
+                            null;
+
+                          const uploading = cmsImageUploading === slot;
+
+                          return (
+                            <div
+                              key={slot}
+                              className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+                            >
+                              <div className="relative aspect-video bg-slate-100">
+                                {imageUrl ? (
+                                  <img
+                                    src={imageUrl}
+                                    alt={`${title} preview`}
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <div className="w-full h-full flex flex-col items-center justify-center gap-2 text-slate-400">
+                                    <ImageIcon className="w-9 h-9" />
+                                    <span className="text-xs font-medium">
+                                      Using homepage fallback image
+                                    </span>
+                                  </div>
+                                )}
+
+                                {uploading && (
+                                  <div className="absolute inset-0 bg-slate-950/70 flex flex-col items-center justify-center gap-3 text-white">
+                                    <span className="w-7 h-7 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                    <span className="text-xs font-bold">
+                                      Uploading image...
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+
+                              <div className="p-4 space-y-3">
+                                <div>
+                                  <h4 className="text-sm font-black text-slate-900">
+                                    {title}
+                                  </h4>
+
+                                  <p className="text-xs text-slate-500 mt-1">
+                                    {description}
+                                  </p>
+                                </div>
+
+                                <div className="flex items-center justify-between gap-2">
+                                  <span
+                                    className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${imageUrl
+                                      ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                                      : 'bg-slate-100 text-slate-600 border border-slate-200'
+                                      }`}
+                                  >
+                                    {imageUrl ? 'Cloudinary image' : 'Local fallback'}
+                                  </span>
+
+                                  <span className="text-[10px] text-slate-400">
+                                    JPG / PNG · Max 5 MB
+                                  </span>
+                                </div>
+
+                                <label
+                                  className={`flex items-center justify-center gap-2 w-full rounded-xl px-4 py-2.5 text-xs font-bold transition ${uploading || cmsImageUploading || cmsImageSaving
+                                    ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                                    : 'bg-emerald-800 hover:bg-emerald-900 text-white cursor-pointer'
+                                    }`}
+                                >
+                                  <UploadCloud className="w-4 h-4" />
+
+                                  {uploading ? 'Uploading...' : imageUrl ? 'Replace Image' : 'Upload Image'}
+
+                                  <input
+                                    type="file"
+                                    accept=".jpg,.jpeg,.png,image/jpeg,image/png"
+                                    className="hidden"
+                                    disabled={Boolean(cmsImageUploading) || cmsImageSaving}
+                                    onChange={async (event) => {
+                                      const file = event.target.files?.[0];
+
+                                      if (file) {
+                                        await handleCmsImageUpload(slot, file);
+                                      }
+
+                                      event.target.value = '';
+                                    }}
+                                  />
+                                </label>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4">
+                        <p className="text-xs text-amber-950 leading-relaxed">
+                          <strong>Publishing reminder:</strong> Uploading an image does
+                          not immediately update your public homepage. After uploading,
+                          click <strong>Save Page Content</strong> below to publish it.
+                          Until then, the public website continues using its previously
+                          saved images.
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -1691,8 +1921,23 @@ function AdminDashboard() {
                 )}
 
                 <div className="flex justify-end pt-4 border-t border-slate-100">
-                  <button onClick={handleSaveCMS} className="bg-[#E8A94A] text-slate-950 font-black px-6 py-2.5 rounded-xl text-xs flex items-center gap-2 cursor-pointer shadow-xs">
-                    <Save className="w-4 h-4" /> Save Page Content
+                  <button
+                    type="button"
+                    onClick={handleSaveCMS}
+                    disabled={cmsImageSaving || Boolean(cmsImageUploading)}
+                    className="bg-[#E8A94A] hover:bg-[#d99839] disabled:opacity-50 disabled:cursor-not-allowed text-slate-950 font-black px-6 py-2.5 rounded-xl text-xs flex items-center gap-2 cursor-pointer shadow-sm transition"
+                  >
+                    {cmsImageSaving ? (
+                      <>
+                        <span className="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
+                        Saving Changes...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="w-4 h-4" />
+                        Save Page Content
+                      </>
+                    )}
                   </button>
                 </div>
               </div>
@@ -1728,9 +1973,8 @@ function AdminDashboard() {
                         <td className="p-4 text-right">
                           <button
                             onClick={() => handleToggleMenuVisibility(item)}
-                            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
-                              item.isVisible ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-600'
-                            }`}
+                            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${item.isVisible ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-600'
+                              }`}
                           >
                             {item.isVisible ? 'Visible (Active)' : 'Hidden'}
                           </button>
@@ -1775,7 +2019,7 @@ function AdminDashboard() {
                         <td className="p-4 text-right">
                           {member.role !== 'Super Admin' ? (
                             <button onClick={async () => {
-                              try { await deleteAdminTeamUser(member._id); } catch {}
+                              try { await deleteAdminTeamUser(member._id); } catch { }
                               setTeamMembers((prev) => prev.filter((m) => m._id !== member._id));
                               showToast(`Removed ${member.name}`);
                             }} className="text-rose-600 font-bold text-xs cursor-pointer">Remove</button>

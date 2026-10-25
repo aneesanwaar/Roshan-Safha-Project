@@ -10,6 +10,7 @@ const ALLOWED_PAGES = [
   "programs",
   "getInvolved",
   "contact",
+  "contest",
 ];
 
 // ==========================================

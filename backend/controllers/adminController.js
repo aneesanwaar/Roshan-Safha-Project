@@ -449,6 +449,7 @@ const ALLOWED_CMS_PAGES = new Set([
   "programs",
   "getInvolved",
   "contact",
+  "contest",
 ]);
 
 const isPlainObject = (value) =>
@@ -650,22 +651,52 @@ exports.getMenuItems = async (req, res) => {
 exports.updateMenuItem = async (req, res) => {
   try {
     const { id } = req.params;
-    const isObjectId = mongoose.Types.ObjectId.isValid(id);
-    let updated;
-    if (isObjectId) {
-      updated = await MenuItem.findByIdAndUpdate(id, req.body, {
-        returnDocument: "after",
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        error: "Invalid menu item ID.",
       });
-    } else {
-      updated = await MenuItem.findOneAndUpdate(
-        { $or: [{ path: req.body.path }, { name: req.body.name }] },
-        req.body,
-        { upsert: true, returnDocument: "after" }
-      );
     }
-    return res.status(200).json({ success: true, data: updated });
+
+    // Basic menu management currently supports visibility changes only.
+    if (
+      typeof req.body?.isVisible !== "boolean" ||
+      Object.keys(req.body).some((key) => key !== "isVisible")
+    ) {
+      return res.status(400).json({
+        success: false,
+        error: "Only a boolean isVisible value can be updated.",
+      });
+    }
+
+    const updated = await MenuItem.findByIdAndUpdate(
+      id,
+      { $set: { isVisible: req.body.isVisible } },
+      {
+        returnDocument: "after",
+        runValidators: true,
+      }
+    );
+
+    if (!updated) {
+      return res.status(404).json({
+        success: false,
+        error: "Menu item not found.",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: updated,
+    });
   } catch (error) {
-    return res.status(500).json({ error: "Failed to update menu item." });
+    console.error("Failed to update menu item:", error);
+
+    return res.status(500).json({
+      success: false,
+      error: "Failed to update menu item.",
+    });
   }
 };
 

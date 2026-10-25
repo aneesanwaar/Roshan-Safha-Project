@@ -568,14 +568,24 @@ function AdminDashboard() {
 
   const handleSaveContestConfig = async (e) => {
     e.preventDefault();
+
     try {
-      await updatePageContent('contest', contestConfig);
-      showToast('Contest configuration & rules saved!');
-    } catch {
-      showToast('Contest configuration & rules saved!');
+      const response = await updatePageContent("contest", contestConfig);
+
+      if (
+        response?.data?.success !== true ||
+        response?.data?.data?.page !== "contest"
+      ) {
+        throw new Error("Contest configuration save was not confirmed.");
+      }
+
+      showToast("Contest configuration & rules saved!");
+    } catch (error) {
+      console.error("Failed to save contest configuration:", error);
+
+      showToast("Failed to save contest configuration & rules.");
     }
   };
-
   const handleAddWinnerSubmit = async (e) => {
     e.preventDefault();
 
@@ -621,13 +631,35 @@ function AdminDashboard() {
 
   const handleToggleMenuVisibility = async (item) => {
     const updatedVisible = !item.isVisible;
+
     try {
-      await updateAdminMenuItem(item._id, { isVisible: updatedVisible });
-    } catch {
-      // local sync
+      const response = await updateAdminMenuItem(item._id, {
+        isVisible: updatedVisible,
+      });
+
+      if (
+        response?.data?.success !== true ||
+        response?.data?.data?.isVisible !== updatedVisible
+      ) {
+        throw new Error("Menu visibility update was not confirmed.");
+      }
+
+      setPagesMenu((prev) =>
+        prev.map((m) =>
+          m._id === item._id
+            ? { ...m, isVisible: updatedVisible }
+            : m
+        )
+      );
+
+      showToast(
+        `${item.name} is now ${updatedVisible ? "visible" : "hidden"}`
+      );
+    } catch (error) {
+      console.error("Failed to update menu visibility:", error);
+
+      showToast(`Failed to update visibility for ${item.name}`);
     }
-    setPagesMenu((prev) => prev.map((m) => (m._id === item._id ? { ...m, isVisible: updatedVisible } : m)));
-    showToast(`Toggled visibility for ${item.name}`);
   };
 
   const navItems = [

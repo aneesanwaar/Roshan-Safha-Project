@@ -6,11 +6,55 @@ import { getPageContent } from "../../services/api";
 const DEFAULT_CONTEST_CONFIG = {
   editionYear: "2026",
   status: "Active",
+
+  // Junior Category
   juniorTheme: "The Book That Changed My Perspective",
-  juniorWordLimit: "1,500 words",
+  juniorWordLimit: "1,000 words",
+  juniorFormats: "PDF, DOC, DOCX",
+  juniorPrizes: "Shields, Certificates & Book Hampers",
+  juniorDeadline: "2026-10-30",
+
+  // Senior Category
   seniorTheme:
     "Digital Media vs. Physical Libraries in Modern Civic Literacy",
-  seniorWordLimit: "2,700 words",
+  seniorWordLimit: "2,500 words",
+  seniorFormats: "PDF, DOC, DOCX",
+  seniorPrizes: "Cash Award & Publication Feature",
+  seniorDeadline: "2026-10-30",
+};
+
+// Convert YYYY-MM-DD to a readable date without timezone shifts.
+const formatContestDeadline = (dateValue) => {
+  if (typeof dateValue !== "string") {
+    return "Not announced";
+  }
+
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateValue);
+
+  if (!match) {
+    return "Not announced";
+  }
+
+  const [, year, month, day] = match;
+
+  const date = new Date(
+    Date.UTC(Number(year), Number(month) - 1, Number(day))
+  );
+
+  if (
+    date.getUTCFullYear() !== Number(year) ||
+    date.getUTCMonth() !== Number(month) - 1 ||
+    date.getUTCDate() !== Number(day)
+  ) {
+    return "Not announced";
+  }
+
+  return new Intl.DateTimeFormat("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    timeZone: "UTC",
+  }).format(date);
 };
 
 function EssayContestsPage() {
@@ -52,8 +96,8 @@ function EssayContestsPage() {
     };
   }, []);
 
-  // Existing archive data is preserved until we connect
-  // this section to the public winners API.
+  // Existing archive data remains unchanged until
+  // we connect this section to the public winners API.
   const pastContests = [
     {
       year: "2025",
@@ -77,8 +121,6 @@ function EssayContestsPage() {
 
         {/* Header Section */}
         <div className="text-center space-y-3">
-
-
           <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
             Annual Essay Contests & Archive
           </h1>
@@ -117,24 +159,27 @@ function EssayContestsPage() {
                 <li className="flex items-start gap-2">
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
                   <span>
-                    <strong>Formats:</strong> PDF, Word document
-                    (.doc, .docx)
+                    <strong>Formats:</strong>{" "}
+                    {contestConfig.juniorFormats}
                   </span>
                 </li>
 
                 <li className="flex items-start gap-2">
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
                   <span>
-                    <strong>Prizes:</strong> Shields, Certificates &
-                    Book Hampers
+                    <strong>Prizes:</strong>{" "}
+                    {contestConfig.juniorPrizes}
                   </span>
                 </li>
               </ul>
             </div>
 
             <div className="pt-3 border-t border-slate-100 text-[11px] text-slate-500 flex items-center gap-1 font-medium">
-              <Calendar className="w-3.5 h-3.5 text-emerald-600" />
-              Deadline: October 30, 2026
+              <Calendar className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+              <span>
+                Deadline:{" "}
+                {formatContestDeadline(contestConfig.juniorDeadline)}
+              </span>
             </div>
           </div>
 
@@ -162,26 +207,30 @@ function EssayContestsPage() {
                 <li className="flex items-start gap-2">
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
                   <span>
-                    <strong>Plagiarism:</strong> 100% original work
-                    mandatory
+                    <strong>Formats:</strong>{" "}
+                    {contestConfig.seniorFormats}
                   </span>
                 </li>
 
                 <li className="flex items-start gap-2">
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
                   <span>
-                    <strong>Prizes:</strong> Cash award & publication
-                    feature
+                    <strong>Prizes:</strong>{" "}
+                    {contestConfig.seniorPrizes}
                   </span>
                 </li>
               </ul>
             </div>
 
             <div className="pt-3 border-t border-slate-100 text-[11px] text-slate-500 flex items-center gap-1 font-medium">
-              <Calendar className="w-3.5 h-3.5 text-emerald-600" />
-              Deadline: October 30, 2026
+              <Calendar className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+              <span>
+                Deadline:{" "}
+                {formatContestDeadline(contestConfig.seniorDeadline)}
+              </span>
             </div>
           </div>
+
         </div>
 
         {/* Backend Connected Submission Form Card */}

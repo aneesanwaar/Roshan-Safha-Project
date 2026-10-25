@@ -95,10 +95,20 @@ function AdminDashboard() {
   const [contestConfig, setContestConfig] = useState({
     editionYear: '2026',
     status: 'Active',
+
+    // Junior Category
     juniorTheme: 'The Book That Changed My Perspective',
     juniorWordLimit: '1,000 words',
+    juniorFormats: 'PDF, DOC, DOCX',
+    juniorPrizes: 'Shields, Certificates & Book Hampers',
+    juniorDeadline: '2026-10-30',
+
+    // Senior Category
     seniorTheme: 'Digital Media vs. Physical Libraries in Modern Civic Literacy',
-    seniorWordLimit: '2,500 words'
+    seniorWordLimit: '2,500 words',
+    seniorFormats: 'PDF, DOC, DOCX',
+    seniorPrizes: 'Cash Award & Publication Feature',
+    seniorDeadline: '2026-10-30'
   });
 
   const [winnersArchive, setWinnersArchive] = useState([]);
@@ -1347,38 +1357,261 @@ function AdminDashboard() {
           {/* 4. CONTESTS & WINNERS */}
           {currentSection === 'contests' && (
             <div className="space-y-8">
+              {/* // Contest Rules & Settings  */}
               <div className="bg-white rounded-3xl border border-slate-200 shadow-xs p-6 sm:p-8 space-y-6">
+
+                {/* Header */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
                   <div>
-                    <h3 className="text-lg font-bold text-slate-900">Edition {contestConfig.editionYear} Rules & Settings</h3>
-                    <p className="text-xs text-slate-500">Configure prompt themes, limits, and submission cutoff dates.</p>
+                    <h3 className="text-lg font-bold text-slate-900">
+                      Edition {contestConfig.editionYear} Rules & Settings
+                    </h3>
+
+                    <p className="text-xs text-slate-500">
+                      Manage essay themes, word limits, accepted formats, prizes,
+                      and submission deadlines.
+                    </p>
                   </div>
-                  <span className="text-xs font-bold px-3 py-1 bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-full">{contestConfig.status}</span>
+
+                  <span className="text-xs font-bold px-3 py-1 bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-full">
+                    {contestConfig.status}
+                  </span>
                 </div>
 
-                <form onSubmit={handleSaveContestConfig} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">Junior Theme (Under 16)</label>
-                    <input type="text" value={contestConfig.juniorTheme} onChange={(e) => setContestConfig({ ...contestConfig, juniorTheme: e.target.value })} className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5" />
+                <form onSubmit={handleSaveContestConfig} className="space-y-8">
+
+                  {/* Junior Category */}
+                  <div className="space-y-4">
+
+                    <h4 className="text-sm font-bold text-emerald-800 border-b border-emerald-100 pb-2">
+                      Junior Category (Under 16)
+                    </h4>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+                      <div className="sm:col-span-2">
+                        <label className="block text-xs font-bold text-slate-700 mb-1">
+                          Junior Essay Theme / Title
+                        </label>
+
+                        <input
+                          type="text"
+                          required
+                          value={contestConfig.juniorTheme ?? ""}
+                          onChange={(e) =>
+                            setContestConfig((prev) => ({
+                              ...prev,
+                              juniorTheme: e.target.value,
+                            }))
+                          }
+                          className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">
+                          Junior Word Limit
+                        </label>
+
+                        <input
+                          type="text"
+                          required
+                          placeholder="e.g. 1,500 words"
+                          value={contestConfig.juniorWordLimit ?? ""}
+                          onChange={(e) =>
+                            setContestConfig((prev) => ({
+                              ...prev,
+                              juniorWordLimit: e.target.value,
+                            }))
+                          }
+                          className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">
+                          Junior Accepted Formats
+                        </label>
+
+                        <input
+                          type="text"
+                          required
+                          placeholder="e.g. PDF, DOC, DOCX"
+                          value={contestConfig.juniorFormats ?? ""}
+                          onChange={(e) =>
+                            setContestConfig((prev) => ({
+                              ...prev,
+                              juniorFormats: e.target.value,
+                            }))
+                          }
+                          className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5"
+                        />
+                      </div>
+
+                      <div className="sm:col-span-2">
+                        <label className="block text-xs font-bold text-slate-700 mb-1">
+                          Junior Prizes
+                        </label>
+
+                        <input
+                          type="text"
+                          required
+                          placeholder="e.g. Shields, Certificates & Book Hampers"
+                          value={contestConfig.juniorPrizes ?? ""}
+                          onChange={(e) =>
+                            setContestConfig((prev) => ({
+                              ...prev,
+                              juniorPrizes: e.target.value,
+                            }))
+                          }
+                          className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">
+                          Junior Submission Deadline
+                        </label>
+
+                        <input
+                          type="date"
+                          required
+                          value={contestConfig.juniorDeadline ?? ""}
+                          onChange={(e) =>
+                            setContestConfig((prev) => ({
+                              ...prev,
+                              juniorDeadline: e.target.value,
+                            }))
+                          }
+                          className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5"
+                        />
+                      </div>
+
+                    </div>
                   </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">Junior Word Limit</label>
-                    <input type="text" value={contestConfig.juniorWordLimit} onChange={(e) => setContestConfig({ ...contestConfig, juniorWordLimit: e.target.value })} className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5" />
+
+                  {/* Senior Category */}
+                  <div className="space-y-4">
+
+                    <h4 className="text-sm font-bold text-blue-800 border-b border-blue-100 pb-2">
+                      Senior Category (16+ / University)
+                    </h4>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+                      <div className="sm:col-span-2">
+                        <label className="block text-xs font-bold text-slate-700 mb-1">
+                          Senior Essay Theme / Title
+                        </label>
+
+                        <input
+                          type="text"
+                          required
+                          value={contestConfig.seniorTheme ?? ""}
+                          onChange={(e) =>
+                            setContestConfig((prev) => ({
+                              ...prev,
+                              seniorTheme: e.target.value,
+                            }))
+                          }
+                          className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">
+                          Senior Word Limit
+                        </label>
+
+                        <input
+                          type="text"
+                          required
+                          placeholder="e.g. 2,700 words"
+                          value={contestConfig.seniorWordLimit ?? ""}
+                          onChange={(e) =>
+                            setContestConfig((prev) => ({
+                              ...prev,
+                              seniorWordLimit: e.target.value,
+                            }))
+                          }
+                          className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">
+                          Senior Accepted Formats
+                        </label>
+
+                        <input
+                          type="text"
+                          required
+                          placeholder="e.g. PDF, DOC, DOCX"
+                          value={contestConfig.seniorFormats ?? ""}
+                          onChange={(e) =>
+                            setContestConfig((prev) => ({
+                              ...prev,
+                              seniorFormats: e.target.value,
+                            }))
+                          }
+                          className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5"
+                        />
+                      </div>
+
+                      <div className="sm:col-span-2">
+                        <label className="block text-xs font-bold text-slate-700 mb-1">
+                          Senior Prizes
+                        </label>
+
+                        <input
+                          type="text"
+                          required
+                          placeholder="e.g. Cash Award & Publication Feature"
+                          value={contestConfig.seniorPrizes ?? ""}
+                          onChange={(e) =>
+                            setContestConfig((prev) => ({
+                              ...prev,
+                              seniorPrizes: e.target.value,
+                            }))
+                          }
+                          className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">
+                          Senior Submission Deadline
+                        </label>
+
+                        <input
+                          type="date"
+                          required
+                          value={contestConfig.seniorDeadline ?? ""}
+                          onChange={(e) =>
+                            setContestConfig((prev) => ({
+                              ...prev,
+                              seniorDeadline: e.target.value,
+                            }))
+                          }
+                          className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5"
+                        />
+                      </div>
+
+                    </div>
                   </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">Senior Theme (16+ / College)</label>
-                    <input type="text" value={contestConfig.seniorTheme} onChange={(e) => setContestConfig({ ...contestConfig, seniorTheme: e.target.value })} className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5" />
+
+                  {/* Save Button */}
+                  <div className="flex justify-end pt-4 border-t border-slate-100">
+                    <button
+                      type="submit"
+                      className="bg-slate-900 hover:bg-slate-800 text-white font-bold px-6 py-3 rounded-xl text-xs transition-colors"
+                    >
+                      Save Contest Rules
+                    </button>
                   </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">Senior Word Limit</label>
-                    <input type="text" value={contestConfig.seniorWordLimit} onChange={(e) => setContestConfig({ ...contestConfig, seniorWordLimit: e.target.value })} className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5" />
-                  </div>
-                  <div className="sm:col-span-2 flex justify-end">
-                    <button type="submit" className="bg-slate-900 text-white font-bold px-5 py-2.5 rounded-xl text-xs">Save Contest Rules</button>
-                  </div>
+
                 </form>
               </div>
-
               {/* Winners Archive */}
               <div className="bg-white rounded-3xl border border-slate-200 shadow-xs p-6 sm:p-8 space-y-6">
                 <div className="flex justify-between items-center border-b border-slate-100 pb-4">

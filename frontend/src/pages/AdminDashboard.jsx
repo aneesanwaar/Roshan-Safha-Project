@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import ManageBooks from '../components/admin/ManageBooks';
 import {
   TrendingUp,
   FileSpreadsheet,
@@ -675,6 +676,7 @@ function AdminDashboard() {
   const navItems = [
     { id: 'analytics', label: 'AI Trend Analytics', icon: <TrendingUp className="w-4 h-4" /> },
     { id: 'submissions', label: 'Form Submissions & Export', icon: <FileSpreadsheet className="w-4 h-4" /> },
+    { id: 'books', label: 'Manage Books', icon: <BookOpen className="w-4 h-4" /> },
     { id: 'announcements', label: 'Announcements & Blog', icon: <Megaphone className="w-4 h-4" /> },
     { id: 'contests', label: 'Contests & Winners', icon: <Trophy className="w-4 h-4" /> },
     { id: 'gallery', label: 'Gallery & Media Library', icon: <ImageIcon className="w-4 h-4" /> },
@@ -786,6 +788,9 @@ function AdminDashboard() {
         </header>
 
         <main className="flex-1 p-4 sm:p-8 max-w-7xl w-full mx-auto space-y-6">
+
+          {/* BOOK INVENTORY MANAGEMENT */}
+          {currentSection === 'books' && <ManageBooks />}
 
           {/* 1. ADVANCED AI DECISION-SUPPORT & PREDICTIVE ANALYTICS */}
           {currentSection === 'analytics' && (

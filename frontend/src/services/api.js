@@ -33,6 +33,27 @@ export const registerEvent = (data) => API.post('/events', data);
 // 2. Public Catalog & Chatbot
 // -------------------------------------------------------------
 export const fetchPublicBooks = (params) => API.get('/books', { params });
+// -------------------------------------------------------------
+// Admin Book Inventory Management
+// -------------------------------------------------------------
+
+// Fetch all inventory, including out-of-stock books
+export const getAdminBookInventory = (params = {}) =>
+  API.get('/books/admin/inventory', { params });
+
+// Add a new book
+export const createAdminBook = (data) =>
+  API.post('/books', data);
+
+// Update book details or available quantity
+export const updateAdminBook = (id, data) =>
+  API.put(`/books/${id}`, data);
+
+// Permanently delete a book
+export const deleteAdminBook = (id) =>
+  API.delete(`/books/${id}`);
+
+//chatbot endpoint
 export const sendChatMessage = (message) => API.post('/chat', { message });
 
 // -------------------------------------------------------------

@@ -1,230 +1,825 @@
-import React, { useState } from 'react';
-import { Search, Filter, BookOpen, Check, X, Send, Sparkles, MapPin } from 'lucide-react';
+import React, { useEffect, useMemo, useState } from "react";
+import {
+  ArrowRight,
+  BookMarked,
+  BookOpen,
+  Check,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  Filter,
+  GraduationCap,
+  LibraryBig,
+  MapPin,
+  RefreshCw,
+  Search,
+  SlidersHorizontal,
+  Sparkles,
+  X,
+} from "lucide-react";
 
-const mockCatalog = [
-  { id: 1, title: 'Physics Part 1 (Class 11)', author: 'Punjab Textbook Board', grade: 'Intermediate / FSc', copies: 6, condition: 'Restored - Excellent', location: 'Muzaffarabad Hub' },
-  { id: 2, title: 'Chemistry Part 2 (Class 12)', author: 'National Book Foundation', grade: 'Intermediate / FSc', copies: 4, condition: 'Good Condition', location: 'Muzaffarabad Hub' },
-  { id: 3, title: 'Mathematics (Class 9)', author: 'AJK Textbook Board', grade: 'Matric / Class 9-10', copies: 9, condition: 'Restored - Excellent', location: 'Rawalakot Desk' },
-  { id: 4, title: 'Biology (Class 10)', author: 'Punjab Textbook Board', grade: 'Matric / Class 9-10', copies: 5, condition: 'Good Condition', location: 'Muzaffarabad Hub' },
-  { id: 5, title: 'English Grammar & Composition', author: 'Wren & Martin (Edition 2021)', grade: 'General / Reference', copies: 3, condition: 'Restored - Like New', location: 'Muzaffarabad Hub' },
-  { id: 6, title: 'Urdu Adab Reader (Class 8)', author: 'AJK Board', grade: 'Middle School', copies: 7, condition: 'Good Condition', location: 'Mirpur Desk' },
-  { id: 7, title: 'General Science (Class 7)', author: 'National Book Foundation', grade: 'Middle School', copies: 4, condition: 'Good Condition', location: 'Muzaffarabad Hub' },
-  { id: 8, title: 'Oxford Junior Illustrated Dictionary', author: 'Oxford University Press', grade: 'Primary / Early Years', copies: 2, condition: 'Like New', location: 'Muzaffarabad Hub' }
+import { fetchPublicBooks } from "../../services/api";
+
+// -------------------------------------------------------------
+// Configuration
+// -------------------------------------------------------------
+
+const EDUCATION_LEVELS = [
+  "All",
+  "Primary",
+  "Middle",
+  "Matric (9th-10th)",
+  "Intermediate (FSc/ICS)",
+  "General Reading",
+  "Other",
 ];
 
-function BookCatalog() {
-  const [search, setSearch] = useState('');
-  const [selectedGrade, setSelectedGrade] = useState('All');
-  const [selectedBook, setSelectedBook] = useState(null); // For Claim Modal
-  const [claimSuccess, setClaimSuccess] = useState(false);
-  const [claimForm, setClaimForm] = useState({ studentName: '', phone: '', institution: '', reason: '' });
+const BOOK_THEMES = [
+  {
+    background: "#204D40",
+    accent: "#E8A94A",
+    light: "#DDEBE2",
+  },
+  {
+    background: "#324B67",
+    accent: "#F0C77C",
+    light: "#E3ECF6",
+  },
+  {
+    background: "#785043",
+    accent: "#F2C38A",
+    light: "#F9E9DB",
+  },
+  {
+    background: "#4D496D",
+    accent: "#D9C5F3",
+    light: "#EDE8F7",
+  },
+  {
+    background: "#526344",
+    accent: "#E7C982",
+    light: "#EDF1E6",
+  },
+  {
+    background: "#774F60",
+    accent: "#F2C4C9",
+    light: "#F8E8ED",
+  },
+];
 
-  const grades = ['All', 'Intermediate / FSc', 'Matric / Class 9-10', 'Middle School', 'Primary / Early Years', 'General / Reference'];
+const PAGE_SIZE = 12;
 
-  const filteredBooks = mockCatalog.filter(book => {
-    const matchesGrade = selectedGrade === 'All' || book.grade === selectedGrade;
-    const matchesSearch = book.title.toLowerCase().includes(search.toLowerCase()) || 
-                          book.author.toLowerCase().includes(search.toLowerCase());
-    return matchesGrade && matchesSearch;
-  });
+// -------------------------------------------------------------
+// Helpers
+// -------------------------------------------------------------
 
-  const handleClaimSubmit = (e) => {
-    e.preventDefault();
-    setClaimSuccess(true);
-    setTimeout(() => {
-      setClaimSuccess(false);
-      setSelectedBook(null);
-      setClaimForm({ studentName: '', phone: '', institution: '', reason: '' });
-    }, 2500);
-  };
+function getBookTheme(book) {
+  const text = `${book.title || ""}${book.subject || ""}`;
+
+  const hash = Array.from(text).reduce(
+    (total, character) => total + character.charCodeAt(0),
+    0
+  );
+
+  return BOOK_THEMES[hash % BOOK_THEMES.length];
+}
+
+function getBookInitials(title = "") {
+  return title
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((word) => word.charAt(0).toUpperCase())
+    .join("");
+}
+
+function getBookCountLabel(count) {
+  return `${count} ${count === 1 ? "copy" : "copies"}`;
+}
+
+// -------------------------------------------------------------
+// Decorative Book Cover
+// -------------------------------------------------------------
+
+function BookCover({ book }) {
+  const theme = getBookTheme(book);
 
   return (
-    <div className="min-h-screen bg-slate-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-6xl mx-auto space-y-8">
-        
-        {/* Header */}
-        <div className="text-center space-y-3">
-          <div className="inline-flex items-center gap-1.5 bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1.5 rounded-full">
-            <BookOpen className="w-3.5 h-3.5" />
-            Free Community Library & Textbook Repository
+    <div
+      className="relative mx-auto flex aspect-[3/4] w-full max-w-[185px] flex-col overflow-hidden rounded-r-xl rounded-l-sm shadow-[8px_12px_22px_rgba(0,0,0,0.17)] transition-transform duration-500 group-hover:-translate-y-2 group-hover:rotate-[-2deg]"
+      style={{
+        backgroundColor: theme.background,
+        color: theme.light,
+      }}
+    >
+      {/* Book spine */}
+      <div className="absolute inset-y-0 left-0 z-10 w-[10px] bg-black/20" />
+
+      <div className="absolute inset-y-0 left-[10px] z-10 w-px bg-white/20" />
+
+      {/* Decorative circles */}
+      <div
+        className="absolute -right-14 -top-14 h-40 w-40 rounded-full border-[25px] opacity-20"
+        style={{ borderColor: theme.accent }}
+      />
+
+      <div
+        className="absolute -bottom-16 -left-16 h-44 w-44 rounded-full border-[24px] opacity-20"
+        style={{ borderColor: theme.accent }}
+      />
+
+      <div className="relative z-10 flex h-full flex-col px-5 pb-5 pt-6">
+        <div className="flex items-center justify-between gap-2">
+          <BookOpen
+            className="h-5 w-5"
+            style={{ color: theme.accent }}
+          />
+
+          <span
+            className="text-[8px] font-bold uppercase tracking-[0.18em]"
+            style={{ color: theme.accent }}
+          >
+            Roshan Safha
+          </span>
+        </div>
+
+        <div className="my-auto py-5 text-center">
+          <div
+            className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full border text-lg font-bold"
+            style={{
+              borderColor: `${theme.accent}80`,
+              color: theme.accent,
+            }}
+          >
+            {getBookInitials(book.title) || "RS"}
           </div>
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
-            Available Books Catalog
-          </h1>
-          <p className="text-sm sm:text-base text-slate-600 max-w-2xl mx-auto">
-            Browse verified, restored textbooks available for students and educators free of cost. Request single copies or class sets.
+
+          <p
+            className="mb-2 text-[9px] font-semibold uppercase tracking-[0.15em]"
+            style={{ color: theme.accent }}
+          >
+            {book.subject}
+          </p>
+
+          <h3
+            className="line-clamp-4 text-base font-bold leading-snug"
+            style={{ fontFamily: "'Playfair Display', serif" }}
+          >
+            {book.title}
+          </h3>
+        </div>
+
+        <div
+          className="border-t pt-3 text-center"
+          style={{ borderColor: `${theme.accent}55` }}
+        >
+          <p className="line-clamp-2 text-[9px] opacity-80">
+            {book.author || "Unknown Author"}
           </p>
         </div>
-
-        {/* Search & Filter Bar */}
-        <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-3 sm:space-y-0 sm:flex sm:items-center sm:gap-4">
-          <div className="relative flex-1">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              placeholder="Search by book title, subject, or author..."
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              className="w-full text-xs pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500"
-            />
-          </div>
-
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
-            <Filter className="w-4 h-4 text-slate-400 shrink-0 hidden sm:block" />
-            <select
-              value={selectedGrade}
-              onChange={e => setSelectedGrade(e.target.value)}
-              className="text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 outline-none font-semibold text-slate-700"
-            >
-              {grades.map(g => (
-                <option key={g} value={g}>{g === 'All' ? 'All Academic Levels' : g}</option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        {/* Books Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          {filteredBooks.length > 0 ? (
-            filteredBooks.map((b) => (
-              <div 
-                key={b.id} 
-                className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs hover:shadow-md transition flex flex-col justify-between"
-              >
-                <div className="space-y-2.5">
-                  <span className="inline-block text-[10px] font-extrabold uppercase tracking-wider text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-100">
-                    {b.grade}
-                  </span>
-                  <h3 className="font-bold text-slate-900 text-sm leading-snug line-clamp-2">
-                    {b.title}
-                  </h3>
-                  <p className="text-xs text-slate-500">{b.author}</p>
-                  
-                  <div className="pt-2 border-t border-slate-100 space-y-1 text-[11px] text-slate-600">
-                    <div className="flex items-center justify-between">
-                      <span className="text-slate-400">Available:</span>
-                      <span className="font-bold text-emerald-700">{b.copies} Copies</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-slate-400">Condition:</span>
-                      <span className="font-medium text-slate-800">{b.condition}</span>
-                    </div>
-                    <div className="flex items-center gap-1 text-slate-500 pt-1">
-                      <MapPin className="w-3 h-3 text-slate-400" />
-                      <span>{b.location}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <button
-                  onClick={() => setSelectedBook(b)}
-                  className="mt-4 w-full bg-slate-900 hover:bg-emerald-600 text-white font-bold py-2 rounded-xl text-xs transition duration-150 cursor-pointer"
-                >
-                  Request This Book
-                </button>
-              </div>
-            ))
-          ) : (
-            <div className="col-span-full bg-white rounded-2xl border border-slate-200 p-12 text-center text-slate-500 space-y-2">
-              <BookOpen className="w-8 h-8 mx-auto text-slate-300" />
-              <p className="font-bold text-sm text-slate-700">No books found matching your filter.</p>
-              <p className="text-xs">Try clearing your search terms or checking another grade level.</p>
-            </div>
-          )}
-        </div>
-
       </div>
-
-      {/* Claim / Request Modal */}
-      {selectedBook && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 relative animate-in fade-in zoom-in-95">
-            <button 
-              onClick={() => setSelectedBook(null)} 
-              className="absolute top-4 right-4 p-1.5 text-slate-400 hover:text-slate-700 rounded-xl hover:bg-slate-100"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            {claimSuccess ? (
-              <div className="text-center py-6 space-y-3">
-                <div className="w-12 h-12 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center mx-auto">
-                  <Check className="w-6 h-6" />
-                </div>
-                <h3 className="font-bold text-slate-900 text-base">Request Registered!</h3>
-                <p className="text-xs text-slate-600">Our literacy coordinator will contact you to verify student identity and arrange collection.</p>
-              </div>
-            ) : (
-              <form onSubmit={handleClaimSubmit} className="space-y-4">
-                <div>
-                  <span className="text-[10px] font-bold text-emerald-700 uppercase bg-emerald-50 px-2 py-0.5 rounded">Book Request</span>
-                  <h3 className="font-bold text-slate-900 text-base mt-1">{selectedBook.title}</h3>
-                  <p className="text-xs text-slate-500">{selectedBook.grade} • {selectedBook.location}</p>
-                </div>
-
-                <div className="space-y-3 pt-2">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">Student / Requester Name *</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="e.g. Bilal Ahmed"
-                      value={claimForm.studentName}
-                      onChange={e => setClaimForm({ ...claimForm, studentName: e.target.value })}
-                      className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">WhatsApp / Contact Number *</label>
-                    <input
-                      type="tel"
-                      required
-                      placeholder="0300 0000000"
-                      value={claimForm.phone}
-                      onChange={e => setClaimForm({ ...claimForm, phone: e.target.value })}
-                      className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">School / College Name *</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="e.g. Govt Degree College Muzaffarabad"
-                      value={claimForm.institution}
-                      onChange={e => setClaimForm({ ...claimForm, institution: e.target.value })}
-                      className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">Purpose / Need Note</label>
-                    <textarea
-                      rows="2"
-                      placeholder="e.g. Preparing for annual board exams..."
-                      value={claimForm.reason}
-                      onChange={e => setClaimForm({ ...claimForm, reason: e.target.value })}
-                      className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500"
-                    ></textarea>
-                  </div>
-                </div>
-
-                <button
-                  type="submit"
-                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-sm transition"
-                >
-                  Confirm Book Request
-                </button>
-              </form>
-            )}
-          </div>
-        </div>
-      )}
-
     </div>
   );
 }
 
-export default BookCatalog;
+// -------------------------------------------------------------
+// Book Card
+// -------------------------------------------------------------
+
+function BookCard({ book }) {
+  return (
+    <article className="group flex h-full flex-col overflow-hidden rounded-[24px] border border-[#E5EAE2] bg-white shadow-[0_5px_24px_rgba(25,62,50,0.045)] transition-all duration-300 hover:-translate-y-1 hover:border-[#B7CDBF] hover:shadow-[0_18px_40px_rgba(25,62,50,0.12)]">
+      {/* Book cover area */}
+      <div className="relative flex min-h-[275px] items-center justify-center overflow-hidden bg-gradient-to-br from-[#F2F5ED] via-[#F8F6EF] to-[#E7EEE5] px-7 py-8">
+        <div className="absolute inset-0 opacity-30 [background-image:radial-gradient(#9BAF9C_1px,transparent_1px)] [background-size:18px_18px]" />
+
+        <div className="absolute left-4 top-4 z-20">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-[#CFE5D7] bg-white/95 px-3 py-1.5 text-[10px] font-bold text-[#276B56] shadow-sm">
+            <Check className="h-3 w-3" />
+            In Stock
+          </span>
+        </div>
+
+        <div className="absolute bottom-4 right-4 z-20">
+          <span className="rounded-full bg-[#193E32] px-3 py-1.5 text-[10px] font-bold text-white shadow-sm">
+            {getBookCountLabel(book.availableQuantity)}
+          </span>
+        </div>
+
+        <BookCover book={book} />
+      </div>
+
+      {/* Book information */}
+      <div className="flex flex-1 flex-col p-5">
+        <div className="mb-3">
+          <span className="inline-flex rounded-lg bg-[#E7EEE5] px-2.5 py-1 text-[10px] font-bold text-[#276B56]">
+            {book.educationLevel}
+          </span>
+        </div>
+
+        <h3 className="line-clamp-2 min-h-[44px] text-[15px] font-bold leading-snug text-[#193E32]">
+          {book.title}
+        </h3>
+
+        <p className="mt-1.5 line-clamp-1 text-xs text-slate-500">
+          {book.author || "Unknown Author"}
+        </p>
+
+        <div className="mt-5 space-y-3 border-t border-slate-100 pt-4">
+          <div className="flex items-start justify-between gap-3 text-xs">
+            <span className="text-slate-500">Subject</span>
+
+            <span className="max-w-[60%] text-right font-semibold text-slate-700">
+              {book.subject}
+            </span>
+          </div>
+
+          <div className="flex items-start justify-between gap-3 text-xs">
+            <span className="text-slate-500">Condition</span>
+
+            <span className="font-semibold text-[#276B56]">
+              {book.condition || "Not specified"}
+            </span>
+          </div>
+
+          {book.language && (
+            <div className="flex items-start justify-between gap-3 text-xs">
+              <span className="text-slate-500">Language</span>
+
+              <span className="font-medium text-slate-700">
+                {book.language}
+              </span>
+            </div>
+          )}
+        </div>
+
+        <div className="mt-auto pt-5">
+          <div className="flex items-start gap-2 rounded-xl bg-[#F6F8F4] px-3 py-3 text-xs text-slate-600">
+            <MapPin className="h-4 w-4 shrink-0 text-[#276B56]" />
+
+            <span className="line-clamp-2">
+              {book.locationShelf || "Roshan Safha Library"}
+            </span>
+          </div>
+        </div>
+
+        {/* Book requests will be implemented in the next phase */}
+        <div className="mt-4 flex items-center justify-center gap-2 border-t border-dashed border-slate-200 pt-4 text-[11px] font-semibold text-[#276B56]">
+          <BookMarked className="h-3.5 w-3.5" />
+          Available in Our Library
+        </div>
+      </div>
+    </article>
+  );
+}
+
+// -------------------------------------------------------------
+// Loading Skeleton
+// -------------------------------------------------------------
+
+function BookCardSkeleton() {
+  return (
+    <div className="overflow-hidden rounded-[24px] border border-slate-100 bg-white">
+      <div className="flex h-[275px] animate-pulse items-center justify-center bg-slate-100">
+        <div className="h-48 w-32 rounded-lg bg-slate-200" />
+      </div>
+
+      <div className="space-y-4 p-5">
+        <div className="h-5 w-24 animate-pulse rounded bg-slate-100" />
+        <div className="h-5 w-4/5 animate-pulse rounded bg-slate-100" />
+        <div className="h-4 w-1/2 animate-pulse rounded bg-slate-100" />
+        <div className="h-20 animate-pulse rounded bg-slate-50" />
+      </div>
+    </div>
+  );
+}
+
+// -------------------------------------------------------------
+// Main Page
+// -------------------------------------------------------------
+
+export default function BookCatalog() {
+  const [books, setBooks] = useState([]);
+
+  const [search, setSearch] = useState("");
+  const [selectedLevel, setSelectedLevel] = useState("All");
+  const [sortBy, setSortBy] = useState("newest");
+
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
+
+  // Fetch books directly from MongoDB through the existing API.
+  useEffect(() => {
+    let active = true;
+
+    const timer = setTimeout(async () => {
+      if (!active) return;
+
+      setLoading(true);
+      setError("");
+
+      try {
+        const response = await fetchPublicBooks({
+          page,
+          limit: PAGE_SIZE,
+          search: search.trim(),
+          educationLevel:
+            selectedLevel === "All" ? undefined : selectedLevel,
+        });
+
+        if (!active) return;
+
+        if (!response.data?.success) {
+          throw new Error("The book catalog could not be loaded.");
+        }
+
+        setBooks(response.data.data || []);
+        setTotal(response.data.total || 0);
+        setTotalPages(response.data.totalPages || 0);
+      } catch (err) {
+        if (!active) return;
+
+        console.error("Public catalog error:", err);
+
+        setBooks([]);
+        setTotal(0);
+        setTotalPages(0);
+
+        setError(
+          err.response?.data?.message ||
+          err.response?.data?.error ||
+          err.message ||
+          "Unable to load the library. Please try again."
+        );
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
+      }
+    }, 300);
+
+    return () => {
+      active = false;
+      clearTimeout(timer);
+    };
+  }, [page, search, selectedLevel, refreshKey]);
+
+  // Sorting applies to the currently loaded page.
+  const sortedBooks = useMemo(() => {
+    const result = [...books];
+
+    if (sortBy === "title") {
+      result.sort((a, b) =>
+        (a.title || "").localeCompare(b.title || "")
+      );
+    }
+
+    if (sortBy === "copies") {
+      result.sort(
+        (a, b) =>
+          (b.availableQuantity || 0) -
+          (a.availableQuantity || 0)
+      );
+    }
+
+    if (sortBy === "newest") {
+      result.sort(
+        (a, b) =>
+          new Date(b.createdAt || 0) -
+          new Date(a.createdAt || 0)
+      );
+    }
+
+    return result;
+  }, [books, sortBy]);
+
+  const hasFilters =
+    search.trim() !== "" || selectedLevel !== "All";
+
+  const handleSearchChange = (event) => {
+    setSearch(event.target.value);
+    setPage(1);
+  };
+
+  const handleLevelChange = (level) => {
+    setSelectedLevel(level);
+    setPage(1);
+    setShowMobileFilters(false);
+  };
+
+  const clearFilters = () => {
+    setSearch("");
+    setSelectedLevel("All");
+    setSortBy("newest");
+    setPage(1);
+  };
+
+  const refreshBooks = () => {
+    setRefreshKey((previous) => previous + 1);
+  };
+
+  return (
+    <div className="min-h-screen bg-[#FFF9EF] pb-20">
+      {/* ===================================================== */}
+      {/* HERO */}
+      {/* ===================================================== */}
+
+      <section className="relative overflow-hidden bg-[#193E32] px-4 pb-24 pt-16 text-white sm:px-6 sm:pb-28 sm:pt-20 lg:px-8">
+        {/* Decorative background */}
+        <div className="pointer-events-none absolute -right-32 -top-32 h-[450px] w-[450px] rounded-full border-[75px] border-white/[0.035]" />
+
+        <div className="pointer-events-none absolute -bottom-56 -left-36 h-[500px] w-[500px] rounded-full border-[75px] border-[#E8A94A]/[0.07]" />
+
+        <div className="pointer-events-none absolute right-[12%] top-20 hidden rotate-12 opacity-10 lg:block">
+          <BookOpen className="h-56 w-56" strokeWidth={0.7} />
+        </div>
+
+        <div className="relative mx-auto max-w-6xl">
+          <div className="max-w-3xl">
+
+
+            <h1
+              className="text-4xl font-bold leading-[1.15] tracking-tight sm:text-5xl lg:text-6xl"
+              style={{ fontFamily: "'Playfair Display', serif" }}
+            >
+              Every Book Opens
+              <br />
+              <span className="text-[#E8A94A]">
+                a New Possibility.
+              </span>
+            </h1>
+
+            <p className="mt-6 max-w-xl text-sm leading-8 text-white/75 sm:text-base">
+              Explore Roshan Safha's growing collection of
+              restored textbooks and educational resources.
+              Discover books ready to support your next chapter
+              of learning.
+            </p>
+
+            <div className="mt-8 flex flex-wrap items-center gap-5 text-xs font-medium text-white/75">
+              <div className="flex items-center gap-2">
+                <Check className="h-4 w-4 text-[#E8A94A]" />
+                Free Educational Resources
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Check className="h-4 w-4 text-[#E8A94A]" />
+                Community-Powered Library
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ===================================================== */}
+      {/* FLOATING SEARCH */}
+      {/* ===================================================== */}
+
+      <div className="relative z-10 mx-auto -mt-12 max-w-6xl px-4 sm:px-6 lg:px-8">
+        <div className="rounded-[24px] border border-[#E5EAE2] bg-white p-4 shadow-[0_18px_55px_rgba(25,62,50,0.12)] sm:p-5">
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <div className="relative flex-1">
+              <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#276B56]" />
+
+              <input
+                type="search"
+                value={search}
+                onChange={handleSearchChange}
+                placeholder="Search by title, author, or subject..."
+                className="w-full rounded-2xl border border-[#E5EAE2] bg-[#F8FAF6] py-4 pl-12 pr-4 text-sm text-[#193E32] outline-none transition focus:border-[#276B56] focus:bg-white focus:ring-4 focus:ring-[#276B56]/10"
+              />
+            </div>
+
+            <div className="relative hidden sm:block">
+              <GraduationCap className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#276B56]" />
+
+              <select
+                value={selectedLevel}
+                onChange={(event) =>
+                  handleLevelChange(event.target.value)
+                }
+                className="h-full min-w-[225px] appearance-none rounded-2xl border border-[#E5EAE2] bg-[#F8FAF6] py-4 pl-12 pr-10 text-sm font-semibold text-[#193E32] outline-none transition focus:border-[#276B56]"
+              >
+                {EDUCATION_LEVELS.map((level) => (
+                  <option key={level} value={level}>
+                    {level === "All"
+                      ? "All Education Levels"
+                      : level}
+                  </option>
+                ))}
+              </select>
+
+              <ChevronDown className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+            </div>
+
+            <button
+              type="button"
+              onClick={() =>
+                setShowMobileFilters((previous) => !previous)
+              }
+              className="flex items-center justify-center gap-2 rounded-2xl border border-[#E5EAE2] px-5 py-4 text-sm font-semibold text-[#193E32] sm:hidden"
+            >
+              <Filter className="h-4 w-4" />
+              Filter Books
+            </button>
+          </div>
+
+          {showMobileFilters && (
+            <div className="mt-3 sm:hidden">
+              <select
+                value={selectedLevel}
+                onChange={(event) =>
+                  handleLevelChange(event.target.value)
+                }
+                className="w-full rounded-xl border border-[#E5EAE2] bg-[#F8FAF6] px-4 py-3 text-sm text-[#193E32]"
+              >
+                {EDUCATION_LEVELS.map((level) => (
+                  <option key={level} value={level}>
+                    {level === "All"
+                      ? "All Education Levels"
+                      : level}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4">
+            <p className="flex items-center gap-2 text-xs text-slate-500">
+              <LibraryBig className="h-4 w-4 text-[#276B56]" />
+
+              {!loading && !error ? (
+                <>
+                  <span className="font-bold text-[#193E32]">
+                    {total}
+                  </span>
+                  available book {total === 1 ? "title" : "titles"}
+                </>
+              ) : (
+                "Explore our community collection"
+              )}
+            </p>
+
+            <button
+              type="button"
+              onClick={refreshBooks}
+              disabled={loading}
+              className="inline-flex items-center gap-2 text-xs font-semibold text-[#276B56] transition hover:text-[#193E32] disabled:opacity-50"
+            >
+              <RefreshCw
+                className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""
+                  }`}
+              />
+              Refresh Inventory
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* ===================================================== */}
+      {/* COLLECTION */}
+      {/* ===================================================== */}
+
+      <section className="mx-auto max-w-6xl px-4 pt-16 sm:px-6 lg:px-8">
+        <div className="mb-8 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <div className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-[#276B56]">
+              <span className="h-px w-7 bg-[#E8A94A]" />
+              Our Collection
+            </div>
+
+            <h2
+              className="text-3xl font-bold text-[#193E32] sm:text-4xl"
+              style={{ fontFamily: "'Playfair Display', serif" }}
+            >
+              Browse Available Books
+            </h2>
+
+            <p className="mt-3 text-sm text-slate-500">
+              Carefully restored and ready for curious minds.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3">
+            {hasFilters && (
+              <button
+                type="button"
+                onClick={clearFilters}
+                className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2.5 text-xs font-bold text-[#276B56] transition hover:bg-[#E7EEE5]"
+              >
+                <X className="h-3.5 w-3.5" />
+                Clear Filters
+              </button>
+            )}
+
+            <div className="relative">
+              <SlidersHorizontal className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#276B56]" />
+
+              <select
+                value={sortBy}
+                onChange={(event) =>
+                  setSortBy(event.target.value)
+                }
+                className="appearance-none rounded-xl border border-[#E5EAE2] bg-white py-3 pl-10 pr-9 text-xs font-semibold text-[#193E32] outline-none"
+              >
+                <option value="newest">Newest First</option>
+                <option value="title">Title A–Z</option>
+                <option value="copies">Most Copies</option>
+              </select>
+
+              <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+            </div>
+          </div>
+        </div>
+
+        {/* Quick education filters */}
+        <div className="mb-8 flex gap-2 overflow-x-auto pb-2">
+          {EDUCATION_LEVELS.map((level) => {
+            const active = selectedLevel === level;
+
+            return (
+              <button
+                key={level}
+                type="button"
+                onClick={() => handleLevelChange(level)}
+                className={`shrink-0 rounded-full border px-4 py-2.5 text-xs font-bold transition ${active
+                    ? "border-[#193E32] bg-[#193E32] text-white shadow-sm"
+                    : "border-[#DCE6DC] bg-white text-[#496456] hover:border-[#276B56] hover:bg-[#E7EEE5]"
+                  }`}
+              >
+                {level === "All" ? "All Books" : level}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Loading */}
+        {loading && (
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {Array.from({ length: 8 }).map((_, index) => (
+              <BookCardSkeleton key={index} />
+            ))}
+          </div>
+        )}
+
+        {/* Error */}
+        {!loading && error && (
+          <div
+            role="alert"
+            className="rounded-[28px] border border-rose-100 bg-white px-6 py-16 text-center shadow-sm"
+          >
+            <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-rose-50 text-rose-500">
+              <X className="h-8 w-8" />
+            </div>
+
+            <h3 className="text-xl font-bold text-[#193E32]">
+              We Couldn't Load the Library
+            </h3>
+
+            <p className="mx-auto mt-3 max-w-md text-sm leading-7 text-slate-500">
+              {error}
+            </p>
+
+            <button
+              type="button"
+              onClick={refreshBooks}
+              className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#193E32] px-6 py-3 text-sm font-bold text-white transition hover:bg-[#276B56]"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Try Again
+            </button>
+          </div>
+        )}
+
+        {/* Empty state */}
+        {!loading && !error && books.length === 0 && (
+          <div className="rounded-[28px] border border-[#E5EAE2] bg-white px-6 py-20 text-center shadow-sm">
+            <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-3xl bg-[#E7EEE5] text-[#276B56]">
+              <BookOpen className="h-10 w-10" />
+            </div>
+
+            <h3
+              className="text-2xl font-bold text-[#193E32]"
+              style={{ fontFamily: "'Playfair Display', serif" }}
+            >
+              No Books Found
+            </h3>
+
+            <p className="mx-auto mt-3 max-w-md text-sm leading-7 text-slate-500">
+              {hasFilters
+                ? "We couldn't find any available books matching your search. Try another keyword or education level."
+                : "Our shelves are waiting for their next chapter. New books will appear here as our team adds them to the library."}
+            </p>
+
+            {hasFilters && (
+              <button
+                type="button"
+                onClick={clearFilters}
+                className="mt-6 rounded-xl bg-[#193E32] px-6 py-3 text-sm font-bold text-white transition hover:bg-[#276B56]"
+              >
+                View All Books
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Real database books */}
+        {!loading && !error && sortedBooks.length > 0 && (
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {sortedBooks.map((book) => (
+              <BookCard key={book._id} book={book} />
+            ))}
+          </div>
+        )}
+
+        {/* Pagination */}
+        {!loading && !error && totalPages > 1 && (
+          <div className="mt-12 flex flex-col items-center justify-between gap-4 rounded-2xl border border-[#E5EAE2] bg-white px-5 py-4 sm:flex-row">
+            <p className="text-xs font-medium text-slate-500">
+              Page{" "}
+              <span className="font-bold text-[#193E32]">
+                {page}
+              </span>{" "}
+              of{" "}
+              <span className="font-bold text-[#193E32]">
+                {totalPages}
+              </span>
+            </p>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                disabled={page === 1}
+                onClick={() => {
+                  setPage((previous) => previous - 1);
+                }}
+                className="inline-flex items-center gap-1 rounded-xl border border-[#E5EAE2] px-4 py-2.5 text-xs font-bold text-[#193E32] transition hover:bg-[#E7EEE5] disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                <ChevronLeft className="h-4 w-4" />
+                Previous
+              </button>
+
+              <button
+                type="button"
+                disabled={page >= totalPages}
+                onClick={() => {
+                  setPage((previous) => previous + 1);
+                }}
+                className="inline-flex items-center gap-1 rounded-xl bg-[#193E32] px-4 py-2.5 text-xs font-bold text-white transition hover:bg-[#276B56] disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                Next
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        )}
+      </section>
+
+      {/* ===================================================== */}
+      {/* CLOSING BANNER */}
+      {/* ===================================================== */}
+
+      <section className="mx-auto max-w-6xl px-4 pt-20 sm:px-6 lg:px-8">
+        <div className="relative overflow-hidden rounded-[30px] bg-[#193E32] px-6 py-12 text-center text-white sm:px-12 sm:py-16">
+          <div className="pointer-events-none absolute -left-20 -top-20 h-64 w-64 rounded-full border-[40px] border-white/5" />
+
+          <div className="pointer-events-none absolute -bottom-28 -right-16 h-72 w-72 rounded-full border-[40px] border-[#E8A94A]/10" />
+
+          <div className="relative">
+            <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10 text-[#E8A94A]">
+              <BookOpen className="h-7 w-7" />
+            </div>
+
+            <h2
+              className="text-2xl font-bold sm:text-3xl"
+              style={{ fontFamily: "'Playfair Display', serif" }}
+            >
+              Knowledge Deserves to Be Shared.
+            </h2>
+
+            <p className="mx-auto mt-4 max-w-xl text-sm leading-7 text-white/70">
+              Every restored book represents another opportunity
+              for someone to learn, discover, and grow. Together,
+              we're building a brighter future, one page at a time.
+            </p>
+
+            <a
+              href="/programs/donate-books"
+              className="mt-7 inline-flex items-center justify-center gap-2 rounded-xl bg-[#E8A94A] px-7 py-3.5 text-sm font-bold text-[#193E32] shadow-lg transition-all duration-300 hover:-translate-y-1 hover:bg-[#F2BC68] hover:shadow-xl"
+            >
+              Donate Books
+              <ArrowRight className="h-4 w-4" />
+            </a>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}

@@ -90,10 +90,7 @@ function BookDonationPage() {
         <div className="rs-container relative mx-auto max-w-7xl px-5 py-20 sm:px-8 sm:py-24 lg:px-12 lg:py-28">
           <div className="grid items-center gap-12 lg:grid-cols-[1.2fr_0.8fr]">
             <div>
-              <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-semibold tracking-wide text-[#F6D6A2]">
-                <Heart size={15} />
-                ROSHAN SAFHA · BOOK DONATIONS
-              </div>
+
 
               <h1
                 className="max-w-3xl text-4xl font-bold leading-[1.15] text-white sm:text-5xl lg:text-6xl"
@@ -143,11 +140,8 @@ function BookDonationPage() {
                       <BookOpen size={29} strokeWidth={1.7} />
                     </div>
 
-                    <Sparkles
-                      size={29}
-                      className="text-[#E8A94A]"
-                      strokeWidth={1.5}
-                    />
+
+
                   </div>
 
                   <div className="my-12">
@@ -174,22 +168,7 @@ function BookDonationPage() {
                 </div>
               </div>
 
-              <div className="absolute -bottom-5 -left-4 rounded-2xl border border-[#E7EEE5] bg-white px-5 py-4 shadow-xl sm:-left-8">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#E7EEE5] text-[#276B56]">
-                    <Heart size={20} />
-                  </div>
 
-                  <div>
-                    <p className="text-sm font-bold text-[#193E32]">
-                      Share Knowledge
-                    </p>
-                    <p className="text-xs text-[#718072]">
-                      Inspire Learning
-                    </p>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
         </div>

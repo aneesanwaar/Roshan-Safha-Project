@@ -1,365 +1,496 @@
-import React, { useState } from 'react';
-import { BookOpen, CheckCircle, Heart, MapPin, Sparkles, Send, AlertCircle, Loader2 } from 'lucide-react';
-import { submitDonation } from '../../services/api';
+import React from "react";
+import { Link } from "react-router-dom";
+import {
+  ArrowRight,
+  BookOpen,
+  CheckCircle2,
+  Heart,
+  MapPin,
+  PackageCheck,
+  RefreshCw,
+  ShieldCheck,
+  Sparkles,
+  Truck,
+} from "lucide-react";
 
-function DonateBooks() {
-  const [formData, setFormData] = useState({
-    donorName: '',
-    contactNumber: '',
-    email: '',
-    city: 'Muzaffarabad',
-    bookCount: '',
-    bookCategories: [],
-    condition: 'Good',
-    deliveryMethod: 'dropoff', // 'dropoff' or 'pickup'
-    notes: ''
-  });
+import DonationForm from "../../components/forms/DonationForm";
 
-  const [loading, setLoading] = useState(false);
-  const [errorMsg, setErrorMsg] = useState(null);
-  const [submitted, setSubmitted] = useState(false);
+const headingFont = {
+  fontFamily: "'Playfair Display', Georgia, serif",
+};
 
-  const categories = [
-    'Matric / Class 9-10 Textbooks',
-    'FSc / Intermediate (Pre-Med/Pre-Eng)',
-    'Primary & Middle School Books',
-    'English & Urdu Storybooks / Literature',
-    'University Reference & General Books'
-  ];
+const processSteps = [
+  {
+    number: "01",
+    title: "Collect",
+    description:
+      "We receive pre-loved textbooks, reference materials, and reading books from people who want to share the gift of learning.",
+    icon: BookOpen,
+  },
+  {
+    number: "02",
+    title: "Restore",
+    description:
+      "Our team reviews donated books and restores suitable copies when needed, helping useful learning materials last longer.",
+    icon: RefreshCw,
+  },
+  {
+    number: "03",
+    title: "Donate",
+    description:
+      "Usable books are prepared for redistribution to students and readers who can benefit from them.",
+    icon: Heart,
+  },
+];
 
-  const toggleCategory = (cat) => {
-    setFormData(prev => ({
-      ...prev,
-      bookCategories: prev.bookCategories.includes(cat)
-        ? prev.bookCategories.filter(c => c !== cat)
-        : [...prev.bookCategories, cat]
-    }));
-  };
+const acceptedBooks = [
+  "Primary and middle school textbooks",
+  "Matric / Class 9–10 textbooks",
+  "FSc and intermediate textbooks",
+  "University and reference books",
+  "English and Urdu literature",
+  "Children's storybooks and educational reading materials",
+];
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setErrorMsg(null);
+const guidelines = [
+  {
+    title: "Check the condition",
+    description:
+      "Books should be readable and reasonably complete. Minor wear or binding damage is generally fine.",
+    icon: CheckCircle2,
+  },
+  {
+    title: "Tell us what you have",
+    description:
+      "Mention the approximate number, categories, and condition of your books in the donation form.",
+    icon: PackageCheck,
+  },
+  {
+    title: "Choose your preference",
+    description:
+      "Select drop-off or request pickup. Our team will confirm the available handover arrangements.",
+    icon: Truck,
+  },
+];
 
-    if (formData.bookCategories.length === 0) {
-      setErrorMsg('Please select at least one book category.');
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      // Map local form fields to MongoDB DonationSchema fields
-      const payload = {
-        name: formData.donorName,
-        phone: formData.contactNumber,
-        email: formData.email,
-        city: formData.city,
-        numberOfBooks: Number(formData.bookCount) || 1,
-        bookTypes: formData.bookCategories.join(', '),
-        dropoffMethod: formData.deliveryMethod === 'dropoff' ? 'Drop-off' : 'Pickup Required',
-        message: `Condition: ${formData.condition}. Notes: ${formData.notes || 'None'}`
-      };
-
-      const response = await submitDonation(payload);
-
-      if (response.data && response.data.success !== false) {
-        setSubmitted(true);
-      } else {
-        throw new Error(response.data?.error || 'Failed to submit book pledge.');
-      }
-    } catch (err) {
-      console.error('Donation Submission Error:', err);
-      setErrorMsg(
-        err.response?.data?.error || 
-        err.message || 
-        'Unable to connect to the backend server. Please verify your connection.'
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
-
+function BookDonationPage() {
   return (
-    <div className="min-h-screen bg-slate-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-4xl mx-auto space-y-10">
-        
-        {/* Hero Header */}
-        <div className="text-center space-y-3">
-          <div className="inline-flex items-center gap-1.5 bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1.5 rounded-full">
-            <Heart className="w-3.5 h-3.5 fill-emerald-700" />
-            Book Restoration & Circulation Drive
+    <main className="overflow-hidden bg-[#FFFDF8] text-[#193E32]">
+      {/* HERO */}
+      <section className="relative overflow-hidden bg-[#193E32]">
+        <div
+          className="pointer-events-none absolute -right-24 -top-32 h-96 w-96 rounded-full border border-white/10"
+          aria-hidden="true"
+        />
+        <div
+          className="pointer-events-none absolute -bottom-40 left-[-100px] h-96 w-96 rounded-full bg-[#276B56]/35 blur-3xl"
+          aria-hidden="true"
+        />
+
+        <div className="rs-container relative mx-auto max-w-7xl px-5 py-20 sm:px-8 sm:py-24 lg:px-12 lg:py-28">
+          <div className="grid items-center gap-12 lg:grid-cols-[1.2fr_0.8fr]">
+            <div>
+              <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-semibold tracking-wide text-[#F6D6A2]">
+                <Heart size={15} />
+                ROSHAN SAFHA · BOOK DONATIONS
+              </div>
+
+              <h1
+                className="max-w-3xl text-4xl font-bold leading-[1.15] text-white sm:text-5xl lg:text-6xl"
+                style={headingFont}
+              >
+                A Book You Share.
+                <br />
+                <span className="text-[#E8A94A]">
+                  A Future You Brighten.
+                </span>
+              </h1>
+
+              <p className="mt-7 max-w-xl text-base leading-8 text-[#E0EAE3] sm:text-lg">
+                The books on your shelf could become someone else's
+                opportunity to learn. Donate your pre-loved books and help
+                make education more accessible, one page at a time.
+              </p>
+
+              <div className="mt-9 flex flex-wrap gap-4">
+                <a
+                  href="#donation-form"
+                  className="inline-flex items-center justify-center gap-2 rounded-full bg-[#E8A94A] px-7 py-3.5 text-sm font-bold text-[#193E32] transition hover:bg-[#F3BF6D]"
+                >
+                  Donate Your Books
+                  <ArrowRight size={17} />
+                </a>
+
+                <a
+                  href="#how-it-works"
+                  className="inline-flex items-center justify-center gap-2 rounded-full border border-white/30 px-7 py-3.5 text-sm font-semibold text-white transition hover:bg-white/10"
+                >
+                  How It Works
+                </a>
+              </div>
+            </div>
+
+            {/* HERO VISUAL */}
+            <div className="relative mx-auto w-full max-w-md lg:max-w-none">
+              <div className="absolute -inset-5 rounded-[40px] border border-white/10" />
+
+              <div className="relative overflow-hidden rounded-[32px] border border-white/15 bg-[#275646] p-8 shadow-2xl sm:p-10">
+                <div className="absolute right-0 top-0 h-44 w-44 rounded-full bg-[#E8A94A]/10 blur-3xl" />
+
+                <div className="relative flex min-h-[300px] flex-col justify-between">
+                  <div className="flex items-center justify-between">
+                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#E8A94A] text-[#193E32]">
+                      <BookOpen size={29} strokeWidth={1.7} />
+                    </div>
+
+                    <Sparkles
+                      size={29}
+                      className="text-[#E8A94A]"
+                      strokeWidth={1.5}
+                    />
+                  </div>
+
+                  <div className="my-12">
+                    <div className="flex items-end justify-center gap-3">
+                      <div className="h-32 w-12 -rotate-6 rounded-md border-l-4 border-[#E8A94A] bg-[#EFCB89] shadow-xl" />
+                      <div className="h-44 w-14 rotate-3 rounded-md border-l-4 border-[#9ABBA4] bg-[#DCE9D9] shadow-xl" />
+                      <div className="h-36 w-12 -rotate-3 rounded-md border-l-4 border-[#D48F48] bg-[#F4D9B5] shadow-xl" />
+                      <div className="h-28 w-12 rotate-6 rounded-md border-l-4 border-[#B4D4BE] bg-[#A4C4AD] shadow-xl" />
+                    </div>
+                    <div className="mx-auto mt-3 h-3 w-64 max-w-full rounded-full bg-[#173D30]/70" />
+                  </div>
+
+                  <div className="border-t border-white/15 pt-5">
+                    <p
+                      className="text-2xl font-bold text-white"
+                      style={headingFont}
+                    >
+                      Give stories a second life.
+                    </p>
+                    <p className="mt-2 text-sm leading-6 text-[#DCE9DE]">
+                      Your books deserve another reader.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="absolute -bottom-5 -left-4 rounded-2xl border border-[#E7EEE5] bg-white px-5 py-4 shadow-xl sm:-left-8">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#E7EEE5] text-[#276B56]">
+                    <Heart size={20} />
+                  </div>
+
+                  <div>
+                    <p className="text-sm font-bold text-[#193E32]">
+                      Share Knowledge
+                    </p>
+                    <p className="text-xs text-[#718072]">
+                      Inspire Learning
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
-            Donate Books, Fuel a Student’s Dream
-          </h1>
-          <p className="text-sm sm:text-base text-slate-600 max-w-2xl mx-auto">
-            Give your gently used or extra syllabus books a second life. We restore worn bindings and deliver them directly to deserving students across Azad Kashmir.
+        </div>
+      </section>
+
+      {/* INTRO */}
+      <section className="bg-[#FFF9EF] py-16 sm:py-20">
+        <div className="rs-container mx-auto max-w-7xl px-5 text-center sm:px-8 lg:px-12">
+          <span className="text-xs font-bold uppercase tracking-[0.2em] text-[#276B56]">
+            Why Your Donation Matters
+          </span>
+
+          <h2
+            className="mx-auto mt-4 max-w-3xl text-3xl font-bold leading-tight sm:text-4xl"
+            style={headingFont}
+          >
+            Every Book Has More Than One Story to Tell
+          </h2>
+
+          <p className="mx-auto mt-6 max-w-3xl text-base leading-8 text-[#66766A]">
+            A book does not stop being valuable when its first reader
+            finishes it. Through Roshan Safha's book donation initiative,
+            we aim to keep educational resources in circulation and
+            connect them with people who need them.
           </p>
         </div>
+      </section>
 
-        {/* Guidelines Banner */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-start gap-3">
-            <div className="p-2.5 bg-emerald-50 rounded-xl text-emerald-700 shrink-0">
-              <BookOpen className="w-5 h-5" />
-            </div>
-            <div>
-              <h4 className="font-bold text-slate-800 text-xs sm:text-sm">What We Accept</h4>
-              <p className="text-[11px] text-slate-500 mt-1">Syllabus textbooks, guides, reference books, and children’s literature.</p>
-            </div>
+      {/* HOW IT WORKS */}
+      <section
+        id="how-it-works"
+        className="scroll-mt-24 bg-white py-20 sm:py-24"
+      >
+        <div className="rs-container mx-auto max-w-7xl px-5 sm:px-8 lg:px-12">
+          <div className="mx-auto mb-12 max-w-2xl text-center">
+            <span className="text-xs font-bold uppercase tracking-[0.2em] text-[#276B56]">
+              Our Simple Process
+            </span>
+
+            <h2
+              className="mt-4 text-3xl font-bold sm:text-4xl"
+              style={headingFont}
+            >
+              Collect. Restore. Donate.
+            </h2>
+
+            <p className="mt-5 leading-8 text-[#66766A]">
+              We believe useful books should keep reaching new readers.
+              Here's how the donation process works.
+            </p>
           </div>
 
-          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-start gap-3">
-            <div className="p-2.5 bg-emerald-50 rounded-xl text-emerald-700 shrink-0">
-              <Sparkles className="w-5 h-5" />
-            </div>
-            <div>
-              <h4 className="font-bold text-slate-800 text-xs sm:text-sm">Restoration Promise</h4>
-              <p className="text-[11px] text-slate-500 mt-1">Damaged spine or torn covers? Our volunteers rebind and clean each copy.</p>
-            </div>
-          </div>
+          <div className="grid gap-6 md:grid-cols-3">
+            {processSteps.map((step) => {
+              const Icon = step.icon;
 
-          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-start gap-3">
-            <div className="p-2.5 bg-emerald-50 rounded-xl text-emerald-700 shrink-0">
-              <MapPin className="w-5 h-5" />
-            </div>
-            <div>
-              <h4 className="font-bold text-slate-800 text-xs sm:text-sm">Drop-off Hub</h4>
-              <p className="text-[11px] text-slate-500 mt-1">Main Secretariat Road & University Campuses, Muzaffarabad.</p>
-            </div>
-          </div>
-        </div>
+              return (
+                <article
+                  key={step.number}
+                  className="group relative rounded-[28px] border border-[#E3EAE0] bg-[#FAFCF8] p-8 transition hover:-translate-y-1 hover:border-[#B8CEBC] hover:shadow-xl"
+                >
+                  <div className="mb-7 flex items-center justify-between">
+                    <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[#E7EEE5] text-[#276B56] transition group-hover:bg-[#193E32] group-hover:text-white">
+                      <Icon size={29} strokeWidth={1.7} />
+                    </div>
 
-        {/* Form or Confirmation */}
-        <div className="bg-white rounded-3xl border border-slate-200 shadow-xl p-6 sm:p-10">
-          {submitted ? (
-            <div className="text-center py-10 space-y-4 animate-in fade-in zoom-in-95">
-              <div className="w-16 h-16 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center mx-auto">
-                <CheckCircle className="w-10 h-10" />
-              </div>
-              <h2 className="text-2xl font-bold text-slate-900">Thank You, {formData.donorName}!</h2>
-              <p className="text-sm text-slate-600 max-w-md mx-auto">
-                Your pledge of approximately <strong className="text-emerald-700">{formData.bookCount} books</strong> has been logged in our system. Our volunteer team will WhatsApp you at <strong className="text-slate-800">{formData.contactNumber}</strong> shortly to coordinate.
-              </p>
-              <button
-                onClick={() => {
-                  setSubmitted(false);
-                  setFormData({
-                    donorName: '',
-                    contactNumber: '',
-                    email: '',
-                    city: 'Muzaffarabad',
-                    bookCount: '',
-                    bookCategories: [],
-                    condition: 'Good',
-                    deliveryMethod: 'dropoff',
-                    notes: ''
-                  });
-                }}
-                className="mt-4 inline-flex items-center gap-2 bg-slate-900 text-white px-5 py-2.5 rounded-xl text-xs font-bold hover:bg-slate-800 transition cursor-pointer"
-              >
-                Submit Another Pledge
-              </button>
-            </div>
-          ) : (
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="border-b border-slate-100 pb-4">
-                <h3 className="text-lg font-bold text-slate-900">Book Donation Intake Pledge</h3>
-                <p className="text-xs text-slate-500">Please provide accurate contact details so we can coordinate collection or provide the nearest drop-off point.</p>
-              </div>
-
-              {/* Error Alert */}
-              {errorMsg && (
-                <div className="p-3.5 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700 flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 shrink-0 text-red-500" />
-                  <span>{errorMsg}</span>
-                </div>
-              )}
-
-              {/* Personal Info */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Your Full Name *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Ayesha Tariq"
-                    value={formData.donorName}
-                    onChange={e => setFormData({ ...formData, donorName: e.target.value })}
-                    className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">WhatsApp / Phone Number *</label>
-                  <input
-                    type="tel"
-                    required
-                    placeholder="0300 1234567"
-                    value={formData.contactNumber}
-                    onChange={e => setFormData({ ...formData, contactNumber: e.target.value })}
-                    className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Email Address *</label>
-                  <input
-                    type="email"
-                    required
-                    placeholder="name@domain.com"
-                    value={formData.email}
-                    onChange={e => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">City / Region *</label>
-                  <select
-                    value={formData.city}
-                    onChange={e => setFormData({ ...formData, city: e.target.value })}
-                    className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500"
-                  >
-                    <option value="Muzaffarabad">Muzaffarabad</option>
-                    <option value="Rawalakot">Rawalakot</option>
-                    <option value="Mirpur">Mirpur</option>
-                    <option value="Islamabad / Rawalpindi">Islamabad / Rawalpindi</option>
-                    <option value="Other AJK Region">Other AJK Region</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Book Details */}
-              <div className="space-y-3 pt-2">
-                <label className="block text-xs font-bold text-slate-700">Categories of Books Being Donated *</label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {categories.map((cat) => (
-                    <label 
-                      key={cat} 
-                      className={`flex items-center gap-2 p-3 rounded-xl border text-xs cursor-pointer transition ${
-                        formData.bookCategories.includes(cat)
-                          ? 'bg-emerald-50 border-emerald-300 text-emerald-900 font-semibold'
-                          : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
-                      }`}
+                    <span
+                      className="text-4xl font-bold text-[#D6E2D7]"
+                      style={headingFont}
                     >
-                      <input
-                        type="checkbox"
-                        checked={formData.bookCategories.includes(cat)}
-                        onChange={() => toggleCategory(cat)}
-                        className="rounded text-emerald-600 focus:ring-emerald-500"
-                      />
-                      <span>{cat}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
+                      {step.number}
+                    </span>
+                  </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Estimated Number of Books *</label>
-                  <input
-                    type="number"
-                    min="1"
-                    required
-                    placeholder="e.g. 5, 15, 50"
-                    value={formData.bookCount}
-                    onChange={e => setFormData({ ...formData, bookCount: e.target.value })}
-                    className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">General Condition</label>
-                  <select
-                    value={formData.condition}
-                    onChange={e => setFormData({ ...formData, condition: e.target.value })}
-                    className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500"
+                  <h3
+                    className="text-2xl font-bold text-[#193E32]"
+                    style={headingFont}
                   >
-                    <option value="Like New">Like New (Unmarked)</option>
-                    <option value="Good">Good (Minor highlights or pencil notes)</option>
-                    <option value="Needs Minor Restoration">Needs Restoration (Torn spine / binding)</option>
-                  </select>
-                </div>
-              </div>
+                    {step.title}
+                  </h3>
 
-              {/* Delivery Option */}
-              <div className="pt-2">
-                <label className="block text-xs font-bold text-slate-700 mb-2">Handover Preference</label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <label className={`p-3.5 rounded-xl border text-xs cursor-pointer flex items-start gap-2.5 ${
-                    formData.deliveryMethod === 'dropoff' ? 'bg-emerald-50 border-emerald-300' : 'bg-slate-50 border-slate-200'
-                  }`}>
-                    <input
-                      type="radio"
-                      name="delivery"
-                      value="dropoff"
-                      checked={formData.deliveryMethod === 'dropoff'}
-                      onChange={() => setFormData({ ...formData, deliveryMethod: 'dropoff' })}
-                      className="mt-0.5 text-emerald-600 focus:ring-emerald-500"
-                    />
-                    <div>
-                      <span className="font-bold text-slate-900 block">I will drop them off</span>
-                      <span className="text-[11px] text-slate-500">At our Muzaffarabad center or designated volunteer point.</span>
-                    </div>
-                  </label>
-
-                  <label className={`p-3.5 rounded-xl border text-xs cursor-pointer flex items-start gap-2.5 ${
-                    formData.deliveryMethod === 'pickup' ? 'bg-emerald-50 border-emerald-300' : 'bg-slate-50 border-slate-200'
-                  }`}>
-                    <input
-                      type="radio"
-                      name="delivery"
-                      value="pickup"
-                      checked={formData.deliveryMethod === 'pickup'}
-                      onChange={() => setFormData({ ...formData, deliveryMethod: 'pickup' })}
-                      className="mt-0.5 text-emerald-600 focus:ring-emerald-500"
-                    />
-                    <div>
-                      <span className="font-bold text-slate-900 block">Request volunteer pickup</span>
-                      <span className="text-[11px] text-slate-500">Available for bulk donations (15+ books) in Muzaffarabad city limits.</span>
-                    </div>
-                  </label>
-                </div>
-              </div>
-
-              {/* Notes */}
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Additional Notes / Specific Book Titles (Optional)</label>
-                <textarea
-                  rows="3"
-                  placeholder="e.g. Physics FBISE 11th, Chemistry Matric, Oxford English readers..."
-                  value={formData.notes}
-                  onChange={e => setFormData({ ...formData, notes: e.target.value })}
-                  className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500"
-                ></textarea>
-              </div>
-
-              {/* Submit Button */}
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 px-6 rounded-xl text-sm shadow-md transition-all active:scale-[0.99] disabled:opacity-50 cursor-pointer"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Submitting Pledge to Database...
-                  </>
-                ) : (
-                  <>
-                    <Send className="w-4 h-4" />
-                    Submit Book Donation Pledge
-                  </>
-                )}
-              </button>
-            </form>
-          )}
+                  <p className="mt-4 text-sm leading-7 text-[#68786C]">
+                    {step.description}
+                  </p>
+                </article>
+              );
+            })}
+          </div>
         </div>
+      </section>
 
-      </div>
-    </div>
+      {/* ACCEPTED BOOKS */}
+      <section className="bg-[#E7EEE5]/60 py-20 sm:py-24">
+        <div className="rs-container mx-auto max-w-7xl px-5 sm:px-8 lg:px-12">
+          <div className="grid items-center gap-12 lg:grid-cols-2">
+            <div>
+              <span className="text-xs font-bold uppercase tracking-[0.2em] text-[#276B56]">
+                Donation Guidelines
+              </span>
+
+              <h2
+                className="mt-4 max-w-xl text-3xl font-bold leading-tight sm:text-4xl"
+                style={headingFont}
+              >
+                What Kind of Books Can You Donate?
+              </h2>
+
+              <p className="mt-6 max-w-xl leading-8 text-[#66766A]">
+                We welcome educational and reading materials that can
+                support students and encourage a love for books.
+              </p>
+
+              <div className="mt-8 grid gap-4 sm:grid-cols-2">
+                {acceptedBooks.map((book) => (
+                  <div key={book} className="flex items-start gap-3">
+                    <CheckCircle2
+                      size={19}
+                      className="mt-0.5 shrink-0 text-[#276B56]"
+                    />
+                    <span className="text-sm leading-6 text-[#344D3D]">
+                      {book}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              <p className="mt-8 rounded-2xl border border-[#C8D9C8] bg-white/80 p-5 text-sm leading-7 text-[#5F7262]">
+                <strong className="text-[#193E32]">A quick note:</strong>{" "}
+                Please avoid donating books with missing pages, severe
+                water damage, or unreadable content. Books needing minor
+                repairs may still be suitable.
+              </p>
+            </div>
+
+            <div className="relative">
+              <div className="rounded-[32px] bg-[#193E32] p-8 text-white shadow-xl sm:p-10">
+                <div className="mb-8 flex h-16 w-16 items-center justify-center rounded-2xl bg-white/10 text-[#E8A94A]">
+                  <BookOpen size={31} />
+                </div>
+
+                <h3
+                  className="text-3xl font-bold leading-tight"
+                  style={headingFont}
+                >
+                  Your Old Books Could Be Someone's Next Chapter.
+                </h3>
+
+                <p className="mt-5 leading-8 text-[#D7E5DB]">
+                  Whether you have a few schoolbooks or an entire
+                  collection, tell us what you'd like to contribute.
+                  Our team can review the details and coordinate the
+                  next steps with you.
+                </p>
+
+                <a
+                  href="#donation-form"
+                  className="mt-8 inline-flex items-center gap-2 rounded-full bg-[#E8A94A] px-6 py-3.5 text-sm font-bold text-[#193E32] transition hover:bg-[#F3BF6D]"
+                >
+                  Share Your Books
+                  <ArrowRight size={17} />
+                </a>
+              </div>
+
+              <div className="pointer-events-none absolute -bottom-4 -right-4 -z-10 h-full w-full rounded-[32px] border-2 border-[#B6CDB9]" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* BEFORE DONATING */}
+      <section className="bg-white py-20 sm:py-24">
+        <div className="rs-container mx-auto max-w-7xl px-5 sm:px-8 lg:px-12">
+          <div className="mb-12 text-center">
+            <span className="text-xs font-bold uppercase tracking-[0.2em] text-[#276B56]">
+              Before You Donate
+            </span>
+
+            <h2
+              className="mt-4 text-3xl font-bold sm:text-4xl"
+              style={headingFont}
+            >
+              A Few Helpful Things to Know
+            </h2>
+          </div>
+
+          <div className="grid gap-6 md:grid-cols-3">
+            {guidelines.map((item) => {
+              const Icon = item.icon;
+
+              return (
+                <article
+                  key={item.title}
+                  className="rounded-[26px] border border-[#E6EBE3] bg-[#FFFDF8] p-7"
+                >
+                  <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-[#E7EEE5] text-[#276B56]">
+                    <Icon size={23} />
+                  </div>
+
+                  <h3 className="text-lg font-bold text-[#193E32]">
+                    {item.title}
+                  </h3>
+
+                  <p className="mt-3 text-sm leading-7 text-[#69786D]">
+                    {item.description}
+                  </p>
+                </article>
+              );
+            })}
+          </div>
+
+          <div className="mt-8 flex items-start gap-3 rounded-2xl border border-[#E3EAE0] bg-[#F7FAF4] p-5">
+            <MapPin
+              size={21}
+              className="mt-0.5 shrink-0 text-[#276B56]"
+            />
+
+            <p className="text-sm leading-7 text-[#647468]">
+              <strong className="text-[#193E32]">
+                Drop-off information:
+              </strong>{" "}
+              Please submit the form below to coordinate a suitable
+              handover location. Exact drop-off details and pickup
+              availability will be confirmed by the Roshan Safha team.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* DONATION FORM — SINGLE REUSABLE COMPONENT */}
+      <section
+        id="donation-form"
+        className="scroll-mt-24 bg-[#FFF9EF] py-20 sm:py-24"
+      >
+        <div className="rs-container mx-auto max-w-7xl px-5 sm:px-8 lg:px-12">
+          <div className="mx-auto mb-12 max-w-2xl text-center">
+            <span className="text-xs font-bold uppercase tracking-[0.2em] text-[#276B56]">
+              Make a Difference
+            </span>
+
+            <h2
+              className="mt-4 text-3xl font-bold sm:text-4xl"
+              style={headingFont}
+            >
+              Ready to Donate Your Books?
+            </h2>
+
+            <p className="mt-5 leading-8 text-[#66766A]">
+              Fill out the form below to share the details of your
+              donation. Our team will review your request and contact
+              you about the next steps.
+            </p>
+          </div>
+
+          <div className="mx-auto max-w-4xl overflow-hidden rounded-[32px] border border-[#E4E9DF] bg-white p-6 shadow-[0_20px_70px_rgba(25,62,50,0.08)] sm:p-10 lg:p-12">
+            <DonationForm />
+          </div>
+
+          <div className="mx-auto mt-6 flex max-w-4xl items-start justify-center gap-2 text-center text-xs leading-6 text-[#758277]">
+            <ShieldCheck size={16} className="mt-0.5 shrink-0" />
+            <p>
+              Please provide accurate contact details so we can
+              coordinate your donation request.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* AVAILABLE BOOKS CTA */}
+      <section className="bg-[#193E32] py-16 sm:py-20">
+        <div className="rs-container mx-auto max-w-7xl px-5 sm:px-8 lg:px-12">
+          <div className="flex flex-col items-start justify-between gap-8 lg:flex-row lg:items-center">
+            <div className="max-w-2xl">
+              <span className="text-xs font-bold uppercase tracking-[0.2em] text-[#E8A94A]">
+                Explore More
+              </span>
+
+              <h2
+                className="mt-4 text-3xl font-bold text-white sm:text-4xl"
+                style={headingFont}
+              >
+                Looking for Books Instead?
+              </h2>
+
+              <p className="mt-4 leading-8 text-[#D7E5DB]">
+                Explore our Available Books page to discover learning
+                materials and see how you can request a book.
+              </p>
+            </div>
+
+            <Link
+              to="/programs/book-catalog"
+              className="inline-flex shrink-0 items-center justify-center gap-2 rounded-full bg-[#E8A94A] px-7 py-3.5 text-sm font-bold text-[#193E32] transition hover:bg-[#F3BF6D]"
+            >
+              Browse Available Books
+              <ArrowRight size={18} />
+            </Link>
+          </div>
+        </div>
+      </section>
+    </main>
   );
 }
 
-export default DonateBooks;
+export default BookDonationPage;

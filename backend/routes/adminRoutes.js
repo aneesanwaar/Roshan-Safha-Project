@@ -1,4 +1,5 @@
 const express = require("express");
+const donationInventoryController = require('../controllers/donationInventoryController');
 
 const router = express.Router();
 
@@ -41,6 +42,13 @@ router.get("/winners", getWinners);
 // ==========================================
 
 router.use(protect);
+
+// ==========================================
+// 0. DONATION INVENTORY MANAGEMENT
+// ==========================================
+router.patch('/donations/:id/collect', donationInventoryController.collectDonation);
+router.post('/donations/:id/inventory', donationInventoryController.addDonationToInventory);
+router.get('/donations/:id/inventory', donationInventoryController.getDonationInventoryHistory);
 
 // ==========================================
 // 1. OVERVIEW & SUBMISSIONS

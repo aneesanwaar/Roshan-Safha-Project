@@ -6,6 +6,7 @@ import AIAnalytics from "../components/admin/AIAnalytics";
 import AdminSidebar from "../components/admin/AdminSidebar";
 import AdminHeader from "../components/admin/AdminHeader";
 import DashboardOverview from "../components/admin/DashboardOverview";
+import ManageSubmissions from '../components/admin/submissions/ManageSubmissions';
 import useDashboardOverview from "../hooks/useDashboardOverview";
 import {
   TrendingUp,
@@ -42,8 +43,6 @@ import {
 } from 'lucide-react';
 
 import {
-  getAdminSubmissions,
-  updateSubmissionStatus,
   getPageContent,
   updatePageContent,
   uploadCmsImage,
@@ -53,7 +52,6 @@ import {
   getAdminMenuItems,
   updateAdminMenuItem,
   getAdminTeamUsers,
-  exportAdminSubmissions,
   getAdminGalleryPhotos,
   uploadAdminGalleryPhoto,
   deleteAdminGalleryPhoto,
@@ -99,7 +97,6 @@ function AdminDashboard() {
     recentActivity,
   } = useDashboardOverview();
 
-  const [subTab, setSubTab] = useState('essays');
   const [cmsPageTab, setCmsPageTab] = useState('contact');
   // Homepage CMS image management
   const [cmsImageUploading, setCmsImageUploading] = useState(null);
@@ -142,15 +139,6 @@ function AdminDashboard() {
   });
 
   // State Stores
-  const [submissions, setSubmissions] = useState({
-    essays: [],
-    donations: [],
-    volunteers: [],
-    collaborations: [],
-    events: [],
-    contacts: []
-  });
-
   const [announcements, setAnnouncements] = useState([
     {
       _id: 'ann-1',
@@ -239,37 +227,18 @@ function AdminDashboard() {
     const fetchBackendData = async () => {
       try {
         const [
-          essaysRes,
-          donationsRes,
-          volunteersRes,
-          collabsRes,
-          contactsRes,
           winnersRes,
           menuRes,
           usersRes,
           galleryRes,
           contestRes
         ] = await Promise.allSettled([
-          getAdminSubmissions('essays'),
-          getAdminSubmissions('donations'),
-          getAdminSubmissions('volunteers'),
-          getAdminSubmissions('collaborations'),
-          getAdminSubmissions('contacts'),
           getAdminWinners(),
           getAdminMenuItems(),
           getAdminTeamUsers(),
           getAdminGalleryPhotos(),
           getPageContent('contest')
         ]);
-
-        setSubmissions((prev) => ({
-          ...prev,
-          essays: essaysRes.status === 'fulfilled' && essaysRes.value?.data?.submissions ? essaysRes.value.data.submissions : prev.essays,
-          donations: donationsRes.status === 'fulfilled' && donationsRes.value?.data?.submissions ? donationsRes.value.data.submissions : prev.donations,
-          volunteers: volunteersRes.status === 'fulfilled' && volunteersRes.value?.data?.submissions ? volunteersRes.value.data.submissions : prev.volunteers,
-          collaborations: collabsRes.status === 'fulfilled' && collabsRes.value?.data?.submissions ? collabsRes.value.data.submissions : prev.collaborations,
-          contacts: contactsRes.status === 'fulfilled' && contactsRes.value?.data?.submissions ? contactsRes.value.data.submissions : prev.contacts
-        }));
 
         if (winnersRes.status === 'fulfilled' && winnersRes.value?.data?.data) {
           setWinnersArchive(winnersRes.value.data.data);
@@ -452,25 +421,6 @@ function AdminDashboard() {
     showToast(`Created album "${newAlbumInput.trim()}"`);
   };
 
-  const handleStatusChange = async (type, id, newStatus) => {
-    try {
-      await updateSubmissionStatus(type, id, newStatus);
-
-      // Update the dashboard only after the backend succeeds.
-      setSubmissions((prev) => ({
-        ...prev,
-        [type]: prev[type].map((item) =>
-          item._id === id ? { ...item, status: newStatus } : item
-        ),
-      }));
-
-      showToast(`Status updated to ${newStatus}`);
-    } catch (error) {
-      console.error("Failed to update submission status:", error);
-
-      showToast("Failed to update status. Please try again.");
-    }
-  };
   const handleCmsImageUpload = async (slot, file) => {
     if (!file) return;
 
@@ -700,284 +650,7 @@ function AdminDashboard() {
           )}
 
           {/* 2. FORM SUBMISSIONS & EXPORT */}
-          {currentSection === 'submissions' && (
-            <div className="space-y-6">
-              <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-                <div className="flex flex-wrap gap-1 bg-slate-100 p-1.5 rounded-2xl">
-                  {[
-                    { id: 'essays', label: 'Essays', icon: <FileText className="w-3.5 h-3.5" />, count: submissions.essays?.length || 0 },
-                    { id: 'donations', label: 'Donations', icon: <BookOpen className="w-3.5 h-3.5" />, count: submissions.donations?.length || 0 },
-                    { id: 'volunteers', label: 'Volunteers', icon: <Users className="w-3.5 h-3.5" />, count: submissions.volunteers?.length || 0 },
-                    { id: 'collaborations', label: 'Partnerships', icon: <Handshake className="w-3.5 h-3.5" />, count: submissions.collaborations?.length || 0 },
-                    { id: 'events', label: 'Events', icon: <Calendar className="w-3.5 h-3.5" />, count: submissions.events?.length || 0 },
-                    { id: 'contacts', label: 'Messages', icon: <Mail className="w-3.5 h-3.5" />, count: submissions.contacts?.length || 0 }
-                  ].map((tab) => (
-                    <button
-                      key={tab.id}
-                      onClick={() => {
-                        setSubTab(tab.id);
-                        setSearchQuery('');
-                      }}
-                      className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${subTab === tab.id ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'
-                        }`}
-                    >
-                      {tab.icon}
-                      <span>{tab.label}</span>
-                      <span className="text-[10px] px-1.5 py-0.2 rounded-md bg-slate-200/80 text-slate-700">{tab.count}</span>
-                    </button>
-                  ))}
-                </div>
-
-                <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
-                  <div className="relative flex-1 md:w-48">
-                    <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                    <input
-                      type="text"
-                      placeholder={`Search ${subTab}...`}
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full text-xs pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:ring-2 focus:ring-[#E8A94A]"
-                    />
-                  </div>
-
-                  <div className="flex items-center gap-1.5">
-                    <button
-                      onClick={() => exportAdminSubmissions(subTab, 'csv')}
-                      className="flex items-center gap-1 bg-slate-900 hover:bg-slate-800 text-white px-3 py-2 rounded-xl text-xs font-bold transition shadow-xs cursor-pointer"
-                    >
-                      <Download className="w-3.5 h-3.5 text-slate-300" /> CSV
-                    </button>
-                    <button
-                      onClick={() => exportAdminSubmissions(subTab, 'excel')}
-                      className="flex items-center gap-1 bg-emerald-800 hover:bg-emerald-900 text-white px-3 py-2 rounded-xl text-xs font-bold transition shadow-xs cursor-pointer"
-                    >
-                      <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-300" /> Excel
-                    </button>
-                    <button
-                      onClick={() => exportAdminSubmissions(subTab, 'pdf')}
-                      className="flex items-center gap-1 bg-rose-700 hover:bg-rose-800 text-white px-3 py-2 rounded-xl text-xs font-bold transition shadow-xs cursor-pointer"
-                    >
-                      <Printer className="w-3.5 h-3.5 text-rose-200" /> PDF
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-3xl border border-slate-200 shadow-xs overflow-hidden">
-                {subTab === 'essays' && (
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left text-xs text-slate-600">
-                      <thead className="bg-slate-50 border-b border-slate-200 text-slate-700 font-bold uppercase text-[10px]">
-                        <tr>
-                          <th className="p-4">Student</th>
-                          <th className="p-4">Category & Age</th>
-                          <th className="p-4">Essay Title</th>
-                          <th className="p-4">Institution</th>
-                          <th className="p-4">Essay Document</th>
-                          <th className="p-4">Evaluation Status</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100">
-                        {(submissions.essays || [])
-                          .filter((e) => e.studentName?.toLowerCase().includes(searchQuery.toLowerCase()) || e.essayTitle?.toLowerCase().includes(searchQuery.toLowerCase()))
-                          .map((item) => (
-                            <tr key={item._id} className="hover:bg-slate-50/50">
-                              <td className="p-4 font-bold text-slate-900">
-                                {item.studentName}
-                                <span className="text-[10px] text-slate-400 font-normal block">{item.email} • {item.phone}</span>
-                              </td>
-                              <td className="p-4">
-                                <span className="font-semibold text-slate-800">{item.category}</span>
-                                <span className="text-slate-400 text-[10px] block">Age: {item.age}</span>
-                              </td>
-                              <td className="p-4 font-medium text-slate-900 max-w-xs truncate">{item.essayTitle}</td>
-                              <td className="p-4">{item.institutionName}</td>
-                              <td className="p-4">
-                                {item.fileUrl && item.fileUrl !== '#' ? (
-                                  <button
-                                    type="button"
-                                    onClick={() => handleDownloadSingleEssay(item)}
-                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold border border-emerald-300 transition shadow-2xs cursor-pointer active:scale-95"
-                                  >
-                                    <Download className="w-3.5 h-3.5 text-emerald-600" />
-                                    <span>Download PDF</span>
-                                  </button>
-                                ) : (
-                                  <span className="text-slate-400 italic text-[11px]">No file attached</span>
-                                )}
-                              </td>
-                              <td className="p-4">
-                                <select
-                                  value={item.status}
-                                  onChange={(e) => handleStatusChange('essays', item._id, e.target.value)}
-                                  className="text-[11px] font-bold bg-slate-50 border border-slate-200 rounded-lg p-1.5 outline-none"
-                                >
-                                  <option value="Pending">⏳ Pending</option>
-                                  <option value="Reviewed">🔍 Reviewed</option>
-                                  <option value="Winner">🏆 Winner</option>
-                                </select>
-                              </td>
-                            </tr>
-                          ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-
-                {subTab === 'donations' && (
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left text-xs text-slate-600">
-                      <thead className="bg-slate-50 border-b border-slate-200 text-slate-700 font-bold uppercase text-[10px]">
-                        <tr>
-                          <th className="p-4">Donor</th>
-                          <th className="p-4">City</th>
-                          <th className="p-4">Quantity</th>
-                          <th className="p-4">Book Types</th>
-                          <th className="p-4">Method</th>
-                          <th className="p-4">Status</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100">
-                        {(submissions.donations || [])
-                          .filter((d) => d.name?.toLowerCase().includes(searchQuery.toLowerCase()) || d.city?.toLowerCase().includes(searchQuery.toLowerCase()))
-                          .map((item) => (
-                            <tr key={item._id} className="hover:bg-slate-50/50">
-                              <td className="p-4 font-bold text-slate-900">{item.name}<span className="text-[10px] text-slate-400 font-normal block">{item.phone} • {item.email}</span></td>
-                              <td className="p-4 font-medium">{item.city}</td>
-                              <td className="p-4 font-extrabold text-emerald-600">{item.numberOfBooks} books</td>
-                              <td className="p-4 max-w-xs truncate">{item.bookTypes}</td>
-                              <td className="p-4"><span className="bg-slate-100 px-2 py-0.5 rounded text-[10px] font-bold">{item.dropoffMethod}</span></td>
-                              <td className="p-4">
-                                <select
-                                  value={item.status || 'Pledged'}
-                                  onChange={(e) => handleStatusChange('donations', item._id, e.target.value)}
-                                  className="text-[11px] font-bold bg-slate-50 border border-slate-200 rounded-lg p-1.5 outline-none"
-                                >
-                                  <option value="Pledged">📦 Pledged</option>
-                                  <option value="Collected">✅ Collected</option>
-                                  <option value="Distributed">📚 Distributed</option>
-                                  <option value="Cancelled">❌ Cancelled</option>
-                                </select>
-                              </td>
-                            </tr>
-                          ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-
-                {subTab === 'volunteers' && (
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left text-xs text-slate-600">
-                      <thead className="bg-slate-50 border-b border-slate-200 text-slate-700 font-bold uppercase text-[10px]">
-                        <tr>
-                          <th className="p-4">Volunteer</th>
-                          <th className="p-4">City & Age</th>
-                          <th className="p-4">Skills</th>
-                          <th className="p-4">Availability</th>
-                          <th className="p-4">Status</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100">
-                        {(submissions.volunteers || []).map((item) => (
-                          <tr key={item._id} className="hover:bg-slate-50/50">
-                            <td className="p-4 font-bold text-slate-900">{item.name}<span className="text-[10px] text-slate-400 font-normal block">{item.email} • {item.phone}</span></td>
-                            <td className="p-4">{item.city} (Age {item.age})</td>
-                            <td className="p-4 font-semibold text-emerald-800">{item.skills}</td>
-                            <td className="p-4">{item.availability}</td>
-                            <td className="p-4">
-                              <select
-                                value={item.status || 'Pending'}
-                                onChange={(e) => handleStatusChange('volunteers', item._id, e.target.value)}
-                                className="text-[11px] font-bold bg-slate-50 border border-slate-200 rounded-lg p-1.5 outline-none"
-                              >
-                                <option value="Pending">⏳ Pending</option>
-                                <option value="Active">🟢 Active</option>
-                                <option value="Archived">⚪ Archived</option>
-                              </select>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-
-                {subTab === 'collaborations' && (
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left text-xs text-slate-600">
-                      <thead className="bg-slate-50 border-b border-slate-200 text-slate-700 font-bold uppercase text-[10px]">
-                        <tr>
-                          <th className="p-4">Representative</th>
-                          <th className="p-4">Organization</th>
-                          <th className="p-4">Collab Type</th>
-                          <th className="p-4">Proposal</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100">
-                        {(submissions.collaborations || []).map((item) => (
-                          <tr key={item._id} className="hover:bg-slate-50/50">
-                            <td className="p-4 font-bold text-slate-900">{item.name}<span className="text-[10px] text-slate-400 font-normal block">{item.email} • {item.phone}</span></td>
-                            <td className="p-4 font-bold text-slate-800">{item.organization}</td>
-                            <td className="p-4 text-indigo-700 font-semibold">{item.collabType}</td>
-                            <td className="p-4 text-slate-600 max-w-md">{item.message}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-
-                {subTab === 'events' && (
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left text-xs text-slate-600">
-                      <thead className="bg-slate-50 border-b border-slate-200 text-slate-700 font-bold uppercase text-[10px]">
-                        <tr>
-                          <th className="p-4">Attendee</th>
-                          <th className="p-4">Event Name</th>
-                          <th className="p-4">Attendees Count</th>
-                          <th className="p-4">Note</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100">
-                        {(submissions.events || []).map((item) => (
-                          <tr key={item._id} className="hover:bg-slate-50/50">
-                            <td className="p-4 font-bold text-slate-900">{item.name}<span className="text-[10px] text-slate-400 font-normal block">{item.email} • {item.phone}</span></td>
-                            <td className="p-4 font-bold text-teal-800">{item.eventName}</td>
-                            <td className="p-4 font-extrabold text-slate-900">{item.attendees}</td>
-                            <td className="p-4 text-slate-500 max-w-xs truncate">{item.message}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-
-                {subTab === 'contacts' && (
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left text-xs text-slate-600">
-                      <thead className="bg-slate-50 border-b border-slate-200 text-slate-700 font-bold uppercase text-[10px]">
-                        <tr>
-                          <th className="p-4">Sender</th>
-                          <th className="p-4">Subject</th>
-                          <th className="p-4">Message Body</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100">
-                        {(submissions.contacts || []).map((item) => (
-                          <tr key={item._id} className="hover:bg-slate-50/50">
-                            <td className="p-4 font-bold text-slate-900">{item.name}<span className="text-[10px] text-slate-400 font-normal block">{item.email}</span></td>
-                            <td className="p-4 font-semibold text-slate-800">{item.subject}</td>
-                            <td className="p-4 text-slate-600 max-w-md">{item.message}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
+          {currentSection === 'submissions' && <ManageSubmissions />}
 
           {/* 3. ANNOUNCEMENTS & BLOG */}
           {currentSection === 'announcements' && (

@@ -10,31 +10,43 @@ const API = axios.create({
 // Automatically inject JWT token from localStorage
 API.interceptors.request.use((config) => {
   const token = localStorage.getItem('roshan_token');
+
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+
   return config;
 });
 
 // -------------------------------------------------------------
 // 1. Public Ingestion Endpoints
 // -------------------------------------------------------------
+
 export const submitDonation = (data) => API.post('/donations', data);
+
 export const submitEssay = (formData) =>
   API.post('/essays', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   });
+
 export const submitVolunteer = (data) => API.post('/volunteers', data);
-export const submitCollaboration = (data) => API.post('/collaborations', data);
+
+export const submitCollaboration = (data) =>
+  API.post('/collaborations', data);
+
 export const submitContact = (data) => API.post('/contact', data);
+
 export const registerEvent = (data) => API.post('/events', data);
 
 // -------------------------------------------------------------
-// 2. Public Catalog & Chatbot
+// 2. Public Book Catalog
 // -------------------------------------------------------------
-export const fetchPublicBooks = (params) => API.get('/books', { params });
+
+export const fetchPublicBooks = (params) =>
+  API.get('/books', { params });
+
 // -------------------------------------------------------------
-// Admin Book Inventory Management
+// 3. Admin Book Inventory Management
 // -------------------------------------------------------------
 
 // Fetch all inventory, including out-of-stock books
@@ -53,36 +65,88 @@ export const updateAdminBook = (id, data) =>
 export const deleteAdminBook = (id) =>
   API.delete(`/books/${id}`);
 
-//chatbot endpoint
-export const sendChatMessage = (message) => API.post('/chat', { message });
+// -------------------------------------------------------------
+// 4. Book Request System — NEW
+// -------------------------------------------------------------
+
+// PUBLIC: Submit a book request
+// POST /api/book-requests
+export const submitBookRequest = (data) =>
+  API.post('/book-requests', data);
+
+// ADMIN: Get all book requests
+// Supports pagination and status filtering
+// GET /api/book-requests/admin
+export const getAdminBookRequests = (params = {}) =>
+  API.get('/book-requests/admin', { params });
+
+// ADMIN: Get a specific book request
+// GET /api/book-requests/admin/:id
+export const getAdminBookRequestById = (id) =>
+  API.get(`/book-requests/admin/${id}`);
+
+// ADMIN: Approve, reject, or fulfill a request
+// PATCH /api/book-requests/admin/:id/status
+export const updateAdminBookRequestStatus = (id, status, adminNotes) =>
+  API.patch(`/book-requests/admin/${id}/status`, {
+    status,
+    ...(adminNotes !== undefined ? { adminNotes } : {}),
+  });
+
+// ADMIN: Delete an unfulfilled book request
+// DELETE /api/book-requests/admin/:id
+export const deleteAdminBookRequest = (id) =>
+  API.delete(`/book-requests/admin/${id}`);
 
 // -------------------------------------------------------------
-// 3. Admin Authentication & Dashboard Endpoints
+// 5. Chatbot
 // -------------------------------------------------------------
-export const loginAdmin = (credentials) => API.post('/auth/login', credentials);
-export const getAdminStats = () => API.get('/admin/stats');
+
+export const sendChatMessage = (message) =>
+  API.post('/chat', { message });
+
+// -------------------------------------------------------------
+// 6. Admin Authentication & Dashboard Endpoints
+// -------------------------------------------------------------
+
+export const loginAdmin = (credentials) =>
+  API.post('/auth/login', credentials);
+
+export const getAdminStats = () =>
+  API.get('/admin/stats');
+
 export const getAdminSubmissions = (type, search = '', page = 1) =>
-  API.get('/admin/submissions', { params: { type, search, page } });
+  API.get('/admin/submissions', {
+    params: { type, search, page },
+  });
+
 export const updateSubmissionStatus = (type, id, status) =>
   API.patch(`/admin/submissions/${type}/${id}/status`, { status });
-export const getAdminAnalyticsTrends = () => API.get('/admin/analytics/trends');
+
+export const getAdminAnalyticsTrends = () =>
+  API.get('/admin/analytics/trends');
 
 // -------------------------------------------------------------
-// 4. Admin Gallery Management Endpoints
+// 7. Admin Gallery Management Endpoints
 // -------------------------------------------------------------
-export const getAdminGalleryPhotos = () => API.get('/gallery');
+
+export const getAdminGalleryPhotos = () =>
+  API.get('/gallery');
 
 export const uploadAdminGalleryPhoto = (formData) =>
   API.post('/gallery', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   });
 
-export const deleteAdminGalleryPhoto = (id) => API.delete(`/gallery/${id}`);
+export const deleteAdminGalleryPhoto = (id) =>
+  API.delete(`/gallery/${id}`);
+
 // Public Gallery fetch
-export const getPublicGalleryPhotos = () => API.get('/gallery');
+export const getPublicGalleryPhotos = () =>
+  API.get('/gallery');
 
 // -------------------------------------------------------------
-// CMS Content & Image Management
+// 8. CMS Content & Image Management
 // -------------------------------------------------------------
 
 export const getPageContent = (page) =>
@@ -93,6 +157,7 @@ export const updatePageContent = (page, content) =>
 
 export const uploadCmsImage = (file) => {
   const formData = new FormData();
+
   formData.append('image', file);
 
   return API.post('/admin/cms/upload-image', formData, {
@@ -102,34 +167,66 @@ export const uploadCmsImage = (file) => {
   });
 };
 
-// Winners Endpoints
-export const getAdminWinners = () => API.get('/admin/winners');
-export const createAdminWinner = (data) => API.post('/admin/winners', data);
-export const deleteAdminWinner = (id) => API.delete(`/admin/winners/${id}`);
+// -------------------------------------------------------------
+// 9. Winners Endpoints
+// -------------------------------------------------------------
 
-// Menu Endpoints
-export const getAdminMenuItems = () => API.get('/admin/menu');
-export const updateAdminMenuItem = (id, data) => API.put(`/admin/menu/${id}`, data);
+export const getAdminWinners = () =>
+  API.get('/admin/winners');
+
+export const createAdminWinner = (data) =>
+  API.post('/admin/winners', data);
+
+export const deleteAdminWinner = (id) =>
+  API.delete(`/admin/winners/${id}`);
+
+// -------------------------------------------------------------
+// 10. Menu Endpoints
+// -------------------------------------------------------------
+
+export const getAdminMenuItems = () =>
+  API.get('/admin/menu');
+
+export const updateAdminMenuItem = (id, data) =>
+  API.put(`/admin/menu/${id}`, data);
 
 // Navigation Menu
-export const getPublicMenuItems = () => API.get('/admin/menu');
+export const getPublicMenuItems = () =>
+  API.get('/admin/menu');
 
-// Public CMS content fetcher
-export const getPublicPageContent = (page) => API.get(`/admin/cms/${page}`);
+// -------------------------------------------------------------
+// 11. Public CMS Content
+// -------------------------------------------------------------
 
-// Contact Form Submission
-export const submitContactMessage = (data) => API.post('/contact', data);
+export const getPublicPageContent = (page) =>
+  API.get(`/admin/cms/${page}`);
 
-// User & Role Management
-export const getAdminTeamUsers = () => API.get('/admin/users');
-export const deleteAdminTeamUser = (id) => API.delete(`/admin/users/${id}`);
+// -------------------------------------------------------------
+// 12. Contact Form Submission
+// -------------------------------------------------------------
 
-// Export File Trigger
+export const submitContactMessage = (data) =>
+  API.post('/contact', data);
+
+// -------------------------------------------------------------
+// 13. User & Role Management
+// -------------------------------------------------------------
+
+export const getAdminTeamUsers = () =>
+  API.get('/admin/users');
+
+export const deleteAdminTeamUser = (id) =>
+  API.delete(`/admin/users/${id}`);
+
+// -------------------------------------------------------------
+// 14. Export File Trigger
+// -------------------------------------------------------------
+
 export const exportAdminSubmissions = async (type, format = 'excel') => {
   try {
-    const response = await API.get(`/admin/submissions/export`, {
+    const response = await API.get('/admin/submissions/export', {
       params: { type, format },
-      responseType: 'blob', // Critical: tells Axios to treat response as binary file
+      responseType: 'blob',
     });
 
     // Create a temporary link element to trigger the download
@@ -143,19 +240,39 @@ export const exportAdminSubmissions = async (type, format = 'excel') => {
     });
 
     const downloadUrl = window.URL.createObjectURL(blob);
+
     const link = document.createElement('a');
+
     link.href = downloadUrl;
-    link.download = `RoshanSafha_${type}_${new Date().toISOString().slice(0, 10)}.${format === 'excel' ? 'xlsx' : format === 'pdf' ? 'pdf' : 'csv'
-      }`;
+
+    link.download = `RoshanSafha_${type}_${new Date()
+      .toISOString()
+      .slice(0, 10)}.${
+      format === 'excel'
+        ? 'xlsx'
+        : format === 'pdf'
+          ? 'pdf'
+          : 'csv'
+    }`;
+
     document.body.appendChild(link);
+
     link.click();
+
     link.remove();
+
     window.URL.revokeObjectURL(downloadUrl);
   } catch (error) {
     console.error('Export download failed:', error);
+
     alert('Failed to download report. Check server logs.');
   }
 };
 
+// -------------------------------------------------------------
+// Axios Instance Exports
+// -------------------------------------------------------------
+
 export { API, API as api };
+
 export default API;

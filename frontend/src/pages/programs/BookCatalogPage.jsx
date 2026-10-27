@@ -1,7 +1,6 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowRight,
-  BookMarked,
   BookOpen,
   Check,
   ChevronDown,
@@ -11,14 +10,15 @@ import {
   GraduationCap,
   LibraryBig,
   MapPin,
+  Loader2,
+  Send,
   RefreshCw,
   Search,
   SlidersHorizontal,
-  Sparkles,
   X,
 } from "lucide-react";
 
-import { fetchPublicBooks } from "../../services/api";
+import { fetchPublicBooks, submitBookRequest } from "../../services/api";
 
 // -------------------------------------------------------------
 // Configuration
@@ -186,7 +186,7 @@ function BookCover({ book }) {
 // Book Card
 // -------------------------------------------------------------
 
-function BookCard({ book }) {
+function BookCard({ book, onRequest }) {
   return (
     <article className="group flex h-full flex-col overflow-hidden rounded-[24px] border border-[#E5EAE2] bg-white shadow-[0_5px_24px_rgba(25,62,50,0.045)] transition-all duration-300 hover:-translate-y-1 hover:border-[#B7CDBF] hover:shadow-[0_18px_40px_rgba(25,62,50,0.12)]">
       {/* Book cover area */}
@@ -263,11 +263,14 @@ function BookCard({ book }) {
           </div>
         </div>
 
-        {/* Book requests will be implemented in the next phase */}
-        <div className="mt-4 flex items-center justify-center gap-2 border-t border-dashed border-slate-200 pt-4 text-[11px] font-semibold text-[#276B56]">
-          <BookMarked className="h-3.5 w-3.5" />
-          Available in Our Library
-        </div>
+        <button
+          type="button"
+          onClick={() => onRequest(book)}
+          className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-[#193E32] px-4 py-3 text-sm font-bold text-white transition hover:bg-[#276B56] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#276B56]"
+        >
+          Request This Book
+          <ArrowRight className="h-4 w-4" />
+        </button>
       </div>
     </article>
   );
@@ -295,11 +298,208 @@ function BookCardSkeleton() {
 }
 
 // -------------------------------------------------------------
+// Book Request Dialog
+// -------------------------------------------------------------
+
+function BookRequestDialog({ book, onClose, onSubmitted }) {
+  const [form, setForm] = useState({
+    studentName: "",
+    phone: "",
+    institution: "",
+    quantity: 1,
+    reason: "",
+    collectionPreference: "Collection",
+  });
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
+  const dialogRef = useRef(null);
+  const closeRef = useRef(null);
+  const submittingRef = useRef(false);
+
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const previousFocus = document.activeElement;
+    closeRef.current?.focus();
+
+    const onKeyDown = (event) => {
+      if (event.key === "Escape" && !submittingRef.current) onClose();
+      if (event.key !== "Tab" || !dialogRef.current) return;
+      const focusable = Array.from(
+        dialogRef.current.querySelectorAll(
+          'button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), a[href]'
+        )).filter((element) => element.getClientRects().length > 0);
+      if (!focusable.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", onKeyDown);
+      previousFocus?.focus?.();
+    };
+  }, [onClose]);
+
+  const updateField = (event) => {
+    const { name, value } = event.target;
+    setForm((previous) => ({ ...previous, [name]: value }));
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    if (submittingRef.current) return;
+    const quantity = Number(form.quantity);
+    if (!Number.isSafeInteger(quantity) || quantity < 1 || quantity > book.availableQuantity) {
+      setError(`Please request between 1 and ${book.availableQuantity} copies.`);
+      return;
+    }
+
+    submittingRef.current = true;
+    setSubmitting(true);
+    setError("");
+    try {
+      const response = await submitBookRequest({
+        bookId: book._id,
+        studentName: form.studentName.trim(),
+        phone: form.phone.trim(),
+        institution: form.institution.trim(),
+        quantity,
+        reason: form.reason.trim(),
+        collectionPreference: form.collectionPreference,
+      });
+      if (!response.data?.success) throw new Error("The request could not be submitted.");
+      setSuccess(true);
+      onSubmitted();
+    } catch (err) {
+      setError(
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        err.message ||
+        "Unable to submit your request. Please try again."
+      );
+    } finally {
+      submittingRef.current = false;
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-[#10281F]/75 px-4 py-6 backdrop-blur-sm"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget && !submitting) onClose();
+      }}
+    >
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="book-request-heading"
+        className="max-h-full w-full max-w-xl overflow-y-auto rounded-[26px] bg-[#FFF9EF] shadow-2xl"
+      >
+        <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-[#DCE6DC] bg-[#193E32] px-6 py-5 text-white">
+          <div>
+            <p className="mb-1 text-xs font-bold uppercase tracking-widest text-[#E8A94A]">Roshan Safha Library</p>
+            <h2 id="book-request-heading" className="text-xl font-bold" style={{ fontFamily: "'Playfair Display', serif" }}>
+              {success ? "Request Received" : "Request This Book"}
+            </h2>
+          </div>
+          <button
+            ref={closeRef}
+            type="button"
+            onClick={onClose}
+            disabled={submitting}
+            aria-label="Close request form"
+            className="rounded-lg p-2 text-white/80 transition hover:bg-white/10 hover:text-white disabled:opacity-40"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        <div className="px-6 py-6">
+          <div className="mb-6 rounded-2xl border border-[#DCE6DC] bg-white p-4">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-[#276B56]">Selected book</p>
+            <p className="mt-1 font-bold text-[#193E32]">{book.title}</p>
+            <p className="mt-1 text-xs text-slate-500">{book.author || "Unknown Author"} · {getBookCountLabel(book.availableQuantity)} currently available</p>
+          </div>
+
+          {success ? (
+            <div role="status" className="py-5 text-center">
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[#E7EEE5] text-[#276B56]">
+                <Check className="h-8 w-8" />
+              </div>
+              <h3 className="text-lg font-bold text-[#193E32]">Your request has been submitted!</h3>
+              <p className="mx-auto mt-3 max-w-sm text-sm leading-7 text-slate-600">
+                Our team will review your request. Submitting a request does not reserve a copy or guarantee approval.
+              </p>
+              <button type="button" onClick={onClose} className="mt-6 rounded-xl bg-[#193E32] px-8 py-3 text-sm font-bold text-white hover:bg-[#276B56]">
+                Back to Books
+              </button>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="block text-xs font-bold text-[#193E32]">
+                  Full name <span className="text-rose-600">*</span>
+                  <input required name="studentName" value={form.studentName} onChange={updateField} maxLength={120} autoComplete="name" className="mt-2 w-full rounded-xl border border-[#DCE6DC] bg-white px-4 py-3 text-sm font-normal outline-none focus:border-[#276B56] focus:ring-2 focus:ring-[#276B56]/15" placeholder="Your full name" />
+                </label>
+                <label className="block text-xs font-bold text-[#193E32]">
+                  Phone / WhatsApp <span className="text-rose-600">*</span>
+                  <input required type="tel" name="phone" value={form.phone} onChange={updateField} maxLength={30} autoComplete="tel" className="mt-2 w-full rounded-xl border border-[#DCE6DC] bg-white px-4 py-3 text-sm font-normal outline-none focus:border-[#276B56] focus:ring-2 focus:ring-[#276B56]/15" placeholder="03XX XXXXXXX" />
+                </label>
+              </div>
+              <label className="block text-xs font-bold text-[#193E32]">
+                School / college / institution <span className="text-rose-600">*</span>
+                <input required name="institution" value={form.institution} onChange={updateField} maxLength={200} className="mt-2 w-full rounded-xl border border-[#DCE6DC] bg-white px-4 py-3 text-sm font-normal outline-none focus:border-[#276B56] focus:ring-2 focus:ring-[#276B56]/15" placeholder="Your institution" />
+              </label>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="block text-xs font-bold text-[#193E32]">
+                  Copies requested <span className="text-rose-600">*</span>
+                  <input required type="number" name="quantity" min="1" max={book.availableQuantity} step="1" value={form.quantity} onChange={updateField} className="mt-2 w-full rounded-xl border border-[#DCE6DC] bg-white px-4 py-3 text-sm font-normal outline-none focus:border-[#276B56] focus:ring-2 focus:ring-[#276B56]/15" />
+                </label>
+                <label className="block text-xs font-bold text-[#193E32]">
+                  Receive books by
+                  <select name="collectionPreference" value={form.collectionPreference} onChange={updateField} className="mt-2 w-full rounded-xl border border-[#DCE6DC] bg-white px-4 py-3 text-sm font-normal outline-none focus:border-[#276B56] focus:ring-2 focus:ring-[#276B56]/15">
+                    <option value="Collection">Collection</option>
+                    <option value="Delivery">Delivery (subject to availability)</option>
+                  </select>
+                </label>
+              </div>
+              <label className="block text-xs font-bold text-[#193E32]">
+                Why do you need this book? <span className="font-normal text-slate-500">(optional)</span>
+                <textarea name="reason" value={form.reason} onChange={updateField} maxLength={1000} rows={3} className="mt-2 w-full resize-y rounded-xl border border-[#DCE6DC] bg-white px-4 py-3 text-sm font-normal outline-none focus:border-[#276B56] focus:ring-2 focus:ring-[#276B56]/15" placeholder="Tell us a little about your learning needs..." />
+              </label>
+              <p className="text-xs leading-5 text-slate-500">Your contact details will be shared with the Roshan Safha team to review and coordinate your request.</p>
+              {error && <p role="alert" className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</p>}
+              <button type="submit" disabled={submitting} className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#193E32] px-5 py-3.5 text-sm font-bold text-white transition hover:bg-[#276B56] disabled:cursor-not-allowed disabled:opacity-60">
+                {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                {submitting ? "Submitting Request..." : "Submit Book Request"}
+              </button>
+            </form>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// -------------------------------------------------------------
 // Main Page
 // -------------------------------------------------------------
 
 export default function BookCatalog() {
   const [books, setBooks] = useState([]);
+  const [requestBook, setRequestBook] = useState(null);
 
   const [search, setSearch] = useState("");
   const [selectedLevel, setSelectedLevel] = useState("All");
@@ -734,7 +934,7 @@ export default function BookCatalog() {
         {!loading && !error && sortedBooks.length > 0 && (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {sortedBooks.map((book) => (
-              <BookCard key={book._id} book={book} />
+              <BookCard key={book._id} book={book} onRequest={setRequestBook} />
             ))}
           </div>
         )}
@@ -820,6 +1020,14 @@ export default function BookCatalog() {
           </div>
         </div>
       </section>
+      {requestBook && (
+        <BookRequestDialog
+          key={requestBook._id}
+          book={requestBook}
+          onClose={() => setRequestBook(null)}
+          onSubmitted={refreshBooks}
+        />
+      )}
     </div>
   );
 }

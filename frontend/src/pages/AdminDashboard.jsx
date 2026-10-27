@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import ManageBooks from '../components/admin/ManageBooks';
+import ManageBookRequests from '../components/admin/ManageBookRequests';
 import {
   TrendingUp,
   FileSpreadsheet,
@@ -677,6 +678,7 @@ function AdminDashboard() {
     { id: 'analytics', label: 'AI Trend Analytics', icon: <TrendingUp className="w-4 h-4" /> },
     { id: 'submissions', label: 'Form Submissions & Export', icon: <FileSpreadsheet className="w-4 h-4" /> },
     { id: 'books', label: 'Manage Books', icon: <BookOpen className="w-4 h-4" /> },
+    { id: 'bookRequests', label: 'Book Requests', icon: <FileText className="w-4 h-4" /> },
     { id: 'announcements', label: 'Announcements & Blog', icon: <Megaphone className="w-4 h-4" /> },
     { id: 'contests', label: 'Contests & Winners', icon: <Trophy className="w-4 h-4" /> },
     { id: 'gallery', label: 'Gallery & Media Library', icon: <ImageIcon className="w-4 h-4" /> },
@@ -791,6 +793,7 @@ function AdminDashboard() {
 
           {/* BOOK INVENTORY MANAGEMENT */}
           {currentSection === 'books' && <ManageBooks />}
+          {currentSection === 'bookRequests' && <ManageBookRequests />}
 
           {/* 1. ADVANCED AI DECISION-SUPPORT & PREDICTIVE ANALYTICS */}
           {currentSection === 'analytics' && (

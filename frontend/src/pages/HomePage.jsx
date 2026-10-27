@@ -660,10 +660,10 @@ export default function HomePage() {
 
             <div
               className={`grid gap-6 text-center ${impactStats.length === 3
-                  ? 'sm:grid-cols-3'
-                  : impactStats.length === 2
-                    ? 'sm:grid-cols-2'
-                    : 'grid-cols-1'
+                ? 'sm:grid-cols-3'
+                : impactStats.length === 2
+                  ? 'sm:grid-cols-2'
+                  : 'grid-cols-1'
                 }`}
             >
               {impactStats.map((stat) => (

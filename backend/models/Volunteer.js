@@ -30,6 +30,12 @@ const VolunteerSchema = new mongoose.Schema({
     required: true
   },
   message: String,
+  // Administrative review state; defaults also apply when old records are read through Mongoose.
+  status: {
+    type: String,
+    enum: ["Pending", "Active", "Declined", "Archived"],
+    default: "Pending"
+  },
   createdAt: {
     type: Date,
     default: Date.now

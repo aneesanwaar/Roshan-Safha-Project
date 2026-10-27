@@ -7,6 +7,12 @@ const eventSchema = new mongoose.Schema({
   eventName: { type: String, required: true }, // Which event are they joining?
   attendees: { type: Number, default: 1 },    // How many people are they bringing?
   message: { type: String },
+  // Administrative review state; defaults also apply when old records are read through Mongoose.
+  status: {
+    type: String,
+    enum: ["Registered", "Confirmed", "Cancelled"],
+    default: "Registered"
+  },
   createdAt: { type: Date, default: Date.now }
 });
 

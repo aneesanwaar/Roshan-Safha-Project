@@ -9,6 +9,7 @@ const Essay = require("../models/Essay");
 const Volunteer = require("../models/Volunteer");
 const Collaboration = require("../models/Collaboration");
 const ContactMessage = require("../models/Contact");
+const Event = require("../models/Event");
 const Book = require("../models/Book");
 const Winner = require("../models/Winner");
 const SiteContent = require("../models/SiteContent");
@@ -62,26 +63,30 @@ const calculateLinearRegression = (dataArray, key) => {
   };
 };
 
-const resolveModel = (type) => {
-  switch (type?.toLowerCase()) {
-    case "essays":
-    case "essay":
-      return Essay;
-    case "donations":
-    case "donation":
-      return Donation;
-    case "volunteers":
-    case "volunteer":
-      return Volunteer;
-    case "collaborations":
-    case "collaboration":
-      return Collaboration;
-    case "contacts":
-    case "contact":
-      return ContactMessage;
-    default:
-      return null;
-  }
+// Submission configuration: one source of truth for search, statuses and legacy defaults.
+const SUBMISSION_TYPES = {
+  essays: { model: Essay, statuses: ["Pending", "Reviewed", "Winner"], defaultStatus: "Pending", searchFields: ["studentName", "essayTitle", "institutionName", "email"] },
+  donations: { model: Donation, statuses: ["Pledged", "Collected", "Cancelled"], defaultStatus: "Pledged", searchFields: ["name", "city", "email", "bookTypes"] },
+  volunteers: { model: Volunteer, statuses: ["Pending", "Active", "Declined", "Archived"], defaultStatus: "Pending", searchFields: ["name", "city", "email", "skills"] },
+  collaborations: { model: Collaboration, statuses: ["Pending", "Contacted", "Approved", "Declined"], defaultStatus: "Pending", searchFields: ["name", "email", "organization", "organizationName"] },
+  events: { model: Event, statuses: ["Registered", "Confirmed", "Cancelled"], defaultStatus: "Registered", searchFields: ["name", "email", "eventName", "phone"] },
+  contacts: { model: ContactMessage, statuses: ["Unread", "Reviewed", "Resolved"], defaultStatus: "Unread", searchFields: ["name", "email", "subject", "message"] },
+};
+const TYPE_ALIASES = { essay: "essays", donation: "donations", volunteer: "volunteers", collaboration: "collaborations", event: "events", contact: "contacts" };
+const resolveConfig = (type) => {
+  if (typeof type !== "string") return null;
+  const key = type.toLowerCase();
+  return SUBMISSION_TYPES[TYPE_ALIASES[key] || key] || null;
+};
+const resolveModel = (type) => resolveConfig(type)?.model || null;
+const escapeRegex = (value) => String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const legacyStatusFilter = (status, defaultStatus) => status === defaultStatus
+  ? { $or: [{ status }, { status: { $exists: false } }, { status: null }] }
+  : { status };
+const positiveInt = (value, fallback, max) => {
+  if (value === undefined || value === "") return fallback;
+  const n = Number(value);
+  return Number.isSafeInteger(n) && n > 0 && n <= max ? n : null;
 };
 
 // -------------------------------------------------------------
@@ -125,44 +130,38 @@ exports.getDashboardStats = async (req, res) => {
 // -------------------------------------------------------------
 exports.getSubmissions = async (req, res) => {
   try {
-    const { type = "essays", search = "", page = 1, limit = 50 } = req.query;
-    const Model = resolveModel(type);
-
-    if (!Model) {
-      return res.status(400).json({ error: "Invalid submission type requested." });
+    const { type = "essays", search = "", status = "" } = req.query;
+    const config = resolveConfig(type);
+    if (!config) return res.status(400).json({ success: false, error: "Invalid submission type requested." });
+    if (typeof search !== "string" || search.length > 200 || typeof status !== "string") {
+      return res.status(400).json({ success: false, error: "Invalid search or status parameter." });
     }
-
-    const query = {};
+    const page = positiveInt(req.query.page, 1, 1000000);
+    const limit = positiveInt(req.query.limit, 50, 100);
+    if (!page || !limit) return res.status(400).json({ success: false, error: "Invalid page or limit." });
+    if (status && !config.statuses.includes(status)) {
+      return res.status(400).json({ success: false, error: "Invalid status for this category." });
+    }
+    const filters = [];
     if (search.trim()) {
-      const regex = { $regex: search.trim(), $options: "i" };
-      if (type.startsWith("essay")) {
-        query.$or = [{ studentName: regex }, { essayTitle: regex }, { institutionName: regex }, { email: regex }];
-      } else if (type.startsWith("donation")) {
-        query.$or = [{ name: regex }, { city: regex }, { email: regex }, { bookTypes: regex }];
-      } else if (type.startsWith("volunteer")) {
-        query.$or = [{ name: regex }, { city: regex }, { email: regex }, { skills: regex }];
-      } else {
-        query.$or = [{ name: regex }, { email: regex }];
-      }
+      const regex = { $regex: escapeRegex(search.trim()), $options: "i" };
+      filters.push({ $or: config.searchFields.map(field => ({ [field]: regex })) });
     }
-
-    const skip = (parseInt(page) - 1) * parseInt(limit);
+    if (status) filters.push(legacyStatusFilter(status, config.defaultStatus));
+    const query = filters.length ? { $and: filters } : {};
+    const skip = (page - 1) * limit;
     const [records, total] = await Promise.all([
-      Model.find(query).sort({ createdAt: -1 }).skip(skip).limit(parseInt(limit)),
-      Model.countDocuments(query)
+      config.model.find(query).sort({ createdAt: -1, _id: -1 }).skip(skip).limit(limit).lean(),
+      config.model.countDocuments(query),
     ]);
-
+    const submissions = records.map(record => ({ ...record, status: record.status ?? config.defaultStatus }));
     return res.status(200).json({
-      success: true,
-      type,
-      total,
-      currentPage: parseInt(page),
-      totalPages: Math.ceil(total / limit),
-      submissions: records
+      success: true, type, total, currentPage: page,
+      totalPages: Math.ceil(total / limit), submissions,
     });
   } catch (error) {
     console.error("Get Submissions Error:", error);
-    return res.status(500).json({ error: "Failed to fetch submissions." });
+    return res.status(500).json({ success: false, error: "Failed to fetch submissions." });
   }
 };
 
@@ -172,31 +171,42 @@ exports.getSubmissions = async (req, res) => {
 exports.updateSubmissionStatus = async (req, res) => {
   try {
     const { type, id } = req.params;
-    const { status } = req.body;
-
-    if (!status) {
-      return res.status(400).json({ error: "Status field is required." });
+    const config = resolveConfig(type);
+    if (!config) return res.status(400).json({ success: false, error: "Invalid submission type." });
+    if (!mongoose.isValidObjectId(id)) return res.status(400).json({ success: false, error: "Invalid submission ID." });
+    const { status } = req.body || {};
+    if (!config.statuses.includes(status)) {
+      return res.status(400).json({ success: false, error: "Invalid status for this category." });
     }
-
-    const Model = resolveModel(type);
-    if (!Model) {
-      return res.status(400).json({ error: "Invalid submission type." });
+    // Collected donations require verified quantities, and processed donations
+    // must never be cancelled via the generic status endpoint.
+    if (config.model === Donation) {
+      if (status === "Collected") {
+        return res.status(400).json({ success: false, error: "Use the donation collection endpoint to verify received books." });
+      }
+      const allowedCurrent = status === "Cancelled"
+        ? { $in: ["Pledged", null] }
+        : { $in: ["Pledged", "Cancelled", null] };
+      const updated = await Donation.findOneAndUpdate(
+        { _id: id, status: allowedCurrent, $or: [{ processedQuantity: 0 }, { processedQuantity: { $exists: false } }] },
+        { $set: { status } },
+        { returnDocument: "after", runValidators: true }
+      );
+      if (updated) return res.status(200).json({ success: true, data: updated });
+      const existing = await Donation.exists({ _id: id });
+      return res.status(existing ? 409 : 404).json({ success: false, error: existing ? "Donation status cannot be changed after collection or inventory processing." : "Submission record not found." });
     }
-
-    const updated = await Model.findByIdAndUpdate(
-      id,
-      { status },
-      { returnDocument: "after", runValidators: true }
+    const updated = await config.model.findByIdAndUpdate(
+      id, { $set: { status } }, { returnDocument: "after", runValidators: true }
     );
-
-    if (!updated) {
-      return res.status(404).json({ error: "Submission record not found." });
-    }
-
+    if (!updated) return res.status(404).json({ success: false, error: "Submission record not found." });
     return res.status(200).json({ success: true, data: updated });
   } catch (error) {
     console.error("Update Status Error:", error);
-    return res.status(500).json({ error: "Failed to update record status." });
+    if (error.name === "ValidationError" || error.name === "CastError") {
+      return res.status(400).json({ success: false, error: "Invalid submission status or ID." });
+    }
+    return res.status(500).json({ success: false, error: "Failed to update record status." });
   }
 };
 

@@ -3,6 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import ManageBooks from '../components/admin/ManageBooks';
 import ManageBookRequests from '../components/admin/ManageBookRequests';
 import AIAnalytics from "../components/admin/AIAnalytics";
+import AdminSidebar from "../components/admin/AdminSidebar";
+import AdminHeader from "../components/admin/AdminHeader";
+
 import {
   TrendingUp,
   FileSpreadsheet,
@@ -605,18 +608,6 @@ function AdminDashboard() {
     }
   };
 
-  const navItems = [
-    { id: 'analytics', label: 'AI Trend Analytics', icon: <TrendingUp className="w-4 h-4" /> },
-    { id: 'submissions', label: 'Form Submissions & Export', icon: <FileSpreadsheet className="w-4 h-4" /> },
-    { id: 'books', label: 'Manage Books', icon: <BookOpen className="w-4 h-4" /> },
-    { id: 'bookRequests', label: 'Book Requests', icon: <FileText className="w-4 h-4" /> },
-    { id: 'announcements', label: 'Announcements & Blog', icon: <Megaphone className="w-4 h-4" /> },
-    { id: 'contests', label: 'Contests & Winners', icon: <Trophy className="w-4 h-4" /> },
-    { id: 'gallery', label: 'Gallery & Media Library', icon: <ImageIcon className="w-4 h-4" /> },
-    { id: 'cms', label: 'Page Content CMS', icon: <LayoutTemplate className="w-4 h-4" /> },
-    { id: 'menu', label: 'Menu & Page Management', icon: <SlidersHorizontal className="w-4 h-4" /> },
-    { id: 'roles', label: 'Team Roles & Permissions', icon: <ShieldCheck className="w-4 h-4" /> }
-  ];
 
 
   return (
@@ -631,100 +622,21 @@ function AdminDashboard() {
       )}
 
       {/* Sidebar Navigation */}
-      <aside className={`fixed lg:sticky top-0 left-0 z-40 h-screen w-72 bg-slate-900 text-slate-200 flex flex-col justify-between border-r border-slate-800 transition-transform duration-200 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-        }`}>
-        <div className="p-6 space-y-6 overflow-y-auto">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-[#E8A94A] flex items-center justify-center text-slate-950 font-black text-base shadow-sm">
-                RS
-              </div>
-              <div>
-                <h2 className="text-sm font-extrabold text-white tracking-tight">Roshan Safha</h2>
-                <span className="text-[10px] text-amber-400 font-bold uppercase tracking-wider block">Admin Control</span>
-              </div>
-            </div>
-            <button onClick={() => setSidebarOpen(false)} className="lg:hidden p-1.5 text-slate-400 hover:text-white rounded-lg">
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-
-          <div className="p-3.5 rounded-2xl bg-slate-800/80 border border-slate-700/60 flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-emerald-700 text-white font-bold text-xs flex items-center justify-center shrink-0">
-              {activeAdmin?.name?.trim()?.charAt(0)?.toUpperCase() || 'A'}
-            </div>
-
-            <div className="overflow-hidden min-w-0">
-              <p className="text-xs font-bold text-white truncate">
-                {activeAdmin?.name || 'Administrator'}
-              </p>
-
-              <p
-                className="text-[10px] text-slate-400 truncate mt-0.5"
-                title={activeAdmin?.email || ''}
-              >
-                {activeAdmin?.email || 'No profile loaded'}
-              </p>
-
-              <span className="inline-block text-[9px] font-bold bg-[#E8A94A]/20 text-[#E8A94A] px-2 py-0.5 rounded-md mt-1 capitalize">
-                {activeAdmin?.role || 'Admin'}
-              </span>
-            </div>
-          </div>
-
-          <nav className="space-y-1.5">
-            <span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider px-3">Management Console</span>
-            {navItems.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => {
-                  setCurrentSection(item.id);
-                  setSidebarOpen(false);
-                }}
-                className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition cursor-pointer ${currentSection === item.id
-                  ? 'bg-[#E8A94A] text-slate-950 shadow-sm'
-                  : 'text-slate-300 hover:bg-slate-800 hover:text-white'
-                  }`}
-              >
-                {item.icon}
-                <span>{item.label}</span>
-              </button>
-            ))}
-          </nav>
-        </div>
-
-        <div className="p-4 border-t border-slate-800/80">
-          <button
-            type="button"
-            onClick={handleSignOut}
-            className="w-full flex items-center justify-center gap-2 py-2.5 text-xs font-bold text-rose-400 hover:bg-rose-950/30 rounded-xl transition cursor-pointer"
-          >
-            <LogOut className="w-4 h-4" />
-            <span>Sign Out</span>
-          </button>
-        </div>
-      </aside>
+      <AdminSidebar
+        currentSection={currentSection}
+        setCurrentSection={setCurrentSection}
+        sidebarOpen={sidebarOpen}
+        setSidebarOpen={setSidebarOpen}
+        activeAdmin={activeAdmin}
+        onSignOut={handleSignOut}
+      />
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200 px-4 sm:px-8 py-4 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 text-slate-700 hover:bg-slate-100 rounded-xl">
-              <Menu className="w-5 h-5" />
-            </button>
-            <div>
-              <h1 className="text-base sm:text-lg font-black text-slate-900 capitalize">
-                {navItems.find((n) => n.id === currentSection)?.label}
-              </h1>
-              <p className="text-[11px] text-slate-500 hidden sm:block">Roshan Safha Automated Operations System</p>
-            </div>
-          </div>
-
-          <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 border border-emerald-200 px-3 py-1 rounded-full flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            Live Database Sync
-          </span>
-        </header>
+        <AdminHeader
+          currentSection={currentSection}
+          onOpenSidebar={() => setSidebarOpen(true)}
+        />
 
         <main className="flex-1 p-4 sm:p-8 max-w-7xl w-full mx-auto space-y-6">
 

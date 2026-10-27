@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import ManageBooks from '../components/admin/ManageBooks';
 import ManageBookRequests from '../components/admin/ManageBookRequests';
 import AIAnalytics from "../components/admin/AIAnalytics";
@@ -35,6 +36,7 @@ import {
   SlidersHorizontal,
   UploadCloud
 } from 'lucide-react';
+
 import {
   getAdminSubmissions,
   updateSubmissionStatus,
@@ -54,6 +56,7 @@ import {
 } from '../services/api';
 
 function AdminDashboard() {
+  const navigate = useNavigate();
   const [currentSection, setCurrentSection] = useState('analytics');
   const [subTab, setSubTab] = useState('essays');
   const [cmsPageTab, setCmsPageTab] = useState('contact');
@@ -65,10 +68,36 @@ function AdminDashboard() {
   const [searchQuery, setSearchQuery] = useState('');
   const [toastMessage, setToastMessage] = useState('');
 
-  const [activeAdmin] = useState({
-    name: 'Anees Anwaar',
-    email: 'admin@roshansafha.org',
-    role: 'Super Admin'
+  // Load the administrator authenticated by the login page.
+  const [activeAdmin] = useState(() => {
+    try {
+      const storedAdmin = localStorage.getItem('roshan_admin');
+
+      if (!storedAdmin) {
+        return null;
+      }
+
+      const parsedAdmin = JSON.parse(storedAdmin);
+
+      if (
+        !parsedAdmin ||
+        typeof parsedAdmin !== 'object' ||
+        typeof parsedAdmin.name !== 'string' ||
+        typeof parsedAdmin.email !== 'string' ||
+        typeof parsedAdmin.role !== 'string'
+      ) {
+        return null;
+      }
+
+      return {
+        name: parsedAdmin.name,
+        email: parsedAdmin.email,
+        role: parsedAdmin.role,
+      };
+    } catch (error) {
+      console.error('Failed to load administrator profile:', error);
+      return null;
+    }
   });
 
   // State Stores
@@ -274,6 +303,17 @@ function AdminDashboard() {
   const showToast = (msg) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(''), 2500);
+  };
+
+  // End the current administrator session.
+  const handleSignOut = () => {
+    // Remove authentication data.
+    localStorage.removeItem('roshan_token');
+    localStorage.removeItem('roshan_admin');
+
+    // Replace the current history entry so the Back button
+    // does not return directly to the previous dashboard page.
+    navigate('/admin/login', { replace: true });
   };
 
   // PDF Individual Essay Downloader
@@ -610,13 +650,24 @@ function AdminDashboard() {
           </div>
 
           <div className="p-3.5 rounded-2xl bg-slate-800/80 border border-slate-700/60 flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-emerald-700 text-white font-bold text-xs flex items-center justify-center shrink-0">
-              {activeAdmin.name.charAt(0)}
+            <div className="w-9 h-9 rounded-full bg-emerald-700 text-white font-bold text-xs flex items-center justify-center shrink-0">
+              {activeAdmin?.name?.trim()?.charAt(0)?.toUpperCase() || 'A'}
             </div>
-            <div className="overflow-hidden">
-              <p className="text-xs font-bold text-white truncate">{activeAdmin.name}</p>
-              <span className="inline-block text-[9px] font-bold bg-[#E8A94A]/20 text-[#E8A94A] px-2 py-0.5 rounded-md mt-0.5">
-                {activeAdmin.role}
+
+            <div className="overflow-hidden min-w-0">
+              <p className="text-xs font-bold text-white truncate">
+                {activeAdmin?.name || 'Administrator'}
+              </p>
+
+              <p
+                className="text-[10px] text-slate-400 truncate mt-0.5"
+                title={activeAdmin?.email || ''}
+              >
+                {activeAdmin?.email || 'No profile loaded'}
+              </p>
+
+              <span className="inline-block text-[9px] font-bold bg-[#E8A94A]/20 text-[#E8A94A] px-2 py-0.5 rounded-md mt-1 capitalize">
+                {activeAdmin?.role || 'Admin'}
               </span>
             </div>
           </div>
@@ -643,8 +694,13 @@ function AdminDashboard() {
         </div>
 
         <div className="p-4 border-t border-slate-800/80">
-          <button className="w-full flex items-center justify-center gap-2 py-2.5 text-xs font-bold text-rose-400 hover:bg-rose-950/30 rounded-xl transition cursor-pointer">
-            <LogOut className="w-4 h-4" /> Sign Out
+          <button
+            type="button"
+            onClick={handleSignOut}
+            className="w-full flex items-center justify-center gap-2 py-2.5 text-xs font-bold text-rose-400 hover:bg-rose-950/30 rounded-xl transition cursor-pointer"
+          >
+            <LogOut className="w-4 h-4" />
+            <span>Sign Out</span>
           </button>
         </div>
       </aside>

@@ -1,23 +1,15 @@
 const express = require("express");
 
+const { loginUser } = require("../controllers/authController");
+const { protect } = require("../middleware/authMiddleware");
+
 const router = express.Router();
 
-const { loginUser } = require("../controllers/authController");
-
 /**
- * Roshan Safha Authentication Routes
+ * Public registration is disabled.
  *
- * Security:
- * Public administrator registration is disabled.
- *
- * Administrative accounts must be created through an
- * authorized provisioning process.
- */
-
-/**
- * @route   POST /api/auth/register
- * @desc    Administrator registration is disabled
- * @access  Public (always rejected)
+ * Administrator accounts must be created through
+ * an authorized provisioning process.
  */
 router.post("/register", (req, res) => {
   return res.status(403).json({
@@ -27,10 +19,36 @@ router.post("/register", (req, res) => {
 });
 
 /**
- * @route   POST /api/auth/login
- * @desc    Authenticate an existing administrator
- * @access  Public
+ * POST /api/auth/login
+ *
+ * Authenticate an administrator and issue a JWT.
  */
 router.post("/login", loginUser);
+
+/**
+ * GET /api/auth/me
+ *
+ * Verify the supplied JWT and return the current
+ * authenticated administrator's profile.
+ *
+ * The protect middleware verifies:
+ * - JWT signature and expiration
+ * - Account existence
+ * - Active account status
+ * - Administrative role
+ */
+router.get("/me", protect, (req, res) => {
+  const user = req.user;
+
+  return res.status(200).json({
+    success: true,
+    admin: {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+    },
+  });
+});
 
 module.exports = router;

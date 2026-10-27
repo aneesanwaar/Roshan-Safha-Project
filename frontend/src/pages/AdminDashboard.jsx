@@ -5,7 +5,8 @@ import ManageBookRequests from '../components/admin/ManageBookRequests';
 import AIAnalytics from "../components/admin/AIAnalytics";
 import AdminSidebar from "../components/admin/AdminSidebar";
 import AdminHeader from "../components/admin/AdminHeader";
-
+import DashboardOverview from "../components/admin/DashboardOverview";
+import useDashboardOverview from "../hooks/useDashboardOverview";
 import {
   TrendingUp,
   FileSpreadsheet,
@@ -55,12 +56,49 @@ import {
   exportAdminSubmissions,
   getAdminGalleryPhotos,
   uploadAdminGalleryPhoto,
-  deleteAdminGalleryPhoto
+  deleteAdminGalleryPhoto,
 } from '../services/api';
 
 function AdminDashboard() {
   const navigate = useNavigate();
-  const [currentSection, setCurrentSection] = useState('analytics');
+  const [currentSection, setCurrentSection] = useState(() => {
+    const savedSection = sessionStorage.getItem(
+      "roshan_admin_section"
+    );
+
+    const validSections = [
+      "overview",
+      "analytics",
+      "submissions",
+      "books",
+      "bookRequests",
+      "announcements",
+      "contests",
+      "gallery",
+      "cms",
+      "menu",
+      "roles",
+    ];
+
+    return validSections.includes(savedSection)
+      ? savedSection
+      : "overview";
+  });
+
+  useEffect(() => {
+    sessionStorage.setItem(
+      "roshan_admin_section",
+      currentSection
+    );
+  }, [currentSection]);
+
+  const {
+    overviewStats,
+    overviewLoading,
+    overviewError,
+    recentActivity,
+  } = useDashboardOverview();
+
   const [subTab, setSubTab] = useState('essays');
   const [cmsPageTab, setCmsPageTab] = useState('contact');
   // Homepage CMS image management
@@ -313,6 +351,8 @@ function AdminDashboard() {
     // Remove authentication data.
     localStorage.removeItem('roshan_token');
     localStorage.removeItem('roshan_admin');
+
+    sessionStorage.removeItem("roshan_admin_section");
 
     // Replace the current history entry so the Back button
     // does not return directly to the previous dashboard page.
@@ -639,6 +679,17 @@ function AdminDashboard() {
         />
 
         <main className="flex-1 p-4 sm:p-8 max-w-7xl w-full mx-auto space-y-6">
+
+          {/* Dashboard Overview */}
+          {currentSection === "overview" && (
+            <DashboardOverview
+              activeAdmin={activeAdmin}
+              onNavigate={setCurrentSection}
+              stats={overviewStats}
+              recentActivity={recentActivity}
+            />
+          )}
+
 
           {/* BOOK INVENTORY MANAGEMENT */}
           {currentSection === 'books' && <ManageBooks />}

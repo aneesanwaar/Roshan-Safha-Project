@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import ManageBooks from '../components/admin/ManageBooks';
 import ManageBookRequests from '../components/admin/ManageBookRequests';
+import AIAnalytics from "../components/admin/AIAnalytics";
 import {
   TrendingUp,
   FileSpreadsheet,
@@ -37,7 +38,6 @@ import {
 import {
   getAdminSubmissions,
   updateSubmissionStatus,
-  getAdminAnalyticsTrends,
   getPageContent,
   updatePageContent,
   uploadCmsImage,
@@ -163,16 +163,6 @@ function AdminDashboard() {
 
   const [teamMembers, setTeamMembers] = useState([]);
 
-  // Time-Series Analytics Store
-  const [timeSeriesData, setTimeSeriesData] = useState([
-    { month: 'May 2026', label: 'May', books: 42, participation: 25 },
-    { month: 'Jun 2026', label: 'Jun', books: 65, participation: 40 },
-    { month: 'Jul 2026', label: 'Jul', books: 90, participation: 75 },
-    { month: 'Aug 2026', label: 'Aug', books: 130, participation: 110 },
-    { month: 'Sep 2026', label: 'Sep', books: 145, participation: 125 },
-    { month: 'Oct 2026', label: 'Oct', books: 160, participation: 135 }
-  ]);
-  const [aiServerModels, setAiServerModels] = useState(null);
 
   // Hydrate Data on Mount
   useEffect(() => {
@@ -241,24 +231,8 @@ function AdminDashboard() {
     fetchBackendData();
   }, []);
 
-  // Fetch Live Analytics Trends
-  useEffect(() => {
-    const loadTrends = async () => {
-      try {
-        const res = await getAdminAnalyticsTrends();
-        if (res.data?.success && res.data?.timeSeriesData?.length > 0) {
-          setTimeSeriesData(res.data.timeSeriesData);
-          setAiServerModels(res.data.models);
-        }
-      } catch (err) {
-        console.warn('Live trend analytics fallback active.');
-      }
-    };
 
-    if (currentSection === 'analytics') {
-      loadTrends();
-    }
-  }, [currentSection]);
+
 
   // Load CMS Content on Tab Change
   useEffect(() => {
@@ -296,89 +270,6 @@ function AdminDashboard() {
   const [isAddingUser, setIsAddingUser] = useState(false);
   const [newUserForm, setNewUserForm] = useState({ name: '', email: '', role: 'Content Editor' });
 
-  // Academic OLS Linear Regression Formulation
-  const linearRegression = (dataArray, key) => {
-    const n = dataArray.length;
-    if (n < 2) return { slope: 0, intercept: 0, r2: 0, forecastNext: 0, growthRate: 0, trend: 'Calibrating', confidenceInterval: '±0' };
-    let sumX = 0, sumY = 0, sumXY = 0, sumXX = 0;
-    for (let i = 0; i < n; i++) {
-      const y = dataArray[i][key] || 0;
-      sumX += i;
-      sumY += y;
-      sumXY += i * y;
-      sumXX += i * i;
-    }
-    const denom = n * sumXX - sumX * sumX;
-    const slope = denom !== 0 ? (n * sumXY - sumX * sumY) / denom : 0;
-    const intercept = (sumY - slope * sumX) / n;
-    const forecastNext = Math.round(slope * n + intercept);
-
-    const meanY = sumY / n;
-    let ssTot = 0, ssRes = 0;
-    for (let i = 0; i < n; i++) {
-      const y = dataArray[i][key] || 0;
-      const yPred = slope * i + intercept;
-      ssTot += Math.pow(y - meanY, 2);
-      ssRes += Math.pow(y - yPred, 2);
-    }
-    const r2 = ssTot !== 0 ? Math.max(0.75, Math.min(0.99, parseFloat((1 - (ssRes / ssTot)).toFixed(2)))) : 0.88;
-    const growthRate = Math.round(((dataArray[n - 1][key] - dataArray[0][key]) / (dataArray[0][key] || 1)) * 100);
-
-    return {
-      slope: parseFloat(slope.toFixed(2)),
-      intercept: parseFloat(intercept.toFixed(2)),
-      r2,
-      forecastNext: Math.max(0, forecastNext),
-      growthRate,
-      trend: slope > 8 ? 'Strong Acceleration' : slope > 0 ? 'Steady Trajectory' : 'Pace Declining',
-      confidenceInterval: `±${Math.max(3, Math.round(slope * 0.35))} units`
-    };
-  };
-
-  const calculatedBooks = useMemo(() => linearRegression(timeSeriesData, 'books'), [timeSeriesData]);
-  const calculatedParticipation = useMemo(() => linearRegression(timeSeriesData, 'participation'), [timeSeriesData]);
-
-  const bookModel = aiServerModels?.books || calculatedBooks;
-  const participationModel = aiServerModels?.participation || calculatedParticipation;
-
-  // AI Decision-Support Recommendation Logic
-  const getRecommendation = () => {
-    const booksForecast = bookModel?.forecast_next ?? bookModel?.forecastNext ?? 0;
-    const participationForecast = participationModel?.forecast_next ?? participationModel?.forecastNext ?? 0;
-    const trend = bookModel?.trend || 'Steady Trajectory';
-
-    if (booksForecast >= 50) {
-      return {
-        urgency: 'Surge Operations Required',
-        badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-300',
-        text: `Intake Inflow Acceleration: Projected collection volume is high (~${booksForecast} books next month). Action: Schedule extra volunteer sorting shifts this coming weekend and dispatch distribution crates to partner schools to avoid facility bottlenecks.`
-      };
-    }
-
-    if (booksForecast >= 20) {
-      return {
-        urgency: 'Steady Nominal Trajectory',
-        badgeColor: 'bg-amber-100 text-amber-900 border-amber-300',
-        text: `Healthy Capacity Ratio: Book inflow indicates ${trend} (~${booksForecast} books projected). Existing sorting schedules and storage capacity are currently sufficient.`
-      };
-    }
-
-    if (participationForecast > 10) {
-      return {
-        urgency: 'Contest Evaluation Priority',
-        badgeColor: 'bg-blue-100 text-blue-900 border-blue-300',
-        text: `High Contest Engagement: Student submissions are accelerating (~${participationForecast} submissions projected). Assign additional peer evaluators to review the incoming essay backlog.`
-      };
-    }
-
-    return {
-      urgency: 'Outreach Opportunity',
-      badgeColor: 'bg-slate-100 text-slate-800 border-slate-300',
-      text: `Intake pace is moderate (~${booksForecast} books projected). Recommend launching an institutional drop-box drive in local high schools to boost donor participation.`
-    };
-  };
-
-  const advice = getRecommendation();
 
   const showToast = (msg) => {
     setToastMessage(msg);
@@ -687,16 +578,6 @@ function AdminDashboard() {
     { id: 'roles', label: 'Team Roles & Permissions', icon: <ShieldCheck className="w-4 h-4" /> }
   ];
 
-  // High-Resolution SVG Coordinates
-  const chartWidth = 720;
-  const chartHeight = 250;
-  const padX = 45;
-  const padY = 35;
-  const maxScaleVal = 200;
-  const getX = (i) => padX + (i * (chartWidth - 2 * padX)) / (timeSeriesData.length - 1 || 1);
-  const getY = (val) => chartHeight - padY - (val / maxScaleVal) * (chartHeight - 2 * padY);
-  const bookPath = timeSeriesData.map((d, i) => `${i === 0 ? 'M' : 'L'} ${getX(i)} ${getY(d.books || 0)}`).join(' ');
-  const partPath = timeSeriesData.map((d, i) => `${i === 0 ? 'M' : 'L'} ${getX(i)} ${getY(d.participation || 0)}`).join(' ');
 
   return (
     <div className="min-h-screen bg-slate-100 flex flex-col lg:flex-row font-sans">
@@ -795,226 +676,8 @@ function AdminDashboard() {
           {currentSection === 'books' && <ManageBooks />}
           {currentSection === 'bookRequests' && <ManageBookRequests />}
 
-          {/* 1. ADVANCED AI DECISION-SUPPORT & PREDICTIVE ANALYTICS */}
-          {currentSection === 'analytics' && (
-            <div className="space-y-6">
-
-              {/* Intelligence Hero Banner */}
-              <div className="relative overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white rounded-3xl p-6 sm:p-8 border border-slate-800 shadow-xl space-y-4">
-                <div className="absolute top-0 right-0 -mt-8 -mr-8 w-80 h-80 bg-[#E8A94A]/10 rounded-full blur-3xl pointer-events-none"></div>
-
-                <div className="flex flex-wrap items-center justify-between gap-3 relative z-10">
-                  <div className="inline-flex items-center gap-2 bg-[#E8A94A]/15 text-[#E8A94A] border border-[#E8A94A]/30 text-[11px] font-black px-3.5 py-1 rounded-full uppercase tracking-wider">
-                    <Sparkles className="w-3.5 h-3.5" />
-                    <span>Autonomous Predictive Intelligence</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-[11px] text-slate-400 font-mono">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-                    <span>Model: OLS Linear Trend Regression • R² = {bookModel?.r2 || 0.89}</span>
-                  </div>
-                </div>
-
-                <div className="space-y-2 relative z-10 max-w-3xl">
-                  <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
-                    Literacy Inflow Forecasting & Capacity Planning
-                  </h2>
-                  <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-                    Trained on real-time donation velocity and student competition uptake across Azad Jammu & Kashmir. Provides empirical demand projections to eliminate textbook sorting bottlenecks.
-                  </p>
-                </div>
-              </div>
-
-              {/* Academic KPI Metrics Cards */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="bg-white p-5 rounded-3xl border border-slate-200/90 shadow-xs hover:shadow-md transition-all space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Monthly Velocity (m)</span>
-                    <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">
-                      {bookModel?.trend || 'Steady'}
-                    </span>
-                  </div>
-                  <div>
-                    <div className="text-3xl font-black text-slate-900 tracking-tight">
-                      +{Math.round(bookModel?.slope || 0)} <span className="text-xs font-semibold text-slate-400">vols / mo</span>
-                    </div>
-                    <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-700 mt-1">
-                      <TrendingUp className="w-3.5 h-3.5" />
-                      <span>Growth gradient: {bookModel?.slope || 0}x</span>
-                    </div>
-                  </div>
-                  <div className="pt-2 border-t border-slate-100 text-[11px] text-slate-500 font-medium">
-                    Regression slope indicates accelerating donation momentum across regional drop boxes.
-                  </div>
-                </div>
-
-                <div className="bg-white p-5 rounded-3xl border border-slate-200/90 shadow-xs hover:shadow-md transition-all space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Next Target (Y_pred)</span>
-                    <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-900 border border-amber-200">
-                      Forward Horizon
-                    </span>
-                  </div>
-                  <div>
-                    <div className="text-3xl font-black text-[#E8A94A] tracking-tight">
-                      ~{bookModel?.forecast_next ?? bookModel?.forecastNext ?? 0} <span className="text-xs font-semibold text-slate-500">Books</span>
-                    </div>
-                    <div className="text-xs font-bold text-amber-800 mt-1">
-                      Confidence: {bookModel?.confidenceInterval || '±5 units'}
-                    </div>
-                  </div>
-                  <div className="pt-2 border-t border-slate-100 text-[11px] text-slate-500 font-medium">
-                    Estimated shelf capacity required at the Muzaffarabad facility for next cycle.
-                  </div>
-                </div>
-
-                <div className="bg-white p-5 rounded-3xl border border-slate-200/90 shadow-xs hover:shadow-md transition-all space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Youth Reach (Y_pred)</span>
-                    <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-800 border border-blue-200">
-                      Submissions
-                    </span>
-                  </div>
-                  <div>
-                    <div className="text-3xl font-black text-slate-900 tracking-tight">
-                      ~{participationModel?.forecast_next ?? participationModel?.forecastNext ?? 0} <span className="text-xs font-semibold text-slate-400">Essays</span>
-                    </div>
-                    <div className="text-xs font-bold text-blue-700 mt-1">
-                      Active evaluation pipeline
-                    </div>
-                  </div>
-                  <div className="pt-2 border-t border-slate-100 text-[11px] text-slate-500 font-medium">
-                    Expected entries for active competition divisions across junior and senior tiers.
-                  </div>
-                </div>
-
-                <div className="bg-white p-5 rounded-3xl border border-slate-200/90 shadow-xs hover:shadow-md transition-all space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Model Precision</span>
-                    <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-purple-50 text-purple-800 border border-purple-200 font-mono">
-                      R² Metric
-                    </span>
-                  </div>
-                  <div>
-                    <div className="text-3xl font-black text-purple-900 tracking-tight font-mono">
-                      {bookModel?.r2 ?? 0.88} <span className="text-xs font-sans font-semibold text-slate-400">/ 1.00</span>
-                    </div>
-                    <div className="text-xs font-bold text-purple-700 mt-1">
-                      Goodness of Fit
-                    </div>
-                  </div>
-                  <div className="pt-2 border-t border-slate-100 text-[11px] text-slate-500 font-medium">
-                    Confirms strong statistical validity between operational months and intake volume.
-                  </div>
-                </div>
-              </div>
-
-              {/* Mathematical Formulation Callout Box */}
-              <div className="bg-slate-950 text-slate-200 rounded-3xl p-6 border border-slate-800 shadow-md">
-                <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
-                  <div className="space-y-1">
-                    <span className="text-[10px] font-black uppercase tracking-wider text-[#E8A94A]">Formulation</span>
-                    <h4 className="text-sm font-bold text-white">Ordinary Least Squares Regression Architecture</h4>
-                    <p className="text-xs text-slate-400">
-                      Gradient slope (m) and intercept (c) calculated over historical observation series:
-                    </p>
-                  </div>
-                  <div className="bg-slate-900/90 border border-slate-700/80 px-4 py-3 rounded-2xl font-mono text-xs text-amber-300 shadow-inner">
-                    Y = ({bookModel?.slope || 0} · X) + {bookModel?.intercept || 0}
-                  </div>
-                </div>
-              </div>
-
-              {/* Automated AI Recommendation Directive */}
-              <div className="bg-amber-50/80 border border-amber-300/80 rounded-3xl p-6 space-y-3 shadow-xs">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-black uppercase tracking-wider text-amber-950 flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-[#E8A94A]" /> Automated Decision-Support Directive
-                  </h4>
-                  <span className={`text-[10px] font-extrabold px-3 py-1 rounded-full border shadow-2xs ${advice.badgeColor}`}>
-                    Priority Level: {advice.urgency}
-                  </span>
-                </div>
-                <p className="text-xs sm:text-sm text-slate-800 font-medium leading-relaxed">
-                  {advice.text}
-                </p>
-                <div className="flex flex-wrap items-center gap-4 pt-2 text-[11px] text-amber-900 font-bold border-t border-amber-200/60">
-                  <span>Recommended Action: Trigger Volunteer Roster</span>
-                  <span>•</span>
-                  <span>Storage Status: Nominal (62% Capacity)</span>
-                  <span>•</span>
-                  <span>Autonomous Re-evaluation: Active</span>
-                </div>
-              </div>
-
-              {/* Interactive SVG Chart */}
-              <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xs p-6 sm:p-8 space-y-6">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
-                  <div>
-                    <h3 className="text-base font-black text-slate-900">Historical & Projected Trajectory</h3>
-                    <p className="text-xs text-slate-500">Dual-series empirical observation and forward regression line.</p>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-5 text-xs font-bold">
-                    <div className="flex items-center gap-2 text-emerald-800">
-                      <span className="w-3 h-3 rounded-full bg-emerald-600 shadow-2xs"></span> Book Donations
-                    </div>
-                    <div className="flex items-center gap-2 text-[#E8A94A]">
-                      <span className="w-3 h-3 rounded-full bg-[#E8A94A] shadow-2xs"></span> Contest Registrations
-                    </div>
-                    <div className="flex items-center gap-2 text-slate-400 font-mono text-[11px]">
-                      <span className="w-4 h-0.5 bg-slate-300 border border-dashed"></span> Projected Threshold
-                    </div>
-                  </div>
-                </div>
-
-                <div className="w-full overflow-x-auto">
-                  <svg viewBox={`0 0 ${chartWidth} ${chartHeight}`} className="w-full h-72 bg-slate-50/70 rounded-2xl border border-slate-100">
-                    {[0, 50, 100, 150, 200].map((val) => (
-                      <g key={val}>
-                        <line x1={padX} y1={getY(val)} x2={chartWidth - padX} y2={getY(val)} stroke="#e2e8f0" strokeDasharray="3 3" />
-                        <text x={padX - 12} y={getY(val) + 4} textAnchor="end" fontSize="10" fill="#94a3b8" fontWeight="700">{val}</text>
-                      </g>
-                    ))}
-
-                    <path d={bookPath} fill="none" stroke="#059669" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
-                    {timeSeriesData.map((d, i) => (
-                      <g key={'d-grp-' + i}>
-                        <circle cx={getX(i)} cy={getY(d.books || 0)} r="6" fill="#059669" stroke="#ffffff" strokeWidth="2.5" />
-                        <text x={getX(i)} y={getY(d.books || 0) - 10} textAnchor="middle" fontSize="10" fill="#065f46" fontWeight="800">
-                          {d.books}
-                        </text>
-                      </g>
-                    ))}
-
-                    <path d={partPath} fill="none" stroke="#E8A94A" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
-                    {timeSeriesData.map((d, i) => (
-                      <g key={'p-grp-' + i}>
-                        <circle cx={getX(i)} cy={getY(d.participation || 0)} r="6" fill="#E8A94A" stroke="#ffffff" strokeWidth="2.5" />
-                        <text x={getX(i)} y={getY(d.participation || 0) + 18} textAnchor="middle" fontSize="10" fill="#92400e" fontWeight="800">
-                          {d.participation}
-                        </text>
-                      </g>
-                    ))}
-
-                    <line
-                      x1={getX(timeSeriesData.length - 1)}
-                      y1={getY(timeSeriesData[timeSeriesData.length - 1]?.books || 0)}
-                      x2={chartWidth - padX}
-                      y2={getY(bookModel?.forecast_next ?? bookModel?.forecastNext ?? 0)}
-                      stroke="#059669"
-                      strokeWidth="2.5"
-                      strokeDasharray="4 4"
-                    />
-
-                    {timeSeriesData.map((d, i) => (
-                      <text key={'lbl-' + i} x={getX(i)} y={chartHeight - 10} textAnchor="middle" fontSize="11" fill="#475569" fontWeight="800">
-                        {d.label || d.month}
-                      </text>
-                    ))}
-                  </svg>
-                </div>
-              </div>
-
-            </div>
+          {currentSection === "analytics" && (
+            <AIAnalytics />
           )}
 
           {/* 2. FORM SUBMISSIONS & EXPORT */}

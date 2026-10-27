@@ -7,7 +7,6 @@ const {
   getSubmissions,
   updateSubmissionStatus,
   exportSubmissions,
-  getAnalyticsTrends,
   getPageContent,
   updatePageContent,
   getWinners,
@@ -17,6 +16,11 @@ const {
   updateMenuItem,
   getTeamUsers,
 } = require("../controllers/adminController");
+
+// AI analytics now has its own dedicated controller.
+const {
+  getAnalyticsTrends,
+} = require("../controllers/analyticsController");
 
 const { protect } = require("../middleware/authMiddleware");
 
@@ -54,8 +58,15 @@ router.patch(
 router.get("/submissions/export", exportSubmissions);
 
 // ==========================================
-// 2. ANALYTICS
+// 2. AI ANALYTICS
 // ==========================================
+
+// Protected endpoint:
+// GET /api/admin/analytics/trends
+//
+// Retrieves six completed months of MongoDB activity,
+// requests predictions from Python Scikit-Learn,
+// and uses JavaScript OLS as a fallback if needed.
 
 router.get("/analytics/trends", getAnalyticsTrends);
 
@@ -85,6 +96,7 @@ router.put("/cms/:page", updatePageContent);
  *     }
  *   }
  */
+
 router.post(
   "/cms/upload-image",
   (req, res, next) => {

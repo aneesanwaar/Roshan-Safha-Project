@@ -8,6 +8,7 @@ import AdminHeader from "../components/admin/AdminHeader";
 import DashboardOverview from "../components/admin/DashboardOverview";
 import ManageSubmissions from '../components/admin/submissions/ManageSubmissions';
 import ManageAnnouncements from '../components/admin/announcements/ManageAnnouncements';
+import ManageContests from '../components/admin/contests/ManageContests';
 import useDashboardOverview from "../hooks/useDashboardOverview";
 import {
   TrendingUp,
@@ -47,9 +48,6 @@ import {
   getPageContent,
   updatePageContent,
   uploadCmsImage,
-  getAdminWinners,
-  createAdminWinner,
-  deleteAdminWinner,
   getAdminMenuItems,
   updateAdminMenuItem,
   getAdminTeamUsers,
@@ -141,26 +139,6 @@ function AdminDashboard() {
 
   // State Stores
 
-  const [contestConfig, setContestConfig] = useState({
-    editionYear: '2026',
-    status: 'Active',
-
-    // Junior Category
-    juniorTheme: 'The Book That Changed My Perspective',
-    juniorWordLimit: '1,000 words',
-    juniorFormats: 'PDF, DOC, DOCX',
-    juniorPrizes: 'Shields, Certificates & Book Hampers',
-    juniorDeadline: '2026-10-30',
-
-    // Senior Category
-    seniorTheme: 'Digital Media vs. Physical Libraries in Modern Civic Literacy',
-    seniorWordLimit: '2,500 words',
-    seniorFormats: 'PDF, DOC, DOCX',
-    seniorPrizes: 'Cash Award & Publication Feature',
-    seniorDeadline: '2026-10-30'
-  });
-
-  const [winnersArchive, setWinnersArchive] = useState([]);
   const [galleryAlbums, setGalleryAlbums] = useState(['Book Restoration Hub', 'Annual Book Drives', 'Community Workshops']);
   const [galleryPhotos, setGalleryPhotos] = useState([]);
 
@@ -216,22 +194,15 @@ function AdminDashboard() {
     const fetchBackendData = async () => {
       try {
         const [
-          winnersRes,
           menuRes,
           usersRes,
-          galleryRes,
-          contestRes
+          galleryRes
         ] = await Promise.allSettled([
-          getAdminWinners(),
           getAdminMenuItems(),
           getAdminTeamUsers(),
-          getAdminGalleryPhotos(),
-          getPageContent('contest')
+          getAdminGalleryPhotos()
         ]);
 
-        if (winnersRes.status === 'fulfilled' && winnersRes.value?.data?.data) {
-          setWinnersArchive(winnersRes.value.data.data);
-        }
         if (menuRes.status === 'fulfilled' && menuRes.value?.data?.data?.length > 0) {
           setPagesMenu(menuRes.value.data.data);
         }
@@ -247,9 +218,6 @@ function AdminDashboard() {
               setGalleryAlbums((prev) => Array.from(new Set([...prev, ...loadedAlbums])));
             }
           }
-        }
-        if (contestRes.status === 'fulfilled' && contestRes.value?.data?.content && Object.keys(contestRes.value.data.content).length > 0) {
-          setContestConfig(contestRes.value.data.content);
         }
       } catch (err) {
         console.warn('Backend hydration notice: using current buffer.');
@@ -287,9 +255,6 @@ function AdminDashboard() {
   const [newAlbumInput, setNewAlbumInput] = useState('');
   const [selectedFiles, setSelectedFiles] = useState([]);
 
-
-  const [isAddingWinner, setIsAddingWinner] = useState(false);
-  const [winnerForm, setWinnerForm] = useState({ editionYear: '2026', category: 'Senior', placement: '🥇 1st Place / Gold', studentName: '', institution: '', essayTitle: '', awardPrizes: '' });
 
   const [isAddingUser, setIsAddingUser] = useState(false);
   const [newUserForm, setNewUserForm] = useState({ name: '', email: '', role: 'Content Editor' });
@@ -487,69 +452,6 @@ function AdminDashboard() {
     }
   };
 
-  const handleSaveContestConfig = async (e) => {
-    e.preventDefault();
-
-    try {
-      const response = await updatePageContent("contest", contestConfig);
-
-      if (
-        response?.data?.success !== true ||
-        response?.data?.data?.page !== "contest"
-      ) {
-        throw new Error("Contest configuration save was not confirmed.");
-      }
-
-      showToast("Contest configuration & rules saved!");
-    } catch (error) {
-      console.error("Failed to save contest configuration:", error);
-
-      showToast("Failed to save contest configuration & rules.");
-    }
-  };
-  const handleAddWinnerSubmit = async (e) => {
-    e.preventDefault();
-
-    try {
-      const res = await createAdminWinner(winnerForm);
-
-      if (!res.data?.success || !res.data?.data) {
-        throw new Error("Backend did not confirm winner creation.");
-      }
-
-      // Add the winner only after successful database creation.
-      setWinnersArchive((prev) => [res.data.data, ...prev]);
-
-      setIsAddingWinner(false);
-      showToast("Winner recorded successfully!");
-    } catch (error) {
-      console.error("Failed to create winner:", error);
-      showToast("Failed to record winner. Please try again.");
-    }
-  };
-
-  const handleDeleteWinner = async (id) => {
-    if (!window.confirm("Delete winner entry?")) return;
-
-    try {
-      const res = await deleteAdminWinner(id);
-
-      if (!res.data?.success) {
-        throw new Error("Backend did not confirm winner deletion.");
-      }
-
-      // Remove the winner only after successful database deletion.
-      setWinnersArchive((prev) =>
-        prev.filter((w) => w._id !== id)
-      );
-
-      showToast("Winner removed.");
-    } catch (error) {
-      console.error("Failed to delete winner:", error);
-      showToast("Failed to remove winner. Please try again.");
-    }
-  };
-
   const handleToggleMenuVisibility = async (item) => {
     const updatedVisible = !item.isVisible;
 
@@ -641,309 +543,7 @@ function AdminDashboard() {
           {currentSection === 'announcements' && <ManageAnnouncements />}
 
           {/* 4. CONTESTS & WINNERS */}
-          {currentSection === 'contests' && (
-            <div className="space-y-8">
-              {/* // Contest Rules & Settings  */}
-              <div className="bg-white rounded-3xl border border-slate-200 shadow-xs p-6 sm:p-8 space-y-6">
-
-                {/* Header */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
-                  <div>
-                    <h3 className="text-lg font-bold text-slate-900">
-                      Edition {contestConfig.editionYear} Rules & Settings
-                    </h3>
-
-                    <p className="text-xs text-slate-500">
-                      Manage essay themes, word limits, accepted formats, prizes,
-                      and submission deadlines.
-                    </p>
-                  </div>
-
-                  <span className="text-xs font-bold px-3 py-1 bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-full">
-                    {contestConfig.status}
-                  </span>
-                </div>
-
-                <form onSubmit={handleSaveContestConfig} className="space-y-8">
-
-                  {/* Junior Category */}
-                  <div className="space-y-4">
-
-                    <h4 className="text-sm font-bold text-emerald-800 border-b border-emerald-100 pb-2">
-                      Junior Category (Under 16)
-                    </h4>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-
-                      <div className="sm:col-span-2">
-                        <label className="block text-xs font-bold text-slate-700 mb-1">
-                          Junior Essay Theme / Title
-                        </label>
-
-                        <input
-                          type="text"
-                          required
-                          value={contestConfig.juniorTheme ?? ""}
-                          onChange={(e) =>
-                            setContestConfig((prev) => ({
-                              ...prev,
-                              juniorTheme: e.target.value,
-                            }))
-                          }
-                          className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-xs font-bold text-slate-700 mb-1">
-                          Junior Word Limit
-                        </label>
-
-                        <input
-                          type="text"
-                          required
-                          placeholder="e.g. 1,500 words"
-                          value={contestConfig.juniorWordLimit ?? ""}
-                          onChange={(e) =>
-                            setContestConfig((prev) => ({
-                              ...prev,
-                              juniorWordLimit: e.target.value,
-                            }))
-                          }
-                          className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-xs font-bold text-slate-700 mb-1">
-                          Junior Accepted Formats
-                        </label>
-
-                        <input
-                          type="text"
-                          required
-                          placeholder="e.g. PDF, DOC, DOCX"
-                          value={contestConfig.juniorFormats ?? ""}
-                          onChange={(e) =>
-                            setContestConfig((prev) => ({
-                              ...prev,
-                              juniorFormats: e.target.value,
-                            }))
-                          }
-                          className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5"
-                        />
-                      </div>
-
-                      <div className="sm:col-span-2">
-                        <label className="block text-xs font-bold text-slate-700 mb-1">
-                          Junior Prizes
-                        </label>
-
-                        <input
-                          type="text"
-                          required
-                          placeholder="e.g. Shields, Certificates & Book Hampers"
-                          value={contestConfig.juniorPrizes ?? ""}
-                          onChange={(e) =>
-                            setContestConfig((prev) => ({
-                              ...prev,
-                              juniorPrizes: e.target.value,
-                            }))
-                          }
-                          className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-xs font-bold text-slate-700 mb-1">
-                          Junior Submission Deadline
-                        </label>
-
-                        <input
-                          type="date"
-                          required
-                          value={contestConfig.juniorDeadline ?? ""}
-                          onChange={(e) =>
-                            setContestConfig((prev) => ({
-                              ...prev,
-                              juniorDeadline: e.target.value,
-                            }))
-                          }
-                          className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5"
-                        />
-                      </div>
-
-                    </div>
-                  </div>
-
-                  {/* Senior Category */}
-                  <div className="space-y-4">
-
-                    <h4 className="text-sm font-bold text-blue-800 border-b border-blue-100 pb-2">
-                      Senior Category (16+ / University)
-                    </h4>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-
-                      <div className="sm:col-span-2">
-                        <label className="block text-xs font-bold text-slate-700 mb-1">
-                          Senior Essay Theme / Title
-                        </label>
-
-                        <input
-                          type="text"
-                          required
-                          value={contestConfig.seniorTheme ?? ""}
-                          onChange={(e) =>
-                            setContestConfig((prev) => ({
-                              ...prev,
-                              seniorTheme: e.target.value,
-                            }))
-                          }
-                          className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-xs font-bold text-slate-700 mb-1">
-                          Senior Word Limit
-                        </label>
-
-                        <input
-                          type="text"
-                          required
-                          placeholder="e.g. 2,700 words"
-                          value={contestConfig.seniorWordLimit ?? ""}
-                          onChange={(e) =>
-                            setContestConfig((prev) => ({
-                              ...prev,
-                              seniorWordLimit: e.target.value,
-                            }))
-                          }
-                          className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-xs font-bold text-slate-700 mb-1">
-                          Senior Accepted Formats
-                        </label>
-
-                        <input
-                          type="text"
-                          required
-                          placeholder="e.g. PDF, DOC, DOCX"
-                          value={contestConfig.seniorFormats ?? ""}
-                          onChange={(e) =>
-                            setContestConfig((prev) => ({
-                              ...prev,
-                              seniorFormats: e.target.value,
-                            }))
-                          }
-                          className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5"
-                        />
-                      </div>
-
-                      <div className="sm:col-span-2">
-                        <label className="block text-xs font-bold text-slate-700 mb-1">
-                          Senior Prizes
-                        </label>
-
-                        <input
-                          type="text"
-                          required
-                          placeholder="e.g. Cash Award & Publication Feature"
-                          value={contestConfig.seniorPrizes ?? ""}
-                          onChange={(e) =>
-                            setContestConfig((prev) => ({
-                              ...prev,
-                              seniorPrizes: e.target.value,
-                            }))
-                          }
-                          className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-xs font-bold text-slate-700 mb-1">
-                          Senior Submission Deadline
-                        </label>
-
-                        <input
-                          type="date"
-                          required
-                          value={contestConfig.seniorDeadline ?? ""}
-                          onChange={(e) =>
-                            setContestConfig((prev) => ({
-                              ...prev,
-                              seniorDeadline: e.target.value,
-                            }))
-                          }
-                          className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5"
-                        />
-                      </div>
-
-                    </div>
-                  </div>
-
-                  {/* Save Button */}
-                  <div className="flex justify-end pt-4 border-t border-slate-100">
-                    <button
-                      type="submit"
-                      className="bg-slate-900 hover:bg-slate-800 text-white font-bold px-6 py-3 rounded-xl text-xs transition-colors"
-                    >
-                      Save Contest Rules
-                    </button>
-                  </div>
-
-                </form>
-              </div>
-              {/* Winners Archive */}
-              <div className="bg-white rounded-3xl border border-slate-200 shadow-xs p-6 sm:p-8 space-y-6">
-                <div className="flex justify-between items-center border-b border-slate-100 pb-4">
-                  <h3 className="text-lg font-bold text-slate-900">Hall of Fame & Laureates</h3>
-                  <button onClick={() => setIsAddingWinner(true)} className="flex items-center gap-1.5 bg-[#E8A94A] text-slate-950 px-3.5 py-2 rounded-xl text-xs font-bold">
-                    <Plus className="w-4 h-4" /> Add Winner
-                  </button>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {winnersArchive.map((w) => (
-                    <div key={w._id} className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2 flex flex-col justify-between">
-                      <div>
-                        <span className="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded">Edition {w.editionYear} • {w.placement}</span>
-                        <h4 className="text-sm font-bold text-slate-900 mt-1">{w.studentName}</h4>
-                        <p className="text-[11px] text-slate-500">{w.institution} ({w.category})</p>
-                        <p className="text-xs text-slate-700 italic mt-1">"{w.essayTitle}"</p>
-                      </div>
-                      <div className="flex justify-end gap-2 pt-2 border-t border-slate-200/60">
-                        <button onClick={() => handleDeleteWinner(w._id)} className="text-xs text-rose-600 font-bold">Delete</button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Winner Form Modal */}
-              {isAddingWinner && (
-                <div className="fixed inset-0 z-50 bg-slate-950/40 backdrop-blur-xs flex items-center justify-center p-4">
-                  <div className="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-md w-full p-6 space-y-4">
-                    <h3 className="text-base font-bold text-slate-900">Add Winner Record</h3>
-                    <form onSubmit={handleAddWinnerSubmit} className="space-y-3">
-                      <input type="text" placeholder="Student Name" required value={winnerForm.studentName} onChange={(e) => setWinnerForm({ ...winnerForm, studentName: e.target.value })} className="w-full text-xs bg-slate-50 border p-2.5 rounded-xl" />
-                      <input type="text" placeholder="Institution / College" required value={winnerForm.institution} onChange={(e) => setWinnerForm({ ...winnerForm, institution: e.target.value })} className="w-full text-xs bg-slate-50 border p-2.5 rounded-xl" />
-                      <input type="text" placeholder="Winning Essay Title" required value={winnerForm.essayTitle} onChange={(e) => setWinnerForm({ ...winnerForm, essayTitle: e.target.value })} className="w-full text-xs bg-slate-50 border p-2.5 rounded-xl" />
-                      <input type="text" placeholder="Prize (e.g. Rs. 15,000 + Shield)" value={winnerForm.awardPrizes} onChange={(e) => setWinnerForm({ ...winnerForm, awardPrizes: e.target.value })} className="w-full text-xs bg-slate-50 border p-2.5 rounded-xl" />
-                      <div className="flex justify-end gap-2 pt-2">
-                        <button type="button" onClick={() => setIsAddingWinner(false)} className="px-3 py-1.5 text-xs text-slate-600 font-bold">Cancel</button>
-                        <button type="submit" className="bg-[#E8A94A] text-slate-950 px-4 py-2 text-xs font-bold rounded-xl">Save Winner</button>
-                      </div>
-                    </form>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
+          {currentSection === 'contests' && <ManageContests />}
 
           {/* 5. GALLERY & MEDIA ASSETS */}
           {currentSection === 'gallery' && (

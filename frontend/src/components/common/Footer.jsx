@@ -84,7 +84,7 @@ const PROGRAM_LINKS = [
 const SOCIAL_LINKS = [
   {
     name: "Instagram",
-    url: "https://www.instagram.com/",
+    url: "https://www.instagram.com/roshan_safha",
     icon: InstagramIcon,
   },
   {

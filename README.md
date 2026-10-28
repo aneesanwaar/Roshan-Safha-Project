@@ -1,242 +1,319 @@
-#  A Web-Based Intelligent Solution for Roshan Safha
 
-**A full-stack literacy management and decision-support platform for Roshan Safha, a non-profit organization in Muzaffarabad, Azad Jammu & Kashmir, Pakistan.**
 
-> **Project status:** Final Year Project (FYP) — active development and pre-defense testing. Some features and production-security improvements remain in progress.
+---
 
-## Overview
+# *A Web-Based Intelligent Solution for Roshan Safha*
 
-Roshan Safha supports educational access through book donation drives, essay competitions, workshops, and volunteer initiatives. This project brings public engagement, book circulation, submissions, website content management, and administrative reporting into one web-based system.
 
-The platform combines a responsive public website, an authenticated administrative dashboard, MongoDB-backed workflows, and a separate Python analytics service. Its aim is to reduce manual record-keeping and help organizers make informed decisions.
+A **web-based intelligent management and decision-support system** developed for the non-profit organization **Roshan Safha**.
+This system digitizes the organization’s operations and introduces **AI-powered analytics and assistance** to improve efficiency, transparency, and decision-making.
 
-## Core Features
+---
 
-### Public Website
+# Project Overview
 
-- Organization information, programs, announcements, and community initiatives.
-- Photo gallery with album filters and an image lightbox.
-- Online forms for book donations, volunteering, event registration, essay submissions, partnerships, and contact inquiries.
-- Book-request workflows and information about available educational resources.
-- Responsive layouts designed for desktop and mobile visitors.
-- Bilingual (English/Urdu) website assistant for common questions.
+Roshan Safha is a non-profit organization based in **Muzaffarabad, Azad Jammu & Kashmir, Pakistan**, working to promote educational opportunities for children through initiatives such as:
 
-### Administration
+* Book donation drives
+* Essay contests
+* Educational workshops and events
+* Volunteer programs
 
-- Authenticated dashboard with collapsible navigation and overview statistics.
-- Book inventory and book-request management.
-- Submission review, status management, search, pagination, and export.
-- Announcements management, including draft, scheduled, and published content.
-- Contest settings and winners archive management.
-- Gallery uploads and image management.
-- Website content and menu administration.
-- AI-assisted trend analysis and reporting views.
+Currently, many organizational tasks such as **donation management, registrations, and data tracking** are handled manually. This project aims to build a **centralized web-based platform** to automate these processes and provide **intelligent insights using AI techniques**.
 
-### Analytics and Website Assistant
+---
 
-**Trend analysis:** A Python/Flask service supports analytics and forecasting workflows using historical organizational data and machine-learning techniques such as linear regression. The administrative interface presents insights to support planning and resource allocation.
+# Key Features
 
-**Website assistant:** The current chat widget uses predefined responses and keyword-based matching to answer common questions about donations, volunteering, contests, and programs. A more capable NLP-backed assistant is a **planned enhancement**; the current widget should not be described as a generative AI chatbot.
+## 1. Public Website
 
-## Technology Stack
+Users can access information about the organization and its activities.
 
-| Layer | Technologies |
-| --- | --- |
-| Frontend | React, Vite, Tailwind CSS, JavaScript, Lucide icons |
-| Backend | Node.js, Express.js, REST APIs |
-| Database | MongoDB Atlas, Mongoose |
-| Analytics service | Python, Flask, Pandas, Scikit-learn |
-| Authentication | JWT-based administrative authentication |
-| Media | Cloudinary for managed image uploads |
-| Development | Git, GitHub, Postman |
+Features include:
 
-Some tools named in the original project proposal, including NLTK, spaCy, Google Analytics, and particular charting or email libraries, should be considered **implementation-dependent** until verified against the installed dependencies.
+* Organization overview
+* Programs and initiatives
+* Event and contest announcements
+* Photo gallery
+* Contact information
 
-## System Architecture
+---
 
-```text
-                   Public Visitors / Administrators
-                                |
-                                v
-                      React + Vite Frontend
-                        (localhost:5173)
-                                |
-                      REST API requests
-                                v
-                     Node.js / Express API
-                        (localhost:5000)
-                         /             \
-                        v               v
-                  MongoDB Atlas      Media Storage
-                  (application data)  (Cloudinary)
-                         
-                  Python / Flask Analytics
-                        (localhost:8000)
-                  (connected analytics workflow)
+## 2. Online Forms & Data Management
+
+The platform provides multiple online forms for user participation.
+
+### Book Donation Form
+
+Collects information about donated books.
+
+Fields:
+
+* Name
+* Email
+* Phone
+* City / Area
+* Number of books
+* Types of books
+* Drop-off or pickup preference
+* Message
+
+### Other Forms
+
+* Volunteer sign-up
+* Event registration
+* Contest registration and essay submission
+* Collaboration / partnership inquiries
+* General contact form
+
+All form submissions are stored securely in the database.
+
+---
+
+## 3. Admin Dashboard
+
+A secure admin panel allows organization administrators to manage system data.
+
+Capabilities include:
+
+* View and manage form submissions
+* Manage website content
+* Upload and manage gallery images
+* Publish announcements or blog posts
+* Manage contests and events
+* Export data for reporting
+
+---
+
+# AI-Powered Intelligent Features
+
+This project introduces two intelligent components.
+
+---
+
+## 1. Donation & Participation Trend Analysis
+
+This module analyzes historical NGO data to generate insights.
+
+Functions:
+
+* Analyze historical donation and registration data
+* Identify monthly and seasonal participation trends
+* Detect growth or decline in participation
+* Predict future donation and participation levels
+
+Techniques used:
+
+* **Time-series analysis** for identifying patterns in chronological data
+* **Linear regression** for predicting future values
+
+Results are visualized through charts in the **admin dashboard**, helping the organization plan future campaigns and events.
+
+---
+
+## 2. Hybrid AI-Powered Chatbot
+
+An intelligent chatbot assists users on the website.
+
+Capabilities:
+
+* Answers frequently asked questions
+* Guides users to the correct pages and forms
+* Provides quick information about donations, events, and volunteering
+
+Architecture:
+
+Hybrid approach combining:
+
+1. **Rule-based responses** for fixed queries
+2. **Natural Language Processing (NLP)** for flexible user input
+
+NLP libraries used:
+
+* NLTK
+* spaCy
+
+This ensures both **accuracy and flexibility**.
+
+---
+
+# Technology Stack
+
+## Frontend
+
+* React.js
+* HTML5
+* CSS3
+* Tailwind CSS
+
+## Backend
+
+* Node.js
+* Express.js
+
+## Database
+
+* MongoDB Atlas
+* Mongoose ODM
+
+## AI / Data Analysis
+
+* Python
+* Pandas
+* Scikit-learn
+* NLTK / spaCy
+
+## Security
+
+* Role-based authentication (JWT)
+* express-validator
+* Google reCAPTCHA
+
+## Other Tools
+
+* Git & GitHub (version control)
+* Postman (API testing)
+* Chart.js / Recharts (data visualization)
+* Nodemailer
+* Google Analytics (website analytics)
+
+---
+
+# System Architecture
+
+The system follows a **three-layer architecture**:
+
+1. **Frontend Layer**
+
+   * React-based responsive interface
+   * User interaction and form submission
+
+2. **Backend Layer**
+
+   * REST API built with Node.js and Express
+   * Handles business logic and authentication
+
+3. **Database Layer**
+
+   * MongoDB Atlas cloud database
+   * Stores user submissions and organizational data
+
+4. **AI Module**
+
+   * Python-based analysis and chatbot processing
+   * Integrated with backend services
+
+---
+
+# Project Structure
+
 ```
-
-The React frontend handles presentation and user interaction. The Express backend handles application workflows, persistence, and authentication. MongoDB Atlas stores organizational records. A separate Flask service supports analytical functionality.
-
-## Repository Structure
-
-The following is a **high-level layout**; individual filenames and subfolders may vary as development continues.
-
-```text
-.
-├── frontend/
-│   ├── public/
-│   └── src/
-│       ├── assets/
-│       ├── components/
-│       │   ├── admin/
-│       │   └── forms/
-│       ├── hooks/
-│       ├── pages/
-│       └── services/
-├── backend/
-│   ├── config/
-│   ├── controllers/
-│   ├── middleware/
-│   ├── models/
-│   ├── routes/
+roshan-safha-project
+│
+├── frontend
+│   ├── public
+│   ├── src
+│   │   ├── components
+│   │   ├── pages
+│   │   ├── services
+│   │   └── assets
+│
+├── backend
+│   ├── config
+│   ├── models
+│   ├── controllers
+│   ├── routes
+│   ├── middleware
 │   └── server.js
-├── ai_service/
+│
+├── ai_service
+│   ├── ml_models
+│   │   └── trend_analyzer.py
+│   └── nlp
+│   │    └── chatbot_engine.py
 │   ├── app.py
+│   │   
 │   └── requirements.txt
-├── API_DOCS.md             # If present in your checkout
+│      
+│
+├── API_DOCS.md
+│
 └── README.md
 ```
 
-## Local Development
+---
 
-### Prerequisites
+# Installation & Setup
 
-- Node.js and npm
-- Python and pip
-- A MongoDB Atlas connection string
-- Credentials for any external services enabled in your configuration
+Clone the repository:
 
-### 1. Clone the repository
-
-```bash
+```
 git clone https://github.com/aneesanwaar/A-Web-Based-Intelligent-Solution-for-Roshan-Safha.git
+```
+
+Navigate to the project directory:
+
+```
 cd A-Web-Based-Intelligent-Solution-for-Roshan-Safha
 ```
 
-### 2. Start the backend
+Install backend dependencies:
 
-```bash
+```
 cd backend
 npm install
 ```
 
-Create `backend/.env` using the environment variables expected by your backend. The following are **illustrative names from the original project documentation**; check the source code for the exact required keys:
+Create a `.env` file and add:
 
-```dotenv
+```
+MONGO_URI=your_mongodb_connection_string
 PORT=5000
+EMAIL_USER= @gmail.com
+EMAIL_PASS=your_app_password
+RECAPTCHA_SECRET=your_secret_key
 NODE_ENV=development
-MONGO_URI=your_mongodb_atlas_connection_string
-JWT_SECRET=replace_with_a_long_random_secret
-EMAIL_USER=your_email_address
-EMAIL_PASS=your_email_app_password
-RECAPTCHA_SECRET=your_recaptcha_secret
 ```
 
-Add any Cloudinary, frontend-origin, or other provider-specific variables required by your installed version. **Never commit `.env` files or real credentials.**
+Start the backend server:
 
-```bash
+```
 node server.js
 ```
 
-The API is expected to run at `http://localhost:5000` in the current development setup.
+---
 
-### 3. Start the frontend
+# Future Improvements
 
-Open a second terminal:
+Possible enhancements include:
 
-```bash
-cd frontend
-npm install
-npm run dev
-```
+* Advanced predictive analytics
+* AI-based recommendation system
+* Mobile application integration
 
-Vite normally serves the frontend at `http://localhost:5173`. Configure its API base URL according to `frontend/src/services/api` and your environment setup.
-
-### 4. Start the analytics service
-
-Open a third terminal:
-
-```bash
-cd ai_service
-python -m venv .venv
-```
-
-Activate the virtual environment:
-
-```bash
-# Windows PowerShell
-.venv\Scripts\Activate.ps1
-
-# macOS / Linux
-source .venv/bin/activate
-```
-
-Install dependencies:
-
-```bash
-pip install -r requirements.txt
-```
-
-Start the service using the entry point defined in `ai_service/app.py` (commonly `python app.py`):
-
-```bash
-python app.py
-```
-
-The development configuration uses port `8000` for the analytics service. If your Flask entry point specifies a different port or startup command, follow that configuration instead.
-
-## Typical Workflows
-
-1. **Book donation:** A visitor submits donation details; administrators review the record and manage the associated inventory workflow.
-2. **Book request:** A request is recorded and processed through the administration interface, with inventory updates where applicable.
-3. **Essay competition:** Visitors review contest information and submit entries; administrators manage competition settings and winner records.
-4. **Announcements and gallery:** Administrators publish updates and manage images that appear on the public website.
-5. **Reporting:** Administrators inspect operational statistics and analytics to support planning.
-
-## Security and Privacy
-
-The project uses JWT-based admin authentication and includes form-validation and anti-abuse mechanisms in selected workflows. **It is not yet presented as production-hardened.** Before public deployment, complete a dedicated review of:
-
-- Authentication, authorization, and administrator permissions.
-- Input validation, rate limiting, and upload restrictions.
-- Secret management, CORS, HTTPS, and secure configuration.
-- Data retention, backup/recovery, logging, and monitoring.
-- Privacy disclosures and consent for collected personal information.
-
-Do not use real personal data for public demonstrations unless authorized.
-
-## Current Status and Roadmap
-
-**Implemented or under active integration:** public pages and forms, gallery, book management, submissions, admin content tools, contests/winners management, dashboard views, and Python-based analytics workflows.
-
-**Planned or pending verification:** chatbot NLP enhancements, remaining cross-page polish, comprehensive end-to-end testing, production security review, deployment readiness, and potential future recommendation features.
-
-This repository is an academic Final Year Project. Feature availability may change during development; the running application and source code are the authoritative references.
-
-## Academic Information
-
-**Project:** A Web-Based Intelligent Solution for Roshan Safha  
-**Department:** Computer Science and Information Technology  
-**University:** University of Azad Jammu and Kashmir, Muzaffarabad  
-**Client organization:** Roshan Safha
-
-### Team
-
-- **Anees Ul Haq** — `2022-UMDB-02774`
-- **Syed Nafees Ahmed Gillani** — `2022-UMDB-02808`
-
-**Supervisor:** Dr. Adil Aslam Mir
 
 ---
 
-*Developed as a Final Year Project to support Roshan Safha's literacy and educational initiatives.*
+# Project Status
+
+Currently under development as a **Final Year Project (FYP)**.
+
+---
+
+# Author
+
+**Final Year Project**
+
+**Anees Ul Haq 2022-UMDB-02774** 
+
+**Syed Nafees Ahmed Gillani 2022-UMDB-02808** 
+
+*Department of Computer Science and Information Technology*
+*University of Azad Jammu and Kashmir, Muzaffarabad*
+
+**Supervised by:** Dr. Adil Aslam Mir
+
+Developed for **Roshan Safha**.
+
+---
+

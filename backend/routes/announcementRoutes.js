@@ -1,21 +1,14 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
-const { 
-  createAnnouncement, 
-  getAnnouncements, 
-  deleteAnnouncement 
-} = require("../controllers/announcementController");
-const { protect } = require("../middleware/authMiddleware");
-const { uploadImage } = require("../config/cloudinary"); // Your Cloudinary config
+const controller = require('../controllers/announcementController');
+const { protect } = require('../middleware/authMiddleware');
+const { uploadImage } = require('../config/cloudinary');
 
-// PUBLIC: Anyone can read news
-router.get("/", getAnnouncements);
-
-// PRIVATE: Only Founder can manage news
-// We add uploadImage.single("featuredImage") here. 
-// "featuredImage" must match the Key name you use in Postman or your Frontend form.
-router.post("/", protect, uploadImage.single("featuredImage"), createAnnouncement);
-
-router.delete("/:id", protect, deleteAnnouncement);
-
+router.get('/', controller.getAnnouncements);
+router.get('/admin', protect, controller.getAdminAnnouncements);
+router.get('/:slug', controller.getAnnouncement);
+router.post('/', protect, uploadImage.single('featuredImage'), controller.createAnnouncement);
+router.patch('/:id', protect, uploadImage.single('featuredImage'), controller.updateAnnouncement);
+router.put('/:id', protect, uploadImage.single('featuredImage'), controller.updateAnnouncement);
+router.delete('/:id', protect, controller.deleteAnnouncement);
 module.exports = router;

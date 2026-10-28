@@ -7,6 +7,7 @@ import AdminSidebar from "../components/admin/AdminSidebar";
 import AdminHeader from "../components/admin/AdminHeader";
 import DashboardOverview from "../components/admin/DashboardOverview";
 import ManageSubmissions from '../components/admin/submissions/ManageSubmissions';
+import ManageAnnouncements from '../components/admin/announcements/ManageAnnouncements';
 import useDashboardOverview from "../hooks/useDashboardOverview";
 import {
   TrendingUp,
@@ -139,18 +140,6 @@ function AdminDashboard() {
   });
 
   // State Stores
-  const [announcements, setAnnouncements] = useState([
-    {
-      _id: 'ann-1',
-      title: 'Roshan Safha Annual Essay Writing Contest 2026 Announced',
-      category: 'Contest',
-      status: 'Published',
-      publishDate: '2026-08-31',
-      excerpt: 'Open for high school and university students across Azad Kashmir.',
-      content: 'Submissions are now open for both Junior and Senior categories.',
-      author: 'Anees Anwaar'
-    }
-  ]);
 
   const [contestConfig, setContestConfig] = useState({
     editionYear: '2026',
@@ -292,16 +281,12 @@ function AdminDashboard() {
   }, [cmsPageTab]);
 
   // Modals & Upload State
-  const [announcementFilter, setAnnouncementFilter] = useState('All');
   const [isAddingPhotos, setIsAddingPhotos] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [selectedAlbum, setSelectedAlbum] = useState('Book Restoration Hub');
   const [newAlbumInput, setNewAlbumInput] = useState('');
   const [selectedFiles, setSelectedFiles] = useState([]);
 
-  const [isCreatingPost, setIsCreatingPost] = useState(false);
-  const [isEditingPost, setIsEditingPost] = useState(null);
-  const [postForm, setPostForm] = useState({ title: '', category: 'General', status: 'Published', publishDate: '2026-08-31', excerpt: '', content: '' });
 
   const [isAddingWinner, setIsAddingWinner] = useState(false);
   const [winnerForm, setWinnerForm] = useState({ editionYear: '2026', category: 'Senior', placement: '🥇 1st Place / Gold', studentName: '', institution: '', essayTitle: '', awardPrizes: '' });
@@ -653,69 +638,7 @@ function AdminDashboard() {
           {currentSection === 'submissions' && <ManageSubmissions />}
 
           {/* 3. ANNOUNCEMENTS & BLOG */}
-          {currentSection === 'announcements' && (
-            <div className="space-y-6">
-              <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div>
-                  <h3 className="text-base font-bold text-slate-900">Announcements & News Posts</h3>
-                  <p className="text-xs text-slate-500">Create, edit, schedule, and publish posts.</p>
-                </div>
-                <button
-                  onClick={() => {
-                    setIsCreatingPost(true);
-                    setIsEditingPost(null);
-                    setPostForm({ title: '', category: 'General', status: 'Published', publishDate: '2026-08-31', excerpt: '', content: '' });
-                  }}
-                  className="flex items-center gap-2 bg-[#E8A94A] hover:bg-[#d99839] text-slate-950 px-4 py-2.5 rounded-xl text-xs font-bold transition shadow-xs cursor-pointer"
-                >
-                  <Plus className="w-4 h-4" /> New Announcement
-                </button>
-              </div>
-
-              <div className="grid grid-cols-1 gap-4">
-                {announcements
-                  .filter((p) => (announcementFilter === 'All' || p.category === announcementFilter) && p.title?.toLowerCase().includes(searchQuery.toLowerCase()))
-                  .map((post) => (
-                    <div key={post._id} className="bg-white rounded-3xl border border-slate-200 p-5 sm:p-6 shadow-xs flex flex-col sm:flex-row justify-between gap-4">
-                      <div className="space-y-2 max-w-3xl">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-md bg-blue-100 text-blue-800">{post.category}</span>
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
-                            <Clock className="w-3 h-3" /> {post.status} • {post.publishDate}
-                          </span>
-                          <span className="text-[10px] text-slate-400">By {post.author}</span>
-                        </div>
-                        <h4 className="text-base font-bold text-slate-900 leading-snug">{post.title}</h4>
-                        <p className="text-xs text-slate-600 line-clamp-2">{post.excerpt || post.content}</p>
-                      </div>
-
-                      <div className="flex sm:flex-col items-center sm:items-end justify-end gap-2 shrink-0">
-                        <button
-                          onClick={() => {
-                            setIsEditingPost(post);
-                            setPostForm(post);
-                          }}
-                          className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold rounded-xl transition"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => {
-                            if (window.confirm('Delete this announcement?')) {
-                              setAnnouncements((prev) => prev.filter((p) => p._id !== post._id));
-                              showToast('Announcement deleted.');
-                            }
-                          }}
-                          className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold rounded-xl transition"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-              </div>
-            </div>
-          )}
+          {currentSection === 'announcements' && <ManageAnnouncements />}
 
           {/* 4. CONTESTS & WINNERS */}
           {currentSection === 'contests' && (

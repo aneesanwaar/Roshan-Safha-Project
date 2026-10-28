@@ -48,10 +48,10 @@ const EMPTY_FORM = {
 };
 
 const INPUT_CLASS =
-    "w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none transition focus:border-[#276B56] focus:ring-2 focus:ring-[#276B56]/15";
+    "w-full min-w-0 rounded-xl border border-[#D8E5D9] bg-[#FBFDF9] px-4 py-3 text-sm text-[#193E32] placeholder:text-slate-400 outline-none transition focus:border-[#276B56] focus:bg-white focus:ring-4 focus:ring-[#276B56]/10";
 
 const LABEL_CLASS =
-    "mb-1.5 block text-xs font-bold text-slate-700";
+    "mb-2 block text-xs font-bold tracking-wide text-[#34594A]";
 
 function ManageBooks() {
     const [books, setBooks] = useState([]);
@@ -315,9 +315,9 @@ function ManageBooks() {
     );
 
     return (
-        <section className="space-y-6">
+        <section className="min-w-0 space-y-6 pb-8">
             {/* Header */}
-            <div className="rounded-3xl bg-[#193E32] p-6 text-white shadow-sm sm:p-8">
+            <div className="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-[#193E32] via-[#205443] to-[#276B56] p-6 text-white shadow-[0_16px_40px_rgba(25,62,50,0.14)] sm:p-8">
                 <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                         <div className="mb-3 flex items-center gap-2 text-[#E8A94A]">
@@ -350,7 +350,7 @@ function ManageBooks() {
 
             {/* Inventory overview */}
             <div className="grid gap-4 sm:grid-cols-3">
-                <div className="rounded-2xl border border-slate-200 bg-white p-5">
+                <div className="rounded-[22px] border border-[#E0EADF] bg-white p-5 shadow-[0_6px_24px_rgba(25,62,50,0.04)]">
                     <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                         Matching Titles
                     </p>
@@ -359,7 +359,7 @@ function ManageBooks() {
                     </p>
                 </div>
 
-                <div className="rounded-2xl border border-slate-200 bg-white p-5">
+                <div className="rounded-[22px] border border-[#E0EADF] bg-white p-5 shadow-[0_6px_24px_rgba(25,62,50,0.04)]">
                     <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                         Titles on This Page
                     </p>
@@ -368,7 +368,7 @@ function ManageBooks() {
                     </p>
                 </div>
 
-                <div className="rounded-2xl border border-slate-200 bg-white p-5">
+                <div className="rounded-[22px] border border-[#E0EADF] bg-white p-5 shadow-[0_6px_24px_rgba(25,62,50,0.04)]">
                     <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                         Available Copies on This Page
                     </p>
@@ -382,8 +382,8 @@ function ManageBooks() {
             </div>
 
             {/* Search and filters */}
-            <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 sm:flex-row">
-                <div className="relative flex-1">
+            <div className="flex min-w-0 flex-col gap-3 rounded-[22px] border border-[#E0EADF] bg-white p-4 shadow-sm sm:flex-row sm:items-center">
+                <div className="relative min-w-0 flex-1">
                     <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
 
                     <input
@@ -409,7 +409,7 @@ function ManageBooks() {
                     type="button"
                     onClick={loadBooks}
                     disabled={loading}
-                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
+                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-[#F7FAF5] disabled:opacity-50"
                 >
                     <RefreshCw
                         className={`h-4 w-4 ${loading ? "animate-spin" : ""}`}
@@ -440,7 +440,7 @@ function ManageBooks() {
             )}
 
             {/* Inventory table */}
-            <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+            <div className="min-w-0 overflow-hidden rounded-[24px] border border-[#E0EADF] bg-white shadow-[0_8px_28px_rgba(25,62,50,0.05)]">
                 {loading ? (
                     <div className="flex flex-col items-center justify-center gap-3 p-16">
                         <Loader2 className="h-8 w-8 animate-spin text-[#276B56]" />
@@ -470,9 +470,9 @@ function ManageBooks() {
                         </button>
                     </div>
                 ) : (
-                    <div className="overflow-x-auto">
+                    <div className="max-w-full overflow-x-auto overscroll-x-contain">
                         <table className="w-full min-w-[850px] text-left text-sm">
-                            <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                            <thead className="border-b border-[#E0EADF] bg-[#F2F7F0] text-xs uppercase tracking-wider text-[#456C5D]">
                                 <tr>
                                     <th className="px-5 py-4">Book</th>
                                     <th className="px-5 py-4">Education Level</th>
@@ -490,7 +490,7 @@ function ManageBooks() {
                                     return (
                                         <tr
                                             key={book._id}
-                                            className="transition hover:bg-slate-50"
+                                            className="transition hover:bg-[#F7FAF5]"
                                         >
                                             <td className="px-5 py-4">
                                                 <p className="font-bold text-[#193E32]">
@@ -597,14 +597,14 @@ function ManageBooks() {
 
             {/* Add / Edit Modal */}
             {modalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4">
+                <div className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-[#0B2119]/70 p-3 backdrop-blur-[3px] sm:p-6">
                     <div
                         role="dialog"
                         aria-modal="true"
                         aria-labelledby="book-modal-title"
-                        className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-3xl bg-white p-6 shadow-2xl sm:p-8"
+                        className="my-auto flex max-h-[min(90dvh,850px)] w-full max-w-2xl flex-col overflow-hidden rounded-[26px] bg-white shadow-2xl"
                     >
-                        <div className="mb-6 flex items-start justify-between gap-4">
+                        <div className="flex shrink-0 items-start justify-between gap-4 border-b border-[#E4ECE3] bg-[#F7FAF5] px-5 py-5 sm:px-7">
                             <div>
                                 <p className="mb-1 text-xs font-bold uppercase tracking-wider text-[#276B56]">
                                     Inventory Editor
@@ -629,7 +629,7 @@ function ManageBooks() {
                             </button>
                         </div>
 
-                        <form onSubmit={handleSave} className="space-y-5">
+                        <form onSubmit={handleSave} className="min-h-0 space-y-5 overflow-y-auto px-5 py-5 sm:px-7">
                             <div className="grid gap-4 sm:grid-cols-2">
                                 <div className="sm:col-span-2">
                                     {inputField("Book Title", "title", {
@@ -688,7 +688,7 @@ function ManageBooks() {
                                 makes it available again.
                             </div>
 
-                            <div className="flex flex-wrap justify-end gap-3 border-t border-slate-100 pt-5">
+                            <div className="sticky bottom-0 -mx-5 -mb-5 flex flex-wrap justify-end gap-3 border-t border-[#E4ECE3] bg-white px-5 py-4 sm:-mx-7 sm:px-7">
                                 <button
                                     type="button"
                                     onClick={closeModal}

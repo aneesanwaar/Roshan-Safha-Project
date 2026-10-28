@@ -478,13 +478,13 @@ export default function ManageBookRequests() {
   // -----------------------------------------------------------
 
   return (
-    <section className="space-y-6 text-[#193E32]">
+    <section className="min-w-0 space-y-6 pb-8 text-[#193E32]">
 
       {/* -----------------------------------------------------
           Page header
       ----------------------------------------------------- */}
 
-      <div className="rounded-2xl bg-[#193E32] p-6 text-white shadow-sm sm:p-8">
+      <div className="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-[#193E32] via-[#205443] to-[#276B56] p-6 text-white shadow-[0_16px_40px_rgba(25,62,50,0.14)] sm:p-8">
         <div className="flex flex-wrap items-center justify-between gap-4">
 
           <div>
@@ -523,11 +523,23 @@ export default function ManageBookRequests() {
         </div>
       </div>
 
+      {/* Status snapshot: counts apply only to the currently loaded page. */}
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        {['Pending', 'Approved', 'Rejected', 'Fulfilled'].map((status) => (
+          <div key={status} className="rounded-[20px] border border-[#E0EADF] bg-white p-4 shadow-sm sm:p-5">
+            <p className="text-xs font-bold uppercase tracking-wide text-[#658073]">{status} · This page</p>
+            <p className="mt-2 text-2xl font-black text-[#193E32]">
+              {loading ? '—' : requests.filter((item) => item.status === status).length}
+            </p>
+          </div>
+        ))}
+      </div>
+
       {/* -----------------------------------------------------
           Requests table
       ----------------------------------------------------- */}
 
-      <div className="rounded-2xl border border-[#E7EEE5] bg-white p-4 shadow-sm sm:p-5">
+      <div className="min-w-0 overflow-hidden rounded-[24px] border border-[#E0EADF] bg-white p-4 shadow-[0_8px_28px_rgba(25,62,50,0.05)] sm:p-6">
 
         {/* Status filters */}
 
@@ -598,12 +610,12 @@ export default function ManageBookRequests() {
 
         {/* Table */}
 
-        <div className="mt-5 overflow-x-auto">
+        <div className="mt-5 max-w-full overflow-x-auto overscroll-x-contain rounded-xl border border-[#E8EEE5]">
 
           <table className="min-w-[760px] w-full border-collapse text-left text-sm">
 
             <thead>
-              <tr className="border-b border-[#E7EEE5] bg-[#FFF9EF] text-[#193E32]">
+              <tr className="border-b border-[#E0EADF] bg-[#F2F7F0] text-[#34594A]">
                 <th className="px-4 py-3 font-semibold">
                   Student
                 </th>
@@ -635,7 +647,7 @@ export default function ManageBookRequests() {
                 requests.map((request) => (
                   <tr
                     key={request._id}
-                    className="border-b border-[#E7EEE5] last:border-0 hover:bg-[#FFF9EF]/60"
+                    className="border-b border-[#E7EEE5] last:border-0 hover:bg-[#F7FAF5]"
                   >
 
                     {/* Student */}
@@ -807,7 +819,7 @@ export default function ManageBookRequests() {
 
       {selectedId && (
         <div
-          className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-black/60 p-4"
+          className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-[#0B2119]/70 p-3 backdrop-blur-[3px] sm:p-6"
           onMouseDown={(event) => {
             if (
               event.target ===
@@ -823,7 +835,7 @@ export default function ManageBookRequests() {
             role="dialog"
             aria-modal="true"
             aria-labelledby="book-request-dialog-title"
-            className="my-auto w-full max-w-2xl rounded-2xl bg-white shadow-2xl"
+            className="my-auto flex max-h-[min(92dvh,900px)] w-full max-w-2xl flex-col overflow-hidden rounded-[26px] bg-white shadow-2xl"
           >
 
             {/* Modal header */}
@@ -857,7 +869,7 @@ export default function ManageBookRequests() {
 
             {/* Modal body */}
 
-            <div className="max-h-[75vh] space-y-5 overflow-y-auto p-6">
+            <div className="min-h-0 space-y-5 overflow-y-auto p-5 sm:p-6">
 
               {/* Detail loading */}
 

@@ -26,19 +26,79 @@ const progress = donation => ({
 
 // PATCH /api/admin/donations/:id/collect
 // Requires JWT middleware. Verified quantity is the actual received amount.
+// PATCH /api/admin/donations/:id/collect
+// Requires JWT authentication.
+// Supports legacy donations without a stored status field.
+
 exports.collectDonation = async (req, res) => {
   try {
-    if (!validId(req.params.id)) fail(400, 'Invalid donation ID.');
+    if (!validId(req.params.id)) {
+      fail(400, 'Invalid donation ID.');
+    }
+
     const verifiedQuantity = req.body?.verifiedQuantity;
-    if (!integer(verifiedQuantity, 1)) fail(400, 'Verified quantity must be a positive whole number.');
+
+    if (!integer(verifiedQuantity, 1)) {
+      fail(
+        400,
+        'Verified quantity must be a positive whole number.'
+      );
+    }
+
     const donation = await Donation.findOneAndUpdate(
-      { _id: req.params.id, status: { $in: ['Pledged', 'Collected'] }, $or: [{ processedQuantity: 0 }, { processedQuantity: { $exists: false } }] },
-      { $set: { status: 'Collected', verifiedQuantity, collectedAt: new Date(), processedQuantity: 0, inventoryStatus: 'Not Processed' } },
-      { new: true, runValidators: true }
+      {
+        _id: req.params.id,
+
+        // Allow valid workflow states and legacy records
+        // that were created before status was introduced.
+        $and: [
+          {
+            $or: [
+              { status: 'Pledged' },
+              { status: 'Collected' },
+              { status: { $exists: false } }
+            ]
+          },
+          {
+            $or: [
+              { processedQuantity: 0 },
+              { processedQuantity: { $exists: false } }
+            ]
+          }
+        ]
+      },
+      {
+        $set: {
+          status: 'Collected',
+          verifiedQuantity,
+          collectedAt: new Date(),
+          processedQuantity: 0,
+          inventoryStatus: 'Not Processed'
+        }
+      },
+      {
+        new: true,
+        runValidators: true
+      }
     );
-    if (!donation) fail(409, 'Donation not found, cancelled, or already partially processed.');
-    return res.json({ success: true, message: 'Donation marked collected.', data: donation, progress: progress(donation) });
-  } catch (error) { return sendError(res, error); }
+
+    if (!donation) {
+      fail(
+        409,
+        'Donation not found, cancelled, or already partially processed.'
+      );
+    }
+
+    return res.json({
+      success: true,
+      message: 'Donation marked collected.',
+      data: donation,
+      progress: progress(donation)
+    });
+
+  } catch (error) {
+    return sendError(res, error);
+  }
 };
 
 // POST /api/admin/donations/:id/inventory

@@ -75,41 +75,41 @@ function FormsPage() {
   const activeTabObj = tabs.find((t) => t.id === currentTab) || tabs[0];
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-8 font-sans">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-8 font-sans">
       
       {/* Header */}
-      <div className="text-center space-y-2">
-        <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Portals & Intake Forms</h1>
-        <p className="text-slate-500 text-sm max-w-xl mx-auto">
+      <div className="relative overflow-hidden rounded-[30px] bg-[#193E32] px-6 py-12 text-center text-white shadow-[0_18px_50px_rgba(25,62,50,0.15)] space-y-3 sm:px-10">
+        <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight">Portals & Intake Forms</h1>
+        <p className="text-white/75 text-sm max-w-xl mx-auto leading-7">
           Select a category below to submit applications, pledges, or inquiries directly to the Roshan Safha team.
         </p>
       </div>
 
       {/* Tabs Switcher */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2 bg-slate-100 p-1.5 rounded-2xl border border-slate-200">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 bg-white p-2 rounded-[22px] border border-[#E0E9DD] shadow-sm">
         {tabs.map((t) => (
           <button
             key={t.id}
             onClick={() => setParams({ tab: t.id })}
             className={`flex flex-col sm:flex-row items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl text-xs font-bold transition cursor-pointer ${
               currentTab === t.id
-                ? 'bg-white text-emerald-800 shadow-xs border border-slate-200/60'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
+                ? 'bg-white text-[#193E32] shadow-xs border border-[#E0E9DD]/60'
+                : 'text-[#587366] hover:text-[#193E32] hover:bg-[#E7EEE5]'
             }`}
           >
-            <t.icon className={`w-4 h-4 ${currentTab === t.id ? 'text-emerald-600' : 'text-slate-400'}`} />
+            <t.icon className={`w-4 h-4 ${currentTab === t.id ? 'text-[#E8A94A]' : 'text-[#789386]'}`} />
             <span className="truncate">{t.label}</span>
           </button>
         ))}
       </div>
 
       {/* Active Form Card */}
-      <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-10 shadow-xs space-y-6">
+      <div className="bg-white border border-[#DDE8DD] rounded-[28px] p-6 sm:p-10 shadow-[0_18px_50px_rgba(25,62,50,0.08)] space-y-6">
         
         {/* Tab Header */}
         <div className="border-b border-slate-100 pb-4">
-          <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-            <activeTabObj.icon className="w-5 h-5 text-emerald-600" />
+          <h2 className="text-xl font-black text-[#193E32] flex items-center gap-2">
+            <activeTabObj.icon className="w-5 h-5 text-[#276B56]" />
             {currentTab === 'donations' ? cmsContent.programs?.donationHeading || activeTabObj.label : activeTabObj.label}
           </h2>
           <p className="text-xs text-slate-500 mt-1">{activeTabObj.desc}</p>
@@ -131,9 +131,9 @@ function FormsPage() {
 
         {/* 2. Volunteers Tab Notice */}
         {currentTab === 'volunteers' && cmsContent.getInvolved?.volunteerPitch && (
-          <div className="bg-emerald-50/80 border border-emerald-200/90 rounded-2xl p-4 space-y-1">
+          <div className="bg-[#E7EEE5]/80 border border-emerald-200/90 rounded-2xl p-4 space-y-1">
             <h3 className="text-xs font-bold text-emerald-950 flex items-center gap-1.5">
-              <Info className="w-4 h-4 text-emerald-600" /> Volunteer Program Focus:
+              <Info className="w-4 h-4 text-[#276B56]" /> Volunteer Program Focus:
             </h3>
             <p className="text-xs text-slate-700 leading-relaxed">
               {cmsContent.getInvolved.volunteerPitch}
@@ -155,13 +155,13 @@ function FormsPage() {
 
         {/* 4. General Inquiry Tab Notice */}
         {currentTab === 'contact' && (
-          <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-slate-700">
+          <div className="bg-[#F8FAF5] border border-[#E0E9DD] rounded-2xl p-4 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-slate-700">
             <div className="flex items-start gap-2">
               <MapPin className="w-4 h-4 text-[#E8A94A] shrink-0 mt-0.5" />
               <span><strong>Hub:</strong> {cmsContent.contact?.hubAddress}</span>
             </div>
             <div className="flex items-start gap-2">
-              <Phone className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+              <Phone className="w-4 h-4 text-[#276B56] shrink-0 mt-0.5" />
               <span><strong>Official WhatsApp:</strong> {cmsContent.contact?.whatsapp}</span>
             </div>
           </div>

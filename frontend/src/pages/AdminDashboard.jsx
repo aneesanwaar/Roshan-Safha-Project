@@ -102,6 +102,15 @@ function AdminDashboard() {
   const [cmsImageSaving, setCmsImageSaving] = useState(false);
   const [cmsImagePreviews, setCmsImagePreviews] = useState({});
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarVisible, setSidebarVisible] = useState(() => {
+    try { return localStorage.getItem("rs_admin_sidebar_visible") !== "false"; }
+    catch { return true; }
+  });
+
+  useEffect(() => {
+    try { localStorage.setItem("rs_admin_sidebar_visible", String(sidebarVisible)); }
+    catch { /* Storage may be disabled */ }
+  }, [sidebarVisible]);
   const [searchQuery, setSearchQuery] = useState('');
   const [toastMessage, setToastMessage] = useState('');
 
@@ -488,7 +497,7 @@ function AdminDashboard() {
 
 
   return (
-    <div className="min-h-screen bg-slate-100 flex flex-col lg:flex-row font-sans">
+    <div className="min-h-screen bg-[#F6F8F3] flex flex-col lg:flex-row font-sans overflow-x-clip">
 
       {/* Toast Alert */}
       {toastMessage && (
@@ -503,6 +512,7 @@ function AdminDashboard() {
         currentSection={currentSection}
         setCurrentSection={setCurrentSection}
         sidebarOpen={sidebarOpen}
+        sidebarVisible={sidebarVisible}
         setSidebarOpen={setSidebarOpen}
         activeAdmin={activeAdmin}
         onSignOut={handleSignOut}
@@ -512,10 +522,12 @@ function AdminDashboard() {
       <div className="flex-1 flex flex-col min-w-0">
         <AdminHeader
           currentSection={currentSection}
+          sidebarVisible={sidebarVisible}
+          onToggleSidebar={() => setSidebarVisible((value) => !value)}
           onOpenSidebar={() => setSidebarOpen(true)}
         />
 
-        <main className="flex-1 p-4 sm:p-8 max-w-7xl w-full mx-auto space-y-6">
+        <main className="flex-1 min-w-0 p-4 sm:p-6 xl:p-8 max-w-[1600px] w-full mx-auto space-y-6">
 
           {/* Dashboard Overview */}
           {currentSection === "overview" && (

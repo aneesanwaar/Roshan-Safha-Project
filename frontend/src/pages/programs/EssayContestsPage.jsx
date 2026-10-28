@@ -116,16 +116,16 @@ function EssayContestsPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-4xl mx-auto space-y-10">
+    <div className="min-h-screen bg-[#FFF9EF] py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-6xl mx-auto space-y-10">
 
         {/* Header Section */}
-        <div className="text-center space-y-3">
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+        <div className="relative overflow-hidden rounded-[30px] bg-[#193E32] px-6 py-12 text-center space-y-4 sm:px-12">
+          <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight">
             Annual Essay Contests & Archive
           </h1>
 
-          <p className="text-sm sm:text-base text-slate-600 max-w-2xl mx-auto">
+          <p className="text-sm sm:text-base text-white/75 max-w-2xl mx-auto leading-7">
             Inspiring youth to express critical thought, literary
             imagination, and societal ideas through structured essay
             competitions.
@@ -136,20 +136,20 @@ function EssayContestsPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
           {/* Junior Category */}
-          <div className="bg-white rounded-2xl p-5 sm:p-6 border border-slate-200 shadow-xs flex flex-col justify-between space-y-4">
+          <div className="bg-white rounded-[24px] p-6 sm:p-7 border border-[#E0E9DD] shadow-xs flex flex-col justify-between space-y-4">
             <div className="space-y-3">
 
-              <span className="inline-block text-[10px] font-extrabold uppercase tracking-wider text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-100">
+              <span className="inline-block text-[10px] font-extrabold uppercase tracking-wider text-[#193E32] bg-[#E7EEE5] px-2.5 py-1 rounded-md border border-emerald-100">
                 Junior Category (Under 16)
               </span>
 
-              <h3 className="text-base font-bold text-slate-900 leading-snug">
+              <h3 className="text-base font-bold text-[#193E32] leading-snug">
                 Theme: {contestConfig.juniorTheme}
               </h3>
 
               <ul className="space-y-2 text-xs text-slate-600">
                 <li className="flex items-start gap-2">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                  <CheckCircle2 className="w-3.5 h-3.5 text-[#276B56] shrink-0 mt-0.5" />
                   <span>
                     <strong>Word limit:</strong>{" "}
                     {contestConfig.juniorWordLimit}
@@ -157,7 +157,7 @@ function EssayContestsPage() {
                 </li>
 
                 <li className="flex items-start gap-2">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                  <CheckCircle2 className="w-3.5 h-3.5 text-[#276B56] shrink-0 mt-0.5" />
                   <span>
                     <strong>Formats:</strong>{" "}
                     {contestConfig.juniorFormats}
@@ -165,7 +165,7 @@ function EssayContestsPage() {
                 </li>
 
                 <li className="flex items-start gap-2">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                  <CheckCircle2 className="w-3.5 h-3.5 text-[#276B56] shrink-0 mt-0.5" />
                   <span>
                     <strong>Prizes:</strong>{" "}
                     {contestConfig.juniorPrizes}
@@ -175,7 +175,7 @@ function EssayContestsPage() {
             </div>
 
             <div className="pt-3 border-t border-slate-100 text-[11px] text-slate-500 flex items-center gap-1 font-medium">
-              <Calendar className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+              <Calendar className="w-3.5 h-3.5 text-[#276B56] shrink-0" />
               <span>
                 Deadline:{" "}
                 {formatContestDeadline(contestConfig.juniorDeadline)}
@@ -184,20 +184,20 @@ function EssayContestsPage() {
           </div>
 
           {/* Senior Category */}
-          <div className="bg-white rounded-2xl p-5 sm:p-6 border border-slate-200 shadow-xs flex flex-col justify-between space-y-4">
+          <div className="bg-white rounded-[24px] p-6 sm:p-7 border border-[#E0E9DD] shadow-xs flex flex-col justify-between space-y-4">
             <div className="space-y-3">
 
               <span className="inline-block text-[10px] font-extrabold uppercase tracking-wider text-blue-800 bg-blue-50 px-2.5 py-1 rounded-md border border-blue-100">
                 Senior Category (16+ / University)
               </span>
 
-              <h3 className="text-base font-bold text-slate-900 leading-snug">
+              <h3 className="text-base font-bold text-[#193E32] leading-snug">
                 Theme: {contestConfig.seniorTheme}
               </h3>
 
               <ul className="space-y-2 text-xs text-slate-600">
                 <li className="flex items-start gap-2">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                  <CheckCircle2 className="w-3.5 h-3.5 text-[#276B56] shrink-0 mt-0.5" />
                   <span>
                     <strong>Word limit:</strong>{" "}
                     {contestConfig.seniorWordLimit}
@@ -205,7 +205,7 @@ function EssayContestsPage() {
                 </li>
 
                 <li className="flex items-start gap-2">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                  <CheckCircle2 className="w-3.5 h-3.5 text-[#276B56] shrink-0 mt-0.5" />
                   <span>
                     <strong>Formats:</strong>{" "}
                     {contestConfig.seniorFormats}
@@ -213,7 +213,7 @@ function EssayContestsPage() {
                 </li>
 
                 <li className="flex items-start gap-2">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                  <CheckCircle2 className="w-3.5 h-3.5 text-[#276B56] shrink-0 mt-0.5" />
                   <span>
                     <strong>Prizes:</strong>{" "}
                     {contestConfig.seniorPrizes}
@@ -223,7 +223,7 @@ function EssayContestsPage() {
             </div>
 
             <div className="pt-3 border-t border-slate-100 text-[11px] text-slate-500 flex items-center gap-1 font-medium">
-              <Calendar className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+              <Calendar className="w-3.5 h-3.5 text-[#276B56] shrink-0" />
               <span>
                 Deadline:{" "}
                 {formatContestDeadline(contestConfig.seniorDeadline)}
@@ -234,7 +234,7 @@ function EssayContestsPage() {
         </div>
 
         {/* Backend Connected Submission Form Card */}
-        <div className="bg-white rounded-3xl border border-slate-200 shadow-xl p-6 sm:p-10 space-y-4">
+        <div className="bg-white rounded-[28px] border border-[#DDE8DD] shadow-[0_18px_50px_rgba(25,62,50,0.08)] p-6 sm:p-10 space-y-4">
           <div className="border-b border-slate-100 pb-3">
             <h3 className="text-base font-bold text-slate-900">
               Online Essay Submission Portal
@@ -249,7 +249,7 @@ function EssayContestsPage() {
         </div>
 
         {/* Past Archive Showcase */}
-        <div className="bg-white rounded-2xl border border-slate-200 p-6 space-y-4">
+        <div className="bg-white rounded-[24px] border border-[#E0E9DD] p-6 space-y-4">
           <div className="flex items-center gap-2">
             <Trophy className="w-4 h-4 text-amber-500" />
 
@@ -262,10 +262,10 @@ function EssayContestsPage() {
             {pastContests.map((item) => (
               <div
                 key={item.year}
-                className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1.5"
+                className="p-3.5 rounded-xl bg-[#F8FAF5] border border-[#E0E9DD]/80 space-y-1.5"
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded">
+                  <span className="text-[10px] font-bold text-[#193E32] bg-[#E7EEE5] px-2 py-0.5 rounded">
                     Edition {item.year}
                   </span>
 

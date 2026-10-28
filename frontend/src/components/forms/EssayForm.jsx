@@ -73,9 +73,9 @@ function EssayForm({ onSuccess }) {
       const response = await submitEssay(data);
 
       if (response.data) {
-        setStatus({ 
-          type: 'success', 
-          message: response.data.message || 'Essay submitted successfully! Your submission is now under review.' 
+        setStatus({
+          type: 'success',
+          message: response.data.message || 'Essay submitted successfully! Your submission is now under review.'
         });
         setFormData({
           studentName: '',
@@ -103,19 +103,24 @@ function EssayForm({ onSuccess }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-7">
+      {/* Roshan Safha form introduction */}
+      <div className="border-b border-[#E2EADF] pb-6">
+
+        <h2 className="mt-4 text-2xl font-black tracking-tight text-[#193E32] sm:text-3xl">Submit Your Essay</h2>
+        <p className="mt-2 max-w-2xl text-sm leading-7 text-[#64796D]">Share your perspective and take part in the Roshan Safha writing competition.</p>
+      </div>
       {status.message && (
-        <div className={`p-3 rounded-xl text-xs flex items-center gap-2 ${
-          status.type === 'success' ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-red-50 text-red-800 border border-red-200'
-        }`}>
+        <div className={`flex items-start gap-3 rounded-xl p-4 text-sm ${status.type === 'success' ? 'border border-[#C8DDCE] bg-[#EDF7EF] text-[#193E32]' : 'border border-rose-200 bg-rose-50 text-rose-800'
+          }`}>
           {status.type === 'success' ? <CheckCircle2 className="w-4 h-4 shrink-0" /> : <AlertCircle className="w-4 h-4 shrink-0" />}
           <span>{status.message}</span>
         </div>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
         <div>
-          <label className="block text-xs font-bold text-slate-700 mb-1">Student Name *</label>
+          <label className="mb-2 block text-sm font-semibold text-[#193E32]">Student Name *</label>
           <input
             type="text"
             name="studentName"
@@ -123,12 +128,12 @@ function EssayForm({ onSuccess }) {
             placeholder="e.g. Maryam Tariq"
             value={formData.studentName}
             onChange={handleChange}
-            className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500"
+            className="w-full rounded-xl border border-[#DCE5DB] bg-[#FAFCF8] px-4 py-3 text-sm text-[#193E32] outline-none transition focus:border-[#276B56] focus:bg-white focus:ring-2 focus:ring-[#276B56]/15"
           />
         </div>
 
         <div>
-          <label className="block text-xs font-bold text-slate-700 mb-1">Age *</label>
+          <label className="mb-2 block text-sm font-semibold text-[#193E32]">Age *</label>
           <input
             type="number"
             name="age"
@@ -138,12 +143,12 @@ function EssayForm({ onSuccess }) {
             placeholder="e.g. 15"
             value={formData.age}
             onChange={handleChange}
-            className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500"
+            className="w-full rounded-xl border border-[#DCE5DB] bg-[#FAFCF8] px-4 py-3 text-sm text-[#193E32] outline-none transition focus:border-[#276B56] focus:bg-white focus:ring-2 focus:ring-[#276B56]/15"
           />
         </div>
 
         <div>
-          <label className="block text-xs font-bold text-slate-700 mb-1">Institution / School *</label>
+          <label className="mb-2 block text-sm font-semibold text-[#193E32]">Institution / School *</label>
           <input
             type="text"
             name="institutionName"
@@ -151,18 +156,18 @@ function EssayForm({ onSuccess }) {
             placeholder="e.g. University of AJK"
             value={formData.institutionName}
             onChange={handleChange}
-            className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500"
+            className="w-full rounded-xl border border-[#DCE5DB] bg-[#FAFCF8] px-4 py-3 text-sm text-[#193E32] outline-none transition focus:border-[#276B56] focus:bg-white focus:ring-2 focus:ring-[#276B56]/15"
           />
         </div>
 
         <div>
-          <label className="block text-xs font-bold text-slate-700 mb-1">Category *</label>
+          <label className="mb-2 block text-sm font-semibold text-[#193E32]">Category *</label>
           <select
             name="category"
             required
             value={formData.category}
             onChange={handleChange}
-            className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500 font-medium text-slate-700"
+            className="w-full rounded-xl border border-[#DCE5DB] bg-[#FAFCF8] px-4 py-3 text-sm font-medium text-[#193E32] outline-none transition focus:border-[#276B56] focus:bg-white focus:ring-2 focus:ring-[#276B56]/15"
           >
             <option value="Junior">Junior (Under 16)</option>
             <option value="Senior">Senior (16+ / University)</option>
@@ -170,7 +175,7 @@ function EssayForm({ onSuccess }) {
         </div>
 
         <div>
-          <label className="block text-xs font-bold text-slate-700 mb-1">Email Address *</label>
+          <label className="mb-2 block text-sm font-semibold text-[#193E32]">Email Address *</label>
           <input
             type="email"
             name="email"
@@ -178,12 +183,12 @@ function EssayForm({ onSuccess }) {
             placeholder="maryam@example.com"
             value={formData.email}
             onChange={handleChange}
-            className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500"
+            className="w-full rounded-xl border border-[#DCE5DB] bg-[#FAFCF8] px-4 py-3 text-sm text-[#193E32] outline-none transition focus:border-[#276B56] focus:bg-white focus:ring-2 focus:ring-[#276B56]/15"
           />
         </div>
 
         <div>
-          <label className="block text-xs font-bold text-slate-700 mb-1">Phone Number *</label>
+          <label className="mb-2 block text-sm font-semibold text-[#193E32]">Phone Number *</label>
           <input
             type="tel"
             name="phone"
@@ -191,13 +196,13 @@ function EssayForm({ onSuccess }) {
             placeholder="0300 1234567"
             value={formData.phone}
             onChange={handleChange}
-            className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500"
+            className="w-full rounded-xl border border-[#DCE5DB] bg-[#FAFCF8] px-4 py-3 text-sm text-[#193E32] outline-none transition focus:border-[#276B56] focus:bg-white focus:ring-2 focus:ring-[#276B56]/15"
           />
         </div>
       </div>
 
       <div>
-        <label className="block text-xs font-bold text-slate-700 mb-1">Essay Title *</label>
+        <label className="mb-2 block text-sm font-semibold text-[#193E32]">Essay Title *</label>
         <input
           type="text"
           name="essayTitle"
@@ -205,17 +210,17 @@ function EssayForm({ onSuccess }) {
           placeholder="e.g. Sustainable Literacy in Azad Kashmir"
           value={formData.essayTitle}
           onChange={handleChange}
-          className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500"
+          className="w-full rounded-xl border border-[#DCE5DB] bg-[#FAFCF8] px-4 py-3 text-sm text-[#193E32] outline-none transition focus:border-[#276B56] focus:bg-white focus:ring-2 focus:ring-[#276B56]/15"
         />
       </div>
 
       <div>
-        <label className="block text-xs font-bold text-slate-700 mb-1">Upload Essay File (PDF / Word) *</label>
-        
+        <label className="mb-2 block text-sm font-semibold text-[#193E32]">Upload Essay File (PDF / Word) *</label>
+
         {!essayFile ? (
-          <label className="border-2 border-dashed border-slate-300 hover:border-emerald-500 bg-slate-50 hover:bg-emerald-50/40 rounded-2xl p-6 flex flex-col items-center justify-center cursor-pointer transition">
+          <label className="flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-[#B9D0BE] bg-[#F5F9F3] p-8 transition hover:border-[#276B56] hover:bg-[#E7EEE5]">
             <Upload className="w-6 h-6 text-slate-400 mb-1.5" />
-            <span className="text-xs font-bold text-slate-700">Click to browse file</span>
+            <span className="text-xs font-bold text-[#193E32]">Click to browse file</span>
             <span className="text-[11px] text-slate-400 mt-0.5">Accepts .pdf, .doc, or .docx (Max 10MB)</span>
             <input
               type="file"
@@ -229,10 +234,10 @@ function EssayForm({ onSuccess }) {
         ) : (
           <div className="flex items-center justify-between p-3.5 bg-emerald-50 border border-emerald-200 rounded-xl">
             <div className="flex items-center gap-2.5">
-              <FileText className="w-5 h-5 text-emerald-700 shrink-0" />
+              <FileText className="w-5 h-5 text-[#276B56] shrink-0" />
               <div>
                 <p className="text-xs font-bold text-emerald-950 truncate max-w-60 sm:max-w-xs">{essayFile.name}</p>
-                <p className="text-[10px] text-emerald-700">{(essayFile.size / (1024 * 1024)).toFixed(2)} MB</p>
+                <p className="text-[10px] text-[#276B56]">{(essayFile.size / (1024 * 1024)).toFixed(2)} MB</p>
               </div>
             </div>
             <button
@@ -253,7 +258,7 @@ function EssayForm({ onSuccess }) {
           required
           checked={formData.hasAgreed}
           onChange={handleChange}
-          className="mt-0.5 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+          className="mt-0.5 rounded text-emerald-600 focus:ring-[#276B56]/15 cursor-pointer"
         />
         <span className="text-[11px] text-slate-600 leading-tight">
           I confirm that this essay is my 100% original work and I agree to the competition terms. *
@@ -263,7 +268,7 @@ function EssayForm({ onSuccess }) {
       <button
         type="submit"
         disabled={loading}
-        className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl text-xs shadow-sm transition flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
+        className="w-full bg-[#193E32] hover:bg-[#276B56] text-white font-bold py-3 rounded-xl text-xs shadow-sm transition flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
       >
         {loading ? (
           <>

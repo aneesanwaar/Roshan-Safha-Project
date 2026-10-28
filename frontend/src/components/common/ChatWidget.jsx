@@ -18,7 +18,7 @@ function ChatWidget() {
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.parentElement?.scrollTo({ top: messagesEndRef.current.parentElement.scrollHeight, behavior: 'smooth' });
   };
 
   useEffect(() => {
@@ -89,20 +89,20 @@ function ChatWidget() {
   };
 
   return (
-    <aside aria-label="AI Assistant" className="fixed bottom-6 right-6 z-50">
+    <aside aria-label="AI Assistant" className="fixed bottom-3 right-3 sm:bottom-5 sm:right-5 z-[60] max-w-[calc(100vw-1.5rem)]">
       {!isOpen ? (
         <button
           onClick={() => setIsOpen(true)}
-          className="flex items-center gap-2.5 bg-slate-950 hover:bg-slate-900 text-[#E8A94A] px-4 py-3 rounded-full shadow-2xl transition-all duration-200 hover:scale-105 active:scale-95 border border-[#E8A94A]/40 cursor-pointer"
+          className="flex items-center gap-2.5 bg-[#193E32] hover:bg-slate-900 text-[#E8A94A] px-4 py-3 rounded-full shadow-2xl transition-all duration-200 hover:scale-105 active:scale-95 border border-[#E8A94A]/40 cursor-pointer"
         >
           <div className="w-6 h-6 rounded-full bg-[#E8A94A] text-slate-950 flex items-center justify-center font-bold text-xs">
             <Bot className="w-3.5 h-3.5" />
           </div>
-          <span className="text-xs font-black tracking-wide pr-1">AI Assistant</span>
+          <span className="hidden sm:inline text-xs font-black tracking-wide pr-1">AI Assistant</span>
           <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
         </button>
       ) : (
-        <div className="bg-white rounded-3xl border border-slate-200 shadow-2xl w-[90vw] sm:w-[380px] h-[520px] max-h-[80vh] flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-5">
+        <div className="bg-white rounded-3xl border border-slate-200 shadow-2xl w-[min(350px,calc(100vw-1.5rem))] h-[min(480px,calc(100dvh-5rem))] max-h-[calc(100dvh-5rem)] flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-5">
           {/* Header */}
           <div className="bg-slate-950 text-white p-4 flex items-center justify-between border-b border-slate-800 shrink-0">
             <div className="flex items-center gap-2.5">
@@ -120,6 +120,7 @@ function ChatWidget() {
 
             <button
               onClick={() => setIsOpen(false)}
+              aria-label="Minimize assistant"
               className="p-1.5 text-slate-400 hover:text-white rounded-xl hover:bg-slate-800 transition cursor-pointer"
             >
               <Minimize2 className="w-4 h-4" />
@@ -127,7 +128,7 @@ function ChatWidget() {
           </div>
 
           {/* Messages */}
-          <div className="flex-1 p-4 overflow-y-auto space-y-3 bg-slate-50 text-xs">
+          <div className="min-h-0 flex-1 p-3 overflow-y-auto overscroll-contain space-y-3 bg-slate-50 text-xs">
             {messages.map((msg) => (
               <div
                 key={msg.id}
@@ -174,7 +175,7 @@ function ChatWidget() {
 
           {/* Quick Prompts */}
           {messages.length <= 2 && (
-            <div className="px-3 py-2 bg-slate-100 border-t border-slate-200 flex flex-wrap gap-1.5 shrink-0">
+            <div className="max-h-24 overflow-y-auto px-3 py-2 bg-slate-100 border-t border-slate-200 flex flex-wrap gap-1.5 shrink-0">
               {quickPrompts.map((prompt, idx) => (
                 <button
                   key={idx}
@@ -200,7 +201,7 @@ function ChatWidget() {
               placeholder="Ask anything / سوال پوچھیں..."
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
-              className="flex-1 text-xs bg-slate-100 border border-slate-200 rounded-xl px-3 py-2 outline-none focus:bg-white focus:ring-2 focus:ring-[#E8A94A]"
+              className="min-w-0 flex-1 text-xs bg-slate-100 border border-slate-200 rounded-xl px-3 py-2 outline-none focus:bg-white focus:ring-2 focus:ring-[#E8A94A]"
             />
             <button
               type="submit"

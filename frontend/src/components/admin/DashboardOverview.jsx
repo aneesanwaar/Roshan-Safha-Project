@@ -1,391 +1,153 @@
 import React from "react";
 import {
-  BookOpen,
-  BookMarked,
-  FileText,
-  HandHeart,
-  ArrowUpRight,
-  Clock3,
-  CheckCircle2,
-  PackageCheck,
-  TrendingUp,
-  ArrowRight,
-  Activity,
-  Sparkles,
-  LayoutDashboard,
+  Activity, ArrowRight, ArrowUpRight, BookMarked, BookOpen,
+  CheckCircle2, Clock3, FileText, HandHeart, LayoutDashboard,
+  PackageCheck, Sparkles, TrendingUp,
 } from "lucide-react";
 
-/**
- * Display a number only when valid data is available.
- */
-const formatCount = (value) => {
-  if (typeof value !== "number" || !Number.isFinite(value)) {
-    return "—";
-  }
+const formatCount = (value) =>
+  typeof value === "number" && Number.isFinite(value) ? value.toLocaleString() : "—";
 
-  return value.toLocaleString();
-};
+const sectionTitle = (eyebrow, title, subtitle) => (
+  <div className="min-w-0">
+    <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-[#B7812D]">{eyebrow}</p>
+    <h3 className="mt-1 text-xl font-black tracking-tight text-[#193E32] sm:text-2xl">{title}</h3>
+    <p className="mt-1 text-xs leading-5 text-[#708378]">{subtitle}</p>
+  </div>
+);
 
-/**
- * Reusable statistics card.
- */
-function StatCard({
-  title,
-  value,
-  description,
-  icon: Icon,
-  iconColor,
-  iconBackground,
-  onClick,
-}) {
+function StatCard({ title, value, description, icon: Icon, tint, onClick }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={!onClick}
-      className={`w-full bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 shadow-sm text-left transition-all ${
-        onClick
-          ? "hover:shadow-md hover:-translate-y-0.5 cursor-pointer"
-          : "cursor-default"
-      }`}
-    >
-      <div className="flex items-start justify-between gap-4">
-        <div
-          className={`w-12 h-12 rounded-xl flex items-center justify-center ${iconBackground}`}
-        >
-          <Icon className={`w-6 h-6 ${iconColor}`} />
+    <button type="button" onClick={onClick} disabled={!onClick}
+      className="group relative min-w-0 overflow-hidden rounded-[22px] border border-[#E0E9DF] bg-white p-5 text-left shadow-[0_6px_20px_rgba(25,62,50,0.04)] transition-all duration-200 hover:-translate-y-1 hover:border-[#B8D2BF] hover:shadow-[0_14px_28px_rgba(25,62,50,0.1)] disabled:cursor-default disabled:hover:translate-y-0 sm:p-6">
+      <div className="flex items-start justify-between gap-3">
+        <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${tint}`}>
+          <Icon className="h-5 w-5" />
         </div>
-
-        {onClick && (
-          <ArrowUpRight className="w-4 h-4 text-slate-400" />
-        )}
+        {onClick && <ArrowUpRight className="h-4 w-4 text-[#9AAFA1] transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />}
       </div>
-
-      <div className="mt-5">
-        <p className="text-sm font-semibold text-slate-500">
-          {title}
-        </p>
-
-        <h3 className="text-3xl font-black text-[#193E32] mt-2">
-          {formatCount(value)}
-        </h3>
-
-        <p className="text-xs text-slate-500 mt-2">
-          {description}
-        </p>
-      </div>
+      <p className="mt-5 text-xs font-bold uppercase tracking-wide text-[#6B8074]">{title}</p>
+      <p className="mt-1 text-3xl font-black tracking-tight text-[#193E32] sm:text-4xl">{formatCount(value)}</p>
+      <p className="mt-2 text-xs leading-5 text-[#839389]">{description}</p>
+      <div className="absolute bottom-0 left-0 h-1 w-0 bg-[#E8A94A] transition-all group-hover:w-full" />
     </button>
   );
 }
 
-/**
- * Reusable quick-action button.
- */
 function QuickAction({ title, description, icon: Icon, onClick }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="w-full flex items-center gap-4 p-4 rounded-xl border border-slate-200 bg-white hover:bg-[#FFF9EF] hover:border-[#E8A94A] transition-all text-left group"
-    >
-      <div className="w-11 h-11 rounded-xl bg-[#E7EEE5] text-[#193E32] flex items-center justify-center shrink-0">
-        <Icon className="w-5 h-5" />
-      </div>
-
-      <div className="flex-1 min-w-0">
-        <h4 className="text-sm font-bold text-slate-900">
-          {title}
-        </h4>
-
-        <p className="text-xs text-slate-500 mt-1">
-          {description}
-        </p>
-      </div>
-
-      <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-[#193E32] group-hover:translate-x-1 transition-transform shrink-0" />
+    <button type="button" onClick={onClick}
+      className="group flex min-w-0 items-center gap-3 rounded-2xl border border-[#E5ECE3] bg-[#FCFDFB] p-4 text-left transition-all hover:border-[#B8D2BF] hover:bg-[#F1F7EF]">
+      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#E7EEE5] text-[#276B56]">
+        <Icon className="h-5 w-5" />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block text-sm font-extrabold text-[#193E32]">{title}</span>
+        <span className="mt-1 block text-xs leading-5 text-[#788A7E]">{description}</span>
+      </span>
+      <ArrowRight className="h-4 w-4 shrink-0 text-[#729583] transition-transform group-hover:translate-x-1" />
     </button>
   );
 }
 
-/**
- * Request status indicator.
- */
-function RequestStatus({ title, value, icon: Icon, color }) {
+function RequestRow({ title, value, icon: Icon, tint }) {
   return (
-    <div className="flex items-center justify-between py-3 border-b border-slate-100 last:border-0">
-      <div className="flex items-center gap-3">
-        <Icon className={`w-4 h-4 ${color}`} />
-
-        <span className="text-sm font-medium text-slate-700">
-          {title}
-        </span>
+    <div className="flex items-center justify-between gap-3 border-b border-[#EDF1EA] py-3.5 last:border-0">
+      <div className="flex min-w-0 items-center gap-3">
+        <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${tint}`}><Icon className="h-4 w-4" /></span>
+        <span className="text-sm font-semibold text-[#4E6558]">{title}</span>
       </div>
-
-      <span className="text-sm font-black text-slate-900">
-        {formatCount(value)}
-      </span>
+      <span className="text-base font-black text-[#193E32]">{formatCount(value)}</span>
     </div>
   );
 }
 
-/**
- * Roshan Safha Admin Dashboard Overview
- *
- * Props:
- * - activeAdmin: currently authenticated administrator
- * - onNavigate: callback that changes dashboard section
- * - stats: verified statistics supplied by the parent
- * - recentActivity: activity records supplied by the parent
- *
- * No hardcoded statistics are used.
- */
-function DashboardOverview({
-  activeAdmin,
-  onNavigate,
-  stats = {},
-  recentActivity = [],
-}) {
+function DashboardOverview({ activeAdmin, onNavigate, stats = {}, recentActivity = [] }) {
   const navigateTo = (section) => {
-    if (typeof onNavigate === "function") {
-      onNavigate(section);
-    }
+    if (typeof onNavigate === "function") onNavigate(section);
   };
-
-  const firstName =
-    activeAdmin?.name?.trim()?.split(/\s+/)[0] || "Administrator";
+  const firstName = activeAdmin?.name?.trim()?.split(/\s+/)[0] || "Administrator";
 
   const summaryCards = [
-    {
-      title: "Total Books",
-      value: stats.totalBooks,
-      description: "Books recorded in the inventory",
-      icon: BookOpen,
-      iconColor: "text-emerald-700",
-      iconBackground: "bg-emerald-100",
-      section: "books",
-    },
-    {
-      title: "Book Requests",
-      value: stats.totalBookRequests,
-      description: "Requests submitted by readers",
-      icon: BookMarked,
-      iconColor: "text-blue-700",
-      iconBackground: "bg-blue-100",
-      section: "bookRequests",
-    },
-    {
-      title: "Essay Submissions",
-      value: stats.totalEssays,
-      description: "Student essays received",
-      icon: FileText,
-      iconColor: "text-amber-700",
-      iconBackground: "bg-amber-100",
-      section: "submissions",
-    },
-    {
-      title: "Book Donations",
-      value: stats.totalDonations,
-      description: "Donation submissions received",
-      icon: HandHeart,
-      iconColor: "text-violet-700",
-      iconBackground: "bg-violet-100",
-      section: "submissions",
-    },
+    { title: "Total Books", value: stats.totalBooks, description: "Books in the inventory", icon: BookOpen, tint: "bg-[#DCF3E5] text-[#167654]", section: "books" },
+    { title: "Book Requests", value: stats.totalBookRequests, description: "Requests from readers", icon: BookMarked, tint: "bg-[#E4EEFF] text-[#3866B4]", section: "bookRequests" },
+    { title: "Essay Submissions", value: stats.totalEssays, description: "Student essays received", icon: FileText, tint: "bg-[#FFF0CE] text-[#B8791C]", section: "submissions" },
+    { title: "Book Donations", value: stats.totalDonations, description: "Donation forms received", icon: HandHeart, tint: "bg-[#F1E7FF] text-[#8256B4]", section: "submissions" },
   ];
-
   const quickActions = [
-    {
-      title: "Manage Books",
-      description: "Add, update, and organize inventory",
-      icon: BookOpen,
-      section: "books",
-    },
-    {
-      title: "Review Book Requests",
-      description: "Approve and fulfill reader requests",
-      icon: BookMarked,
-      section: "bookRequests",
-    },
-    {
-      title: "Review Submissions",
-      description: "View essays, donations, and inquiries",
-      icon: FileText,
-      section: "submissions",
-    },
-    {
-      title: "View AI Analytics",
-      description: "Explore trends and predictions",
-      icon: TrendingUp,
-      section: "analytics",
-    },
+    { title: "Manage Books", description: "Organize the book inventory", icon: BookOpen, section: "books" },
+    { title: "Book Requests", description: "Review and fulfill requests", icon: BookMarked, section: "bookRequests" },
+    { title: "Form Submissions", description: "Review community submissions", icon: FileText, section: "submissions" },
+    { title: "AI Trend Analytics", description: "Explore insights and forecasts", icon: TrendingUp, section: "analytics" },
   ];
 
   return (
-    <div className="space-y-7">
-      {/* Welcome Banner */}
-      <section className="relative overflow-hidden rounded-3xl bg-[#193E32] text-white p-6 sm:p-9 shadow-lg">
-        <div className="absolute -top-16 -right-16 w-64 h-64 rounded-full bg-[#E8A94A]/10" />
-
-        <div className="absolute -bottom-24 right-32 w-52 h-52 rounded-full bg-white/5" />
-
-        <div className="relative z-10">
-          <div className="inline-flex items-center gap-2 rounded-full border border-[#E8A94A]/30 bg-[#E8A94A]/10 px-3 py-1.5 text-[10px] sm:text-xs font-bold text-[#E8A94A]">
-            <LayoutDashboard className="w-4 h-4" />
-            ADMINISTRATOR OVERVIEW
-          </div>
-
-          <h2 className="mt-5 text-2xl sm:text-4xl font-black tracking-tight">
-            Welcome back, {firstName}!
-          </h2>
-
-          <p className="mt-3 text-sm sm:text-base text-white/75 max-w-2xl leading-relaxed">
-            Manage Roshan Safha's literacy initiatives, monitor
-            book circulation, review student submissions, and
-            oversee community engagement from one place.
-          </p>
-
-          <div className="mt-6 flex flex-wrap items-center gap-3">
-            <span className="inline-flex items-center gap-2 rounded-full bg-white/10 border border-white/10 px-3 py-2 text-xs font-semibold">
-              <Activity className="w-4 h-4 text-[#E8A94A]" />
-              Operations Dashboard
+    <div className="min-w-0 space-y-7 pb-6 sm:space-y-8">
+      <section className="relative overflow-hidden rounded-[26px] border border-[#2D5B49] bg-[#193E32] p-6 text-white shadow-[0_12px_32px_rgba(25,62,50,0.12)] sm:p-8">
+        <div aria-hidden="true" className="pointer-events-none absolute -right-20 -top-28 h-64 w-64 rounded-full border-[35px] border-white/[0.045]" />
+        <div aria-hidden="true" className="pointer-events-none absolute bottom-[-90px] right-24 h-40 w-40 rounded-full bg-[#E8A94A]/[0.07] blur-2xl" />
+        <div className="relative flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+          <div className="max-w-2xl">
+            <span className="inline-flex items-center gap-2 rounded-full border border-[#E8A94A]/30 bg-[#E8A94A]/10 px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-[0.12em] text-[#F1BF69]">
+              <LayoutDashboard className="h-3.5 w-3.5" /> Administration workspace
             </span>
-
-            <span className="inline-flex items-center gap-2 rounded-full bg-white/10 border border-white/10 px-3 py-2 text-xs font-semibold">
-              <Sparkles className="w-4 h-4 text-[#E8A94A]" />
-              Roshan Safha
-            </span>
-          </div>
-        </div>
-      </section>
-
-      {/* Statistics */}
-      <section>
-        <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-          <div>
-            <h3 className="text-lg font-black text-slate-900">
-              Organization at a Glance
-            </h3>
-
-            <p className="text-xs text-slate-500 mt-1">
-              Key operational statistics from Roshan Safha
+            <h2 className="mt-4 text-2xl font-black tracking-tight sm:text-3xl">Welcome back, {firstName} <span aria-hidden="true">👋</span></h2>
+            <p className="mt-2 max-w-xl text-sm leading-7 text-[#D4E3D9]">
+              Your literacy operations, book circulation, and community activity — all in one place.
             </p>
           </div>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-          {summaryCards.map((card) => (
-            <StatCard
-              key={card.title}
-              title={card.title}
-              value={card.value}
-              description={card.description}
-              icon={card.icon}
-              iconColor={card.iconColor}
-              iconBackground={card.iconBackground}
-              onClick={() => navigateTo(card.section)}
-            />
-          ))}
+          <button type="button" onClick={() => navigateTo("submissions")}
+            className="inline-flex w-fit shrink-0 items-center gap-2 rounded-xl bg-[#E8A94A] px-4 py-3 text-xs font-extrabold text-[#193E32] transition hover:bg-[#F4BF6D]">
+            Review Submissions <ArrowUpRight className="h-4 w-4" />
+          </button>
         </div>
       </section>
 
-      {/* Operational Details */}
-      <section className="grid grid-cols-1 xl:grid-cols-3 gap-5">
-        {/* Book Request Status */}
-        <div className="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 shadow-sm">
-          <div className="flex items-center justify-between gap-3 mb-4">
-            <div>
-              <h3 className="text-base font-black text-slate-900">
-                Book Request Status
-              </h3>
+      <section className="min-w-0">
+        <div className="mb-5">{sectionTitle("Live overview", "Organization at a Glance", "Operational totals provided by your dashboard data.")}</div>
+        <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {summaryCards.map((card) => <StatCard key={card.title} {...card} onClick={() => navigateTo(card.section)} />)}
+        </div>
+      </section>
 
-              <p className="text-xs text-slate-500 mt-1">
-                Reader request progress
-              </p>
-            </div>
-
-            <BookMarked className="w-5 h-5 text-[#276B56]" />
+      <section className="grid min-w-0 grid-cols-1 gap-5 xl:grid-cols-5">
+        <div className="min-w-0 rounded-[22px] border border-[#E0E9DF] bg-white p-5 shadow-sm sm:p-6 xl:col-span-2">
+          <div className="flex items-start justify-between gap-3">
+            {sectionTitle("Fulfillment", "Book Request Status", "Track reader requests by status.")}
+            <span className="rounded-xl bg-[#E7EEE5] p-2 text-[#276B56]"><BookMarked className="h-5 w-5" /></span>
           </div>
-
-          <RequestStatus
-            title="Pending"
-            value={stats.pendingRequests}
-            icon={Clock3}
-            color="text-amber-600"
-          />
-
-          <RequestStatus
-            title="Approved"
-            value={stats.approvedRequests}
-            icon={CheckCircle2}
-            color="text-blue-600"
-          />
-
-          <RequestStatus
-            title="Fulfilled"
-            value={stats.fulfilledRequests}
-            icon={PackageCheck}
-            color="text-emerald-600"
-          />
-
-          <button
-            type="button"
-            onClick={() => navigateTo("bookRequests")}
-            className="mt-5 w-full flex items-center justify-center gap-2 rounded-xl bg-[#E7EEE5] hover:bg-[#d8e6d4] text-[#193E32] px-4 py-3 text-xs font-bold transition-colors"
-          >
-            Manage Book Requests
-            <ArrowRight className="w-4 h-4" />
+          <div className="mt-5">
+            <RequestRow title="Pending" value={stats.pendingRequests} icon={Clock3} tint="bg-[#FFF2D7] text-[#B77D23]" />
+            <RequestRow title="Approved" value={stats.approvedRequests} icon={CheckCircle2} tint="bg-[#E6EEFF] text-[#4A71B7]" />
+            <RequestRow title="Fulfilled" value={stats.fulfilledRequests} icon={PackageCheck} tint="bg-[#DCF3E5] text-[#167654]" />
+          </div>
+          <button type="button" onClick={() => navigateTo("bookRequests")}
+            className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-[#E7EEE5] px-4 py-3 text-xs font-extrabold text-[#193E32] transition hover:bg-[#D5E5D5]">
+            Manage Requests <ArrowRight className="h-4 w-4" />
           </button>
         </div>
 
-        {/* Recent Activity */}
-        <div className="xl:col-span-2 bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 shadow-sm">
-          <div className="flex items-center justify-between gap-3 mb-5">
-            <div>
-              <h3 className="text-base font-black text-slate-900">
-                Recent Activity
-              </h3>
-
-              <p className="text-xs text-slate-500 mt-1">
-                Latest activity across the platform
-              </p>
-            </div>
-
-            <Activity className="w-5 h-5 text-[#276B56]" />
+        <div className="min-w-0 rounded-[22px] border border-[#E0E9DF] bg-white p-5 shadow-sm sm:p-6 xl:col-span-3">
+          <div className="flex items-start justify-between gap-3">
+            {sectionTitle("Platform updates", "Recent Activity", "Latest available records from your system.")}
+            <span className="rounded-xl bg-[#E7EEE5] p-2 text-[#276B56]"><Activity className="h-5 w-5" /></span>
           </div>
-
-          {recentActivity.length === 0 ? (
-            <div className="min-h-48 flex flex-col items-center justify-center text-center rounded-xl border border-dashed border-slate-200 bg-slate-50 px-5 py-8">
-              <Clock3 className="w-9 h-9 text-slate-300" />
-
-              <p className="mt-3 text-sm font-bold text-slate-700">
-                No activity loaded yet
-              </p>
-
-              <p className="mt-2 text-xs text-slate-500 max-w-sm">
-                Recent activity will appear here after we
-                connect the overview to the backend.
-              </p>
+          {!recentActivity.length ? (
+            <div className="mt-5 flex min-h-52 flex-col items-center justify-center rounded-2xl border border-dashed border-[#DCE7DC] bg-[#F8FBF7] px-5 py-7 text-center">
+              <span className="rounded-2xl bg-[#E7EEE5] p-3 text-[#6B9980]"><Clock3 className="h-6 w-6" /></span>
+              <p className="mt-3 text-sm font-extrabold text-[#193E32]">No recent activity available</p>
+              <p className="mt-1 max-w-xs text-xs leading-6 text-[#7B8E81]">Activity will appear when the dashboard receives activity records.</p>
             </div>
           ) : (
-            <div className="divide-y divide-slate-100">
+            <div className="mt-4 divide-y divide-[#EDF1EA]">
               {recentActivity.slice(0, 5).map((activity, index) => (
-                <div
-                  key={activity.id || index}
-                  className="flex items-start justify-between gap-4 py-3"
-                >
-                  <div className="min-w-0">
-                    <p className="text-sm font-bold text-slate-800">
-                      {activity.title}
-                    </p>
-
-                    <p className="text-xs text-slate-500 mt-1">
-                      {activity.description}
-                    </p>
+                <div key={activity.id || index} className="flex min-w-0 items-start gap-3 py-3.5">
+                  <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-[#E8A94A]" />
+                  <div className="min-w-0 flex-1">
+                    <p className="break-words text-sm font-bold text-[#193E32]">{activity.title}</p>
+                    <p className="mt-1 break-words text-xs leading-5 text-[#7B8E81]">{activity.description}</p>
                   </div>
-
-                  <span className="text-[11px] text-slate-400 shrink-0">
-                    {activity.date || ""}
-                  </span>
+                  <span className="max-w-24 shrink-0 text-right text-[10px] text-[#8B9C90]">{activity.date || ""}</span>
                 </div>
               ))}
             </div>
@@ -393,58 +155,24 @@ function DashboardOverview({
         </div>
       </section>
 
-      {/* Quick Actions */}
-      <section className="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 shadow-sm">
-        <div className="mb-5">
-          <h3 className="text-lg font-black text-slate-900">
-            Quick Actions
-          </h3>
-
-          <p className="text-xs text-slate-500 mt-1">
-            Jump directly to frequently used management tools
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {quickActions.map((action) => (
-            <QuickAction
-              key={action.title}
-              title={action.title}
-              description={action.description}
-              icon={action.icon}
-              onClick={() => navigateTo(action.section)}
-            />
-          ))}
+      <section className="min-w-0 rounded-[22px] border border-[#E0E9DF] bg-white p-5 shadow-sm sm:p-6">
+        <div className="mb-5">{sectionTitle("Shortcuts", "Quick Actions", "Jump directly to frequently used management tools.")}</div>
+        <div className="grid min-w-0 grid-cols-1 gap-3 md:grid-cols-2">
+          {quickActions.map((action) => <QuickAction key={action.title} {...action} onClick={() => navigateTo(action.section)} />)}
         </div>
       </section>
 
-      {/* AI Analytics Promotion */}
-      <section className="rounded-2xl border border-[#E8A94A]/30 bg-[#FFF9EF] p-5 sm:p-7 flex flex-col md:flex-row items-start md:items-center justify-between gap-5">
-        <div className="flex items-start gap-4">
-          <div className="w-12 h-12 rounded-xl bg-[#E8A94A]/20 text-[#193E32] flex items-center justify-center shrink-0">
-            <TrendingUp className="w-6 h-6" />
-          </div>
-
-          <div>
-            <h3 className="text-base font-black text-[#193E32]">
-              Explore AI-Powered Insights
-            </h3>
-
-            <p className="text-xs sm:text-sm text-slate-600 mt-2 max-w-xl leading-relaxed">
-              Analyze donation patterns, essay participation,
-              and forecast future trends using Roshan Safha's
-              AI analytics system.
-            </p>
+      <section className="flex min-w-0 flex-col gap-5 rounded-[22px] border border-[#EBD8AD] bg-[#FFF7E6] p-5 sm:p-6 md:flex-row md:items-center md:justify-between">
+        <div className="flex min-w-0 items-start gap-3">
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#F8E7BB] text-[#98681D]"><Sparkles className="h-6 w-6" /></span>
+          <div className="min-w-0">
+            <h3 className="text-base font-black text-[#193E32]">Explore AI-Powered Insights</h3>
+            <p className="mt-1 max-w-2xl text-xs leading-6 text-[#6F765D] sm:text-sm">Explore trends in donations, essay participation, and literacy activity using the existing analytics module.</p>
           </div>
         </div>
-
-        <button
-          type="button"
-          onClick={() => navigateTo("analytics")}
-          className="shrink-0 inline-flex items-center gap-2 rounded-xl bg-[#193E32] hover:bg-[#276B56] text-white px-5 py-3 text-xs font-bold transition-colors"
-        >
-          Open AI Analytics
-          <ArrowRight className="w-4 h-4" />
+        <button type="button" onClick={() => navigateTo("analytics")}
+          className="inline-flex w-fit shrink-0 items-center gap-2 rounded-xl bg-[#193E32] px-5 py-3 text-xs font-extrabold text-white transition hover:bg-[#276B56]">
+          Open Analytics <ArrowRight className="h-4 w-4" />
         </button>
       </section>
     </div>

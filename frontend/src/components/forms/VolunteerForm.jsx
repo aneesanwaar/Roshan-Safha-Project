@@ -144,21 +144,25 @@ function VolunteerForm({ onSuccess }) {
 
   // Helper classes for input borders
   const getInputClass = (fieldName) =>
-    `w-full text-xs rounded-xl p-2.5 outline-none transition ${
-      fieldErrors[fieldName]
-        ? 'bg-red-50/50 border border-red-400 focus:ring-2 focus:ring-red-400 focus:bg-white text-slate-800'
-        : 'bg-slate-50 border border-slate-200 focus:bg-white focus:ring-2 focus:ring-emerald-500 text-slate-800'
+    `w-full text-xs rounded-xl p-2.5 outline-none transition ${fieldErrors[fieldName]
+      ? 'bg-red-50/50 border border-red-400 focus:ring-2 focus:ring-red-400 focus:bg-white text-[#193E32]'
+      : 'bg-[#FAFCF8] border border-[#DCE5DB] focus:bg-white focus:ring-2 focus:ring-[#276B56]/15 text-[#193E32]'
     }`;
 
   return (
-    <form onSubmit={handleSubmit} noValidate className="space-y-4">
+    <form onSubmit={handleSubmit} noValidate className="space-y-7">
+      {/* Roshan Safha form introduction */}
+      <div className="border-b border-[#E2EADF] pb-6">
+
+        <h2 className="mt-4 text-2xl font-black tracking-tight text-[#193E32] sm:text-3xl">Become a Volunteer</h2>
+        <p className="mt-2 max-w-2xl text-sm leading-7 text-[#64796D]">Share your details and help us create meaningful literacy opportunities.</p>
+      </div>
       {status.message && (
         <div
-          className={`p-3 rounded-xl text-xs flex items-center gap-2 ${
-            status.type === 'success'
-              ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-              : 'bg-red-50 text-red-800 border border-red-200'
-          }`}
+          className={`flex items-start gap-3 rounded-xl p-4 text-sm ${status.type === 'success'
+              ? 'border border-[#C8DDCE] bg-[#EDF7EF] text-[#193E32]'
+              : 'border border-rose-200 bg-rose-50 text-rose-800'
+            }`}
         >
           {status.type === 'success' ? (
             <CheckCircle2 className="w-4 h-4 shrink-0" />
@@ -169,9 +173,9 @@ function VolunteerForm({ onSuccess }) {
         </div>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
         <div>
-          <label className="block text-xs font-bold text-slate-700 mb-1">Full Name *</label>
+          <label className="mb-2 block text-sm font-semibold text-[#193E32]">Full Name *</label>
           <input
             type="text"
             name="name"
@@ -181,12 +185,12 @@ function VolunteerForm({ onSuccess }) {
             className={getInputClass('name')}
           />
           {fieldErrors.name && (
-            <p className="text-[11px] text-red-600 mt-1 font-medium">{fieldErrors.name}</p>
+            <p className="mt-1.5 text-xs font-medium text-rose-600">{fieldErrors.name}</p>
           )}
         </div>
 
         <div>
-          <label className="block text-xs font-bold text-slate-700 mb-1">Age *</label>
+          <label className="mb-2 block text-sm font-semibold text-[#193E32]">Age *</label>
           <input
             type="number"
             name="age"
@@ -198,12 +202,12 @@ function VolunteerForm({ onSuccess }) {
             className={getInputClass('age')}
           />
           {fieldErrors.age && (
-            <p className="text-[11px] text-red-600 mt-1 font-medium">{fieldErrors.age}</p>
+            <p className="mt-1.5 text-xs font-medium text-rose-600">{fieldErrors.age}</p>
           )}
         </div>
 
         <div>
-          <label className="block text-xs font-bold text-slate-700 mb-1">Email Address *</label>
+          <label className="mb-2 block text-sm font-semibold text-[#193E32]">Email Address *</label>
           <input
             type="email"
             name="email"
@@ -213,12 +217,12 @@ function VolunteerForm({ onSuccess }) {
             className={getInputClass('email')}
           />
           {fieldErrors.email && (
-            <p className="text-[11px] text-red-600 mt-1 font-medium">{fieldErrors.email}</p>
+            <p className="mt-1.5 text-xs font-medium text-rose-600">{fieldErrors.email}</p>
           )}
         </div>
 
         <div>
-          <label className="block text-xs font-bold text-slate-700 mb-1">Phone Number *</label>
+          <label className="mb-2 block text-sm font-semibold text-[#193E32]">Phone Number *</label>
           <input
             type="tel"
             name="phone"
@@ -228,12 +232,12 @@ function VolunteerForm({ onSuccess }) {
             className={getInputClass('phone')}
           />
           {fieldErrors.phone && (
-            <p className="text-[11px] text-red-600 mt-1 font-medium">{fieldErrors.phone}</p>
+            <p className="mt-1.5 text-xs font-medium text-rose-600">{fieldErrors.phone}</p>
           )}
         </div>
 
         <div>
-          <label className="block text-xs font-bold text-slate-700 mb-1">City *</label>
+          <label className="mb-2 block text-sm font-semibold text-[#193E32]">City *</label>
           <input
             type="text"
             name="city"
@@ -243,12 +247,12 @@ function VolunteerForm({ onSuccess }) {
             className={getInputClass('city')}
           />
           {fieldErrors.city && (
-            <p className="text-[11px] text-red-600 mt-1 font-medium">{fieldErrors.city}</p>
+            <p className="mt-1.5 text-xs font-medium text-rose-600">{fieldErrors.city}</p>
           )}
         </div>
 
         <div>
-          <label className="block text-xs font-bold text-slate-700 mb-1">Availability *</label>
+          <label className="mb-2 block text-sm font-semibold text-[#193E32]">Availability *</label>
           <input
             type="text"
             name="availability"
@@ -258,13 +262,13 @@ function VolunteerForm({ onSuccess }) {
             className={getInputClass('availability')}
           />
           {fieldErrors.availability && (
-            <p className="text-[11px] text-red-600 mt-1 font-medium">{fieldErrors.availability}</p>
+            <p className="mt-1.5 text-xs font-medium text-rose-600">{fieldErrors.availability}</p>
           )}
         </div>
       </div>
 
       <div>
-        <label className="block text-xs font-bold text-slate-700 mb-1">Skills & Areas of Interest *</label>
+        <label className="mb-2 block text-sm font-semibold text-[#193E32]">Skills & Areas of Interest *</label>
         <input
           type="text"
           name="skills"
@@ -274,26 +278,26 @@ function VolunteerForm({ onSuccess }) {
           className={getInputClass('skills')}
         />
         {fieldErrors.skills && (
-          <p className="text-[11px] text-red-600 mt-1 font-medium">{fieldErrors.skills}</p>
+          <p className="mt-1.5 text-xs font-medium text-rose-600">{fieldErrors.skills}</p>
         )}
       </div>
 
       <div>
-        <label className="block text-xs font-bold text-slate-700 mb-1">Message / Note (Optional)</label>
+        <label className="mb-2 block text-sm font-semibold text-[#193E32]">Message / Note (Optional)</label>
         <textarea
           name="message"
           rows="2"
           placeholder="Why would you like to join Roshan Safha?"
           value={formData.message}
           onChange={handleChange}
-          className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500"
+          className="w-full rounded-xl border border-[#DCE5DB] bg-[#FAFCF8] px-4 py-3 text-sm text-[#193E32] outline-none transition focus:border-[#276B56] focus:bg-white focus:ring-2 focus:ring-[#276B56]/15"
         ></textarea>
       </div>
 
       <button
         type="submit"
         disabled={loading}
-        className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-sm transition flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
+        className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#193E32] px-6 py-3.5 text-sm font-bold text-white shadow-[0_8px_20px_rgba(25,62,50,0.15)] transition hover:bg-[#276B56] disabled:cursor-not-allowed disabled:opacity-50"
       >
         {loading ? (
           <>

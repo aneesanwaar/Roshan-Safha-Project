@@ -12,10 +12,10 @@
       
 //       {/* Header */}
 //       <div className="text-center max-w-2xl mx-auto space-y-3">
-//         <span className="text-xs font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
+//         <span className="text-xs font-bold uppercase tracking-wider text-emerald-700 bg-[#E7EEE5] px-3 py-1 rounded-full border border-emerald-200">
 //           Join the Movement
 //         </span>
-//         <h1 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">
+//         <h1 className="text-3xl sm:text-4xl font-black text-[#193E32] tracking-tight">
 //           Get Involved with Roshan Safha
 //         </h1>
 //         <p className="text-slate-600 text-sm leading-relaxed">
@@ -27,7 +27,7 @@
 //       <div className="grid sm:grid-cols-2 gap-4">
 //         <Link 
 //           to="/programs/donations" 
-//           className="bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 p-5 rounded-2xl flex items-center gap-4 transition group"
+//           className="bg-[#E7EEE5] hover:bg-[#E7EEE5] border border-emerald-200 p-5 rounded-2xl flex items-center gap-4 transition group"
 //         >
 //           <div className="p-3 bg-emerald-600 text-white rounded-xl group-hover:scale-105 transition-transform">
 //             <BookOpen className="w-5 h-5" />
@@ -53,13 +53,13 @@
 //       </div>
 
 //       {/* Switcher & Form Card */}
-//       <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-10 shadow-sm space-y-6">
-//         <div className="flex border-b border-slate-200 pb-4 gap-4">
+//       <div className="bg-white border border-[#E0E9DD] rounded-3xl p-6 sm:p-10 shadow-sm space-y-6">
+//         <div className="flex border-b border-[#E0E9DD] pb-4 gap-4">
 //           <button
 //             onClick={() => setActiveTab('volunteer')}
 //             className={`flex items-center gap-2 pb-2 text-sm font-bold transition border-b-2 -mb-[18px] ${
 //               activeTab === 'volunteer' 
-//                 ? 'border-emerald-600 text-emerald-600' 
+//                 ? 'border-emerald-600 text-[#276B56]' 
 //                 : 'border-transparent text-slate-400 hover:text-slate-700'
 //             }`}
 //           >
@@ -69,7 +69,7 @@
 //             onClick={() => setActiveTab('collab')}
 //             className={`flex items-center gap-2 pb-2 text-sm font-bold transition border-b-2 -mb-[18px] ${
 //               activeTab === 'collab' 
-//                 ? 'border-emerald-600 text-emerald-600' 
+//                 ? 'border-emerald-600 text-[#276B56]' 
 //                 : 'border-transparent text-slate-400 hover:text-slate-700'
 //             }`}
 //           >
@@ -97,53 +97,50 @@ function GetInvolvedPage() {
   const [activeTab, setActiveTab] = useState('volunteer'); // 'volunteer' or 'collab'
 
   return (
-    <div className="min-h-screen bg-slate-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-4xl mx-auto space-y-8">
+    <div className="min-h-screen bg-[#FFF9EF] py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-6xl mx-auto space-y-10">
         
         {/* Header */}
-        <div className="text-center space-y-3">
-          <div className="inline-flex items-center gap-1.5 bg-emerald-100 text-emerald-800 text-xs font-bold px-3.5 py-1.5 rounded-full">
-            <HeartHandshake className="w-3.5 h-3.5" />
-            <span>Join Our Mission</span>
-          </div>
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+        <div className="relative overflow-hidden rounded-[30px] bg-[#193E32] px-6 py-12 text-center text-white space-y-4 sm:px-12">
+
+          <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight">
             Get Involved with Roshan Safha
           </h1>
-          <p className="text-sm sm:text-base text-slate-600 max-w-2xl mx-auto">
+          <p className="text-sm sm:text-base text-white/75 max-w-2xl mx-auto leading-7">
             Whether you are an individual wanting to volunteer your time, or an educational institution looking to partner, there is a place for you.
           </p>
         </div>
 
         {/* Form Selector Tabs */}
         <div className="flex justify-center">
-          <div className="inline-flex bg-slate-200/80 p-1 rounded-2xl gap-1">
+          <div className="inline-flex flex-wrap justify-center bg-white border border-[#DDE8DD] p-2 rounded-2xl gap-2 shadow-sm">
             <button
               onClick={() => setActiveTab('volunteer')}
               className={`flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
                 activeTab === 'volunteer'
-                  ? 'bg-white text-slate-900 shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900'
+                  ? 'bg-[#193E32] text-white shadow-sm'
+                  : 'text-[#587366] hover:text-[#193E32]'
               }`}
             >
-              <UserCheck className="w-4 h-4 text-emerald-600" />
+              <UserCheck className="w-4 h-4 text-[#276B56]" />
               Join as Volunteer
             </button>
             <button
               onClick={() => setActiveTab('collab')}
               className={`flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
                 activeTab === 'collab'
-                  ? 'bg-white text-slate-900 shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900'
+                  ? 'bg-[#193E32] text-white shadow-sm'
+                  : 'text-[#587366] hover:text-[#193E32]'
               }`}
             >
-              <Building2 className="w-4 h-4 text-emerald-600" />
+              <Building2 className="w-4 h-4 text-[#276B56]" />
               Partner / Collaborate
             </button>
           </div>
         </div>
 
         {/* Active Form Container */}
-        <div className="bg-white rounded-3xl border border-slate-200 shadow-xl p-6 sm:p-10">
+        <div className="bg-white rounded-[28px] border border-[#DDE8DD] shadow-[0_18px_50px_rgba(25,62,50,0.08)] p-6 sm:p-10">
           {activeTab === 'volunteer' ? (
             <div className="space-y-4">
               <div className="border-b border-slate-100 pb-3">

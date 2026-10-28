@@ -1,69 +1,18 @@
 import React from "react";
-import { Menu } from "lucide-react";
+import { Menu, PanelLeftClose, PanelLeftOpen, ShieldCheck } from "lucide-react";
 import { adminNavItems } from "./AdminSidebar";
 
-/**
- * Roshan Safha Admin Dashboard Header
- *
- * Displays:
- * - Current dashboard section title
- * - Mobile sidebar toggle
- * - Administration system subtitle
- * - Live database sync indicator
- *
- * Props:
- * currentSection: currently selected dashboard section
- * onOpenSidebar: opens the sidebar on mobile devices
- */
-function AdminHeader({ currentSection, onOpenSidebar }) {
-  const activeSection = adminNavItems.find(
-    (item) => item.id === currentSection
-  );
-
-  const sectionTitle = activeSection?.label || "Admin Dashboard";
-
+function AdminHeader({ currentSection, onOpenSidebar, sidebarVisible = true, onToggleSidebar }) {
+  const title = adminNavItems.find((item) => item.id === currentSection)?.label || "Admin Dashboard";
   return (
-    <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200 px-4 sm:px-8 py-4 flex items-center justify-between gap-4">
-      {/* Left: Mobile Menu + Section Title */}
-      <div className="flex items-center gap-3 min-w-0">
-        {/* Mobile Sidebar Toggle */}
-        <button
-          type="button"
-          onClick={onOpenSidebar}
-          aria-label="Open admin navigation"
-          className="lg:hidden p-2 text-slate-700 hover:bg-slate-100 rounded-xl transition-colors shrink-0"
-        >
-          <Menu className="w-5 h-5" />
-        </button>
-
-        {/* Section Heading */}
-        <div className="min-w-0">
-          <h1 className="text-base sm:text-lg font-black text-slate-900 truncate">
-            {sectionTitle}
-          </h1>
-
-          <p className="text-[11px] text-slate-500 hidden sm:block">
-            Roshan Safha Automated Operations System
-          </p>
-        </div>
+    <header className="sticky top-0 z-30 flex min-h-[76px] items-center justify-between gap-3 border-b border-[#E1E9DF] bg-white/95 px-4 py-3 backdrop-blur-xl sm:px-6 xl:px-8">
+      <div className="flex min-w-0 items-center gap-3">
+        <button type="button" onClick={onOpenSidebar} aria-label="Open admin sidebar" className="rounded-xl border border-[#E3EBE1] bg-[#F6F8F3] p-2.5 text-[#193E32] hover:bg-[#E7EEE5] lg:hidden"><Menu size={20}/></button>
+        <button type="button" onClick={onToggleSidebar} aria-label={sidebarVisible ? "Hide sidebar" : "Show sidebar"} title={sidebarVisible ? "Hide sidebar" : "Show sidebar"} className="hidden rounded-xl border border-[#E3EBE1] bg-[#F6F8F3] p-2.5 text-[#193E32] transition hover:bg-[#E7EEE5] lg:inline-flex">{sidebarVisible ? <PanelLeftClose size={20}/> : <PanelLeftOpen size={20}/>}</button>
+        <div className="min-w-0"><p className="mb-0.5 hidden text-[10px] font-bold uppercase tracking-[0.16em] text-[#739184] sm:block">Administration / Workspace</p><h1 className="truncate text-sm font-black text-[#193E32] sm:text-lg">{title}</h1></div>
       </div>
-
-      {/* Right: Database Status */}
-      <div className="shrink-0">
-        <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 border border-emerald-200 px-3 py-1 rounded-full flex items-center gap-1.5 whitespace-nowrap">
-          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-
-          <span className="hidden sm:inline">
-            Live Database Sync
-          </span>
-
-          <span className="sm:hidden">
-            Live
-          </span>
-        </span>
-      </div>
+      <div className="flex shrink-0 items-center gap-2 rounded-full border border-[#DCE8DD] bg-[#F0F6EF] px-3 py-2 text-[11px] font-bold text-[#276B56]" title="Admin workspace (not a live connection health check)"><ShieldCheck size={15}/><span className="hidden sm:inline">Admin Workspace</span><span className="sm:hidden">Admin</span></div>
     </header>
   );
 }
-
 export default AdminHeader;

@@ -123,21 +123,25 @@ function CollaborationForm({ onSuccess }) {
   };
 
   const getInputClass = (fieldName) =>
-    `w-full text-xs rounded-xl p-2.5 outline-none transition ${
-      fieldErrors[fieldName]
-        ? 'bg-red-50/50 border border-red-400 focus:ring-2 focus:ring-red-400 focus:bg-white text-slate-800'
-        : 'bg-slate-50 border border-slate-200 focus:bg-white focus:ring-2 focus:ring-emerald-500 text-slate-800'
+    `w-full text-xs rounded-xl p-2.5 outline-none transition ${fieldErrors[fieldName]
+      ? 'bg-red-50/50 border border-red-400 focus:ring-2 focus:ring-red-400 focus:bg-white text-[#193E32]'
+      : 'bg-[#FAFCF8] border border-[#DCE5DB] focus:bg-white focus:ring-2 focus:ring-[#276B56]/15 text-[#193E32]'
     }`;
 
   return (
-    <form onSubmit={handleSubmit} noValidate className="space-y-4">
+    <form onSubmit={handleSubmit} noValidate className="space-y-7">
+      {/* Roshan Safha form introduction */}
+      <div className="border-b border-[#E2EADF] pb-6">
+
+        <h2 className="mt-4 text-2xl font-black tracking-tight text-[#193E32] sm:text-3xl">Partner With Purpose</h2>
+        <p className="mt-2 max-w-2xl text-sm leading-7 text-[#64796D]">Tell us about your organization and how we can work together to expand access to learning.</p>
+      </div>
       {status.message && (
         <div
-          className={`p-3 rounded-xl text-xs flex items-center gap-2 ${
-            status.type === 'success'
-              ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-              : 'bg-red-50 text-red-800 border border-red-200'
-          }`}
+          className={`flex items-start gap-3 rounded-xl p-4 text-sm ${status.type === 'success'
+              ? 'border border-[#C8DDCE] bg-[#EDF7EF] text-[#193E32]'
+              : 'border border-rose-200 bg-rose-50 text-rose-800'
+            }`}
         >
           {status.type === 'success' ? (
             <CheckCircle2 className="w-4 h-4 shrink-0" />
@@ -148,9 +152,9 @@ function CollaborationForm({ onSuccess }) {
         </div>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
         <div>
-          <label className="block text-xs font-bold text-slate-700 mb-1">Representative Name *</label>
+          <label className="mb-2 block text-sm font-semibold text-[#193E32]">Representative Name *</label>
           <input
             type="text"
             name="name"
@@ -160,12 +164,12 @@ function CollaborationForm({ onSuccess }) {
             className={getInputClass('name')}
           />
           {fieldErrors.name && (
-            <p className="text-[11px] text-red-600 mt-1 font-medium">{fieldErrors.name}</p>
+            <p className="mt-1.5 text-xs font-medium text-rose-600">{fieldErrors.name}</p>
           )}
         </div>
 
         <div>
-          <label className="block text-xs font-bold text-slate-700 mb-1">Organization / Entity *</label>
+          <label className="mb-2 block text-sm font-semibold text-[#193E32]">Organization / Entity *</label>
           <input
             type="text"
             name="organization"
@@ -175,12 +179,12 @@ function CollaborationForm({ onSuccess }) {
             className={getInputClass('organization')}
           />
           {fieldErrors.organization && (
-            <p className="text-[11px] text-red-600 mt-1 font-medium">{fieldErrors.organization}</p>
+            <p className="mt-1.5 text-xs font-medium text-rose-600">{fieldErrors.organization}</p>
           )}
         </div>
 
         <div>
-          <label className="block text-xs font-bold text-slate-700 mb-1">Official Email *</label>
+          <label className="mb-2 block text-sm font-semibold text-[#193E32]">Official Email *</label>
           <input
             type="email"
             name="email"
@@ -190,12 +194,12 @@ function CollaborationForm({ onSuccess }) {
             className={getInputClass('email')}
           />
           {fieldErrors.email && (
-            <p className="text-[11px] text-red-600 mt-1 font-medium">{fieldErrors.email}</p>
+            <p className="mt-1.5 text-xs font-medium text-rose-600">{fieldErrors.email}</p>
           )}
         </div>
 
         <div>
-          <label className="block text-xs font-bold text-slate-700 mb-1">Phone Number *</label>
+          <label className="mb-2 block text-sm font-semibold text-[#193E32]">Phone Number *</label>
           <input
             type="tel"
             name="phone"
@@ -205,18 +209,18 @@ function CollaborationForm({ onSuccess }) {
             className={getInputClass('phone')}
           />
           {fieldErrors.phone && (
-            <p className="text-[11px] text-red-600 mt-1 font-medium">{fieldErrors.phone}</p>
+            <p className="mt-1.5 text-xs font-medium text-rose-600">{fieldErrors.phone}</p>
           )}
         </div>
       </div>
 
       <div>
-        <label className="block text-xs font-bold text-slate-700 mb-1">Collaboration Type *</label>
+        <label className="mb-2 block text-sm font-semibold text-[#193E32]">Collaboration Type *</label>
         <select
           name="collabType"
           value={formData.collabType}
           onChange={handleChange}
-          className={`${getInputClass('collabType')} font-medium text-slate-700`}
+          className={`${getInputClass('collabType')} font-medium text-[#193E32]`}
         >
           <option value="School / College Partnership">School / College Partnership</option>
           <option value="NGO / Youth Foundation">NGO / Youth Foundation</option>
@@ -224,12 +228,12 @@ function CollaborationForm({ onSuccess }) {
           <option value="Corporate / Event Sponsor">Corporate / Event Sponsor</option>
         </select>
         {fieldErrors.collabType && (
-          <p className="text-[11px] text-red-600 mt-1 font-medium">{fieldErrors.collabType}</p>
+          <p className="mt-1.5 text-xs font-medium text-rose-600">{fieldErrors.collabType}</p>
         )}
       </div>
 
       <div>
-        <label className="block text-xs font-bold text-slate-700 mb-1">Proposal / Message *</label>
+        <label className="mb-2 block text-sm font-semibold text-[#193E32]">Proposal / Message *</label>
         <textarea
           name="message"
           rows="3"
@@ -239,14 +243,14 @@ function CollaborationForm({ onSuccess }) {
           className={getInputClass('message')}
         ></textarea>
         {fieldErrors.message && (
-          <p className="text-[11px] text-red-600 mt-1 font-medium">{fieldErrors.message}</p>
+          <p className="mt-1.5 text-xs font-medium text-rose-600">{fieldErrors.message}</p>
         )}
       </div>
 
       <button
         type="submit"
         disabled={loading}
-        className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-sm transition flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
+        className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-[#193E32] px-6 py-3.5 text-sm font-bold text-white shadow-[0_8px_20px_rgba(25,62,50,0.15)] transition hover:bg-[#276B56] disabled:cursor-not-allowed disabled:opacity-50"
       >
         {loading ? (
           <>

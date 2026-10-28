@@ -161,12 +161,8 @@ function DonationForm({ onSuccess }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-7">
+    <form onSubmit={handleSubmit} className="space-y-8">
       <div className="border-b border-[#E7ECE5] pb-6">
-        <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-[#E7EEE5] px-3 py-1.5 text-xs font-semibold text-[#276B56]">
-          <BookOpen size={14} />
-          Donation Request
-        </div>
 
         <h3
           className="text-2xl font-bold text-[#193E32] sm:text-3xl"
@@ -204,7 +200,7 @@ function DonationForm({ onSuccess }) {
 
       <div>
         <h4 className="mb-5 text-base font-bold text-[#193E32]">
-          01. Your details
+           Your details
         </h4>
 
         <div className="grid gap-5 sm:grid-cols-2">
@@ -286,7 +282,7 @@ function DonationForm({ onSuccess }) {
 
       <div className="border-t border-[#E7ECE5] pt-7">
         <h4 className="mb-5 text-base font-bold text-[#193E32]">
-          02. Book details
+           Book details
         </h4>
 
         <fieldset>
@@ -372,7 +368,7 @@ function DonationForm({ onSuccess }) {
 
       <div className="border-t border-[#E7ECE5] pt-7">
         <h4 className="mb-5 text-base font-bold text-[#193E32]">
-          03. Handover preference
+           Handover preference
         </h4>
 
         <fieldset>

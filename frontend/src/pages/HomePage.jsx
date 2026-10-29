@@ -533,7 +533,7 @@ export default function HomePage() {
 
             <div className="mt-9 flex flex-wrap items-center gap-3">
               <Link
-                to="/programs/donate-books"
+                to="/programs/donate-books#donation-form"
                 className="rs-btn-primary inline-flex items-center justify-center gap-2"
               >
                 Give a Book New Life
@@ -892,7 +892,7 @@ export default function HomePage() {
             </div>
 
             <Link
-              to="/get-involved"
+              to="/get-involved#volunteer-form"
               className="inline-flex shrink-0 items-center justify-center gap-2 rounded-full bg-[#E8A94A] px-7 py-4 text-sm font-bold text-[#3D2415] transition-colors hover:bg-[#F3BF6C] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
             >
               Become a Volunteer

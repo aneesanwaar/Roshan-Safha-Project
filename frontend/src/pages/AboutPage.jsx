@@ -170,7 +170,7 @@ function AboutPage() {
 
           <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
             <Link
-              to="/programs/donate-books"
+              to="/programs/donate-books#donation-form"
               className="rs-btn-primary inline-flex items-center justify-center gap-2"
             >
               Support Our Mission

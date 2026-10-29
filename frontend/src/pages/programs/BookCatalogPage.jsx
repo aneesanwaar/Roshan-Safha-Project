@@ -1011,7 +1011,7 @@ export default function BookCatalog() {
             </p>
 
             <a
-              href="/programs/donate-books"
+              href="/programs/donate-books#donation-form"
               className="mt-7 inline-flex items-center justify-center gap-2 rounded-xl bg-[#E8A94A] px-7 py-3.5 text-sm font-bold text-[#193E32] shadow-lg transition-all duration-300 hover:-translate-y-1 hover:bg-[#F2BC68] hover:shadow-xl"
             >
               Donate Books

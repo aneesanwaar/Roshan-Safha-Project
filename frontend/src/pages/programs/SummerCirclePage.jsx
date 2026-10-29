@@ -79,7 +79,7 @@ function SummerCirclePage() {
           </div>
 
           {/* Registration Box using EventForm */}
-          <div className="bg-white rounded-[24px] p-5 text-slate-900 shadow-md">
+          <div id="event-registration-form" className="scroll-mt-28 bg-white rounded-[24px] p-5 text-slate-900 shadow-md">
             {registered ? (
               <div className="text-center py-6 space-y-2">
                 <CheckCircle2 className="w-8 h-8 text-[#276B56] mx-auto" />

@@ -65,6 +65,8 @@ const QUICK_LINKS = [
   { name: "Announcements", path: "/announcements" },
   { name: "Get Involved", path: "/get-involved" },
   { name: "Contact Us", path: "/contact" },
+  { name: "Privacy Policy", path: "/privacy-policy" },
+  { name: "Terms & Conditions", path: "/terms" },
 ];
 
 const PROGRAM_LINKS = [
@@ -313,8 +315,8 @@ function Footer() {
               ))}
             </ul>
 
-            <Link
-              to="/programs/donate-books"
+           <Link
+              to="/programs/donate-books#donation-form"
               className="
                 group mt-7 inline-flex
                 items-center gap-2
@@ -459,57 +461,12 @@ function Footer() {
         </div>
       </div>
 
-      {/* ======================================
-          BOTTOM BAR
-      ====================================== */}
-
+      {/* Centered copyright bar; legal links now live under Explore. */}
       <div className="relative border-t border-white/10">
-        <div className="rs-container">
-          <div
-            className="
-              flex flex-col gap-4
-              py-6 text-center
-              md:flex-row
-              md:items-center
-              md:justify-between
-              md:text-left
-            "
-          >
-            <p className="text-[12px] text-[#B4C9BD]">
-              © {currentYear} Roshan Safha.
-              All rights reserved.
-            </p>
-
-            <div
-              className="
-                flex flex-wrap items-center
-                justify-center gap-5
-                md:justify-end
-              "
-            >
-              <Link
-                to="/privacy-policy"
-                className="
-                  text-[12px] text-[#B4C9BD]
-                  transition-colors
-                  hover:text-[#F3BD65]
-                "
-              >
-                Privacy Policy
-              </Link>
-
-              <Link
-                to="/terms"
-                className="
-                  text-[12px] text-[#B4C9BD]
-                  transition-colors
-                  hover:text-[#F3BD65]
-                "
-              >
-                Terms & Conditions
-              </Link>
-            </div>
-          </div>
+        <div className="rs-container py-6 text-center">
+          <p className="text-[12px] text-[#B4C9BD]">
+            © {currentYear} Roshan Safha. All rights reserved.
+          </p>
         </div>
       </div>
     </footer>

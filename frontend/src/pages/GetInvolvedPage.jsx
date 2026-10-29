@@ -1,4 +1,5 @@
-// import React, { useState } from 'react';
+// import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 // import VolunteerForm from '../components/forms/VolunteerForm';
 // import CollaborationForm from '../components/forms/CollaborationForm';
 // import { Users, HeartHandshake, BookOpen, Award } from 'lucide-react';
@@ -88,13 +89,18 @@
 
 // export default GetInvolvedPage;
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import VolunteerForm from '../components/forms/VolunteerForm';
 import CollaborationForm from '../components/forms/CollaborationForm';
 import { UserCheck, Building2, HeartHandshake } from 'lucide-react';
 
 function GetInvolvedPage() {
   const [activeTab, setActiveTab] = useState('volunteer'); // 'volunteer' or 'collab'
+  const { hash } = useLocation();
+  useEffect(() => {
+    if (hash === '#collaboration-form') setActiveTab('collab');
+    else if (hash === '#volunteer-form') setActiveTab('volunteer');
+  }, [hash]);
 
   return (
     <div className="min-h-screen bg-[#FFF9EF] py-12 px-4 sm:px-6 lg:px-8">
@@ -140,7 +146,7 @@ function GetInvolvedPage() {
         </div>
 
         {/* Active Form Container */}
-        <div className="bg-white rounded-[28px] border border-[#DDE8DD] shadow-[0_18px_50px_rgba(25,62,50,0.08)] p-6 sm:p-10">
+        <div id={activeTab === 'volunteer' ? 'volunteer-form' : 'collaboration-form'} className="scroll-mt-28 bg-white rounded-[28px] border border-[#DDE8DD] shadow-[0_18px_50px_rgba(25,62,50,0.08)] p-6 sm:p-10">
           {activeTab === 'volunteer' ? (
             <div className="space-y-4">
               <div className="border-b border-slate-100 pb-3">

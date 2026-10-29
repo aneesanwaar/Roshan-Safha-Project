@@ -495,7 +495,7 @@ function Navbar() {
 
           <div className="hidden xl:flex shrink-0 items-center">
             <Link
-              to="/programs/donate-books"
+              to="/programs/donate-books#donation-form"
               className="
                 group inline-flex items-center
                 justify-center gap-2
@@ -695,7 +695,7 @@ function Navbar() {
 
             <div className="mt-5 border-t border-[#E6DFD3] pt-5">
               <Link
-                to="/programs/donate-books"
+                to="/programs/donate-books#donation-form"
                 onClick={closeMobileMenu}
                 className="
                   flex w-full items-center

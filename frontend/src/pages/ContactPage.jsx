@@ -96,7 +96,7 @@ function ContactPage() {
           </a>
         </aside>
 
-        <section className="min-w-0 rounded-2xl border border-[#DCE6DB] bg-white p-4 shadow-[0_10px_30px_rgba(25,62,50,0.05)] sm:p-6 lg:p-7">
+        <section id="contact-form" className="scroll-mt-28 min-w-0 rounded-2xl border border-[#DCE6DB] bg-white p-4 shadow-[0_10px_30px_rgba(25,62,50,0.05)] sm:p-6 lg:p-7">
           <ContactForm />
         </section>
       </div>

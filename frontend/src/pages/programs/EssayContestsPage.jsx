@@ -234,7 +234,7 @@ function EssayContestsPage() {
         </div>
 
         {/* Backend Connected Submission Form Card */}
-        <div className="bg-white rounded-[28px] border border-[#DDE8DD] shadow-[0_18px_50px_rgba(25,62,50,0.08)] p-6 sm:p-10 space-y-4">
+        <div id="essay-submission-form" className="scroll-mt-28 bg-white rounded-[28px] border border-[#DDE8DD] shadow-[0_18px_50px_rgba(25,62,50,0.08)] p-6 sm:p-10 space-y-4">
           <div className="border-b border-slate-100 pb-3">
             <h3 className="text-base font-bold text-slate-900">
               Online Essay Submission Portal

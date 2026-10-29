@@ -24,6 +24,8 @@ import GalleryPage from "./pages/GalleryPage";
 import AnnouncementsPage from "./pages/AnnouncementsPage";
 import GetInvolvedPage from "./pages/GetInvolvedPage";
 import ContactPage from "./pages/ContactPage";
+import TermsConditionsPage from "./pages/TermsConditionsPage";
+import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
 
 // Admin Portal
 import AdminDashboard from "./pages/AdminDashboard";
@@ -307,8 +309,8 @@ function AdminLoginRoute() {
 
     const destination =
       typeof requestedDestination === "string" &&
-      requestedDestination.startsWith("/admin") &&
-      !requestedDestination.startsWith("/admin/login")
+        requestedDestination.startsWith("/admin") &&
+        !requestedDestination.startsWith("/admin/login")
         ? requestedDestination
         : "/admin";
 
@@ -390,7 +392,20 @@ function App() {
               element={<AdminDashboard />}
             />
           </Route>
+
+          <Route
+            path="/terms"
+            element={<TermsConditionsPage />}
+          />
+
+          <Route
+            path="/privacy-policy"
+            element={<PrivacyPolicyPage />}
+          />
+
         </Routes>
+
+
       </main>
 
       {!isAdminRoute && <Footer />}

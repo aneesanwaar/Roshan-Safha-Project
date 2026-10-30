@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Trophy, Trash2, X, Loader2 } from 'lucide-react';
+import { Plus, Trophy, Trash2, X, Loader2, Pencil } from 'lucide-react';
 
 const INITIAL_FORM = {
   editionYear: '2026',
@@ -11,17 +11,21 @@ const INITIAL_FORM = {
   awardPrizes: '',
 };
 
-export default function WinnersArchive({ winners, onAdd, onDelete, busy }) {
+export default function WinnersArchive({ winners, onAdd, onEdit, onDelete, busy }) {
   const [open, setOpen] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+  const openAdd = () => { setEditingId(null); setForm({ ...INITIAL_FORM }); setOpen(true); };
+  const openEdit = (winner) => { setEditingId(winner._id); setForm(Object.fromEntries(Object.keys(INITIAL_FORM).map(key => [key, winner[key] ?? INITIAL_FORM[key]]))); setOpen(true); };
   const [form, setForm] = useState(INITIAL_FORM);
   const update = (field, value) => setForm((prev) => ({ ...prev, [field]: value }));
 
   const submit = async (event) => {
     event.preventDefault();
-    const saved = await onAdd(form);
+    const saved = editingId ? await onEdit(editingId, form) : await onAdd(form);
     if (saved) {
       setForm(INITIAL_FORM);
       setOpen(false);
+      setEditingId(null);
     }
   };
 
@@ -34,7 +38,7 @@ export default function WinnersArchive({ winners, onAdd, onDelete, busy }) {
           </h2>
           <p className="mt-1 text-xs text-slate-500">{winners.length} winner record(s)</p>
         </div>
-        <button type="button" onClick={() => setOpen(true)} className="inline-flex items-center gap-2 rounded-xl bg-[#E8A94A] px-4 py-2.5 text-xs font-bold text-[#193E32] hover:brightness-95">
+        <button type="button" onClick={openAdd} className="inline-flex items-center gap-2 rounded-xl bg-[#E8A94A] px-4 py-2.5 text-xs font-bold text-[#193E32] hover:brightness-95">
           <Plus className="h-4 w-4" /> Add Winner
         </button>
       </div>
@@ -55,6 +59,7 @@ export default function WinnersArchive({ winners, onAdd, onDelete, busy }) {
               <p className="mt-3 text-sm italic text-slate-700">“{winner.essayTitle}”</p>
               {winner.awardPrizes && <p className="mt-2 text-xs font-semibold text-[#276B56]">{winner.awardPrizes}</p>}
               <div className="mt-4 flex justify-end border-t border-slate-200 pt-3">
+                <button type="button" disabled={busy} onClick={() => openEdit(winner)} className="mr-4 inline-flex items-center gap-1.5 text-xs font-bold text-[#276B56] hover:underline disabled:opacity-50"><Pencil className="h-3.5 w-3.5" /> Edit</button>
                 <button type="button" disabled={busy} onClick={() => onDelete(winner._id)} className="inline-flex items-center gap-1.5 text-xs font-bold text-rose-600 hover:text-rose-800 disabled:opacity-50">
                   <Trash2 className="h-3.5 w-3.5" /> Delete
                 </button>
@@ -68,7 +73,7 @@ export default function WinnersArchive({ winners, onAdd, onDelete, busy }) {
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/60 p-3 sm:p-5" onMouseDown={(event) => { if (event.target === event.currentTarget && !busy) setOpen(false); }}>
           <div role="dialog" aria-modal="true" aria-labelledby="winner-modal-title" className="flex max-h-[90dvh] w-full max-w-lg flex-col overflow-hidden rounded-3xl bg-white shadow-2xl">
             <div className="flex shrink-0 items-center justify-between border-b border-slate-100 px-6 py-5">
-              <h3 id="winner-modal-title" className="text-lg font-bold text-[#193E32]">Add Winner Record</h3>
+              <h3 id="winner-modal-title" className="text-lg font-bold text-[#193E32]">{editingId ? "Edit Winner Record" : "Declare / Add Winner"}</h3>
               <button type="button" disabled={busy} onClick={() => setOpen(false)} aria-label="Close modal" className="rounded-lg p-1 text-slate-500 hover:bg-slate-100"><X className="h-5 w-5" /></button>
             </div>
             <form onSubmit={submit} className="flex min-h-0 flex-1 flex-col">
@@ -106,7 +111,7 @@ export default function WinnersArchive({ winners, onAdd, onDelete, busy }) {
                 <button type="button" disabled={busy} onClick={() => setOpen(false)} className="rounded-xl px-4 py-2.5 text-xs font-bold text-slate-600">Cancel</button>
                 <button type="submit" disabled={busy} className="inline-flex items-center gap-2 rounded-xl bg-[#E8A94A] px-5 py-2.5 text-xs font-bold text-[#193E32] disabled:opacity-50">
                   {busy && <Loader2 className="h-4 w-4 animate-spin" />}
-                  {busy ? 'Saving...' : 'Save Winner'}
+                  {busy ? 'Saving...' : editingId ? 'Save Changes' : 'Save Winner'}
                 </button>
               </div>
             </form>

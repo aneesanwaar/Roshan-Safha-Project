@@ -627,12 +627,43 @@ exports.getWinners = async (req, res) => {
   }
 };
 
+const WINNER_FIELDS = ["editionYear", "category", "placement", "studentName", "institution", "essayTitle", "awardPrizes"];
+const winnerPayload = (body) => Object.fromEntries(WINNER_FIELDS.filter(k => body?.[k] !== undefined).map(k => [k, body[k]]));
+
 exports.createWinner = async (req, res) => {
   try {
-    const winner = await Winner.create(req.body);
+    const payload = winnerPayload(req.body);
+    if (req.body?.essaySubmission) {
+      if (!mongoose.isValidObjectId(req.body.essaySubmission)) return res.status(400).json({ success: false, error: "Invalid essay submission ID." });
+      const essay = await Essay.findById(req.body.essaySubmission);
+      if (!essay) return res.status(404).json({ success: false, error: "Essay submission not found." });
+      const exists = await Winner.exists({ essaySubmission: essay._id });
+      if (exists) return res.status(409).json({ success: false, error: "This essay already has a winner record. Edit the existing record instead." });
+      Object.assign(payload, {
+        essaySubmission: essay._id,
+        studentName: essay.studentName,
+        institution: essay.institutionName,
+        essayTitle: essay.essayTitle,
+        category: essay.category,
+      });
+    }
+    const winner = await Winner.create(payload);
     return res.status(201).json({ success: true, data: winner });
   } catch (error) {
-    return res.status(400).json({ error: error.message || "Failed to add winner entry." });
+    return res.status(error.code === 11000 ? 409 : 400).json({ success: false, error: error.code === 11000 ? "This essay already has a winner record." : error.message || "Failed to add winner entry." });
+  }
+};
+
+exports.updateWinner = async (req, res) => {
+  try {
+    if (!mongoose.isValidObjectId(req.params.id)) return res.status(400).json({ success: false, error: "Invalid winner ID." });
+    const payload = winnerPayload(req.body);
+    if (!Object.keys(payload).length) return res.status(400).json({ success: false, error: "No winner fields provided." });
+    const winner = await Winner.findByIdAndUpdate(req.params.id, { $set: payload }, { returnDocument: "after", runValidators: true });
+    if (!winner) return res.status(404).json({ success: false, error: "Winner entry not found." });
+    return res.status(200).json({ success: true, data: winner });
+  } catch (error) {
+    return res.status(400).json({ success: false, error: error.message || "Failed to update winner." });
   }
 };
 

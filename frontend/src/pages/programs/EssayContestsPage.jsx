@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Calendar, CheckCircle2, Trophy } from "lucide-react";
 import EssayForm from "../../components/forms/EssayForm";
-import { getPageContent } from "../../services/api";
+import { getPageContent, getAdminWinners } from "../../services/api";
 
 const DEFAULT_CONTEST_CONFIG = {
   editionYear: "2026",
@@ -62,6 +62,10 @@ function EssayContestsPage() {
     DEFAULT_CONTEST_CONFIG
   );
 
+  const [winners, setWinners] = useState([]);
+  const [winnersLoading, setWinnersLoading] = useState(true);
+  const [winnersError, setWinnersError] = useState(false);
+
   useEffect(() => {
     let cancelled = false;
 
@@ -96,24 +100,16 @@ function EssayContestsPage() {
     };
   }, []);
 
-  // Existing archive data remains unchanged until
-  // we connect this section to the public winners API.
-  const pastContests = [
-    {
-      year: "2025",
-      theme: "The Book That Changed My Perspective",
-      winner: "Fatima Noor (Rawalakot)",
-      runnerUp: "Hamza Tariq (Muzaffarabad)",
-      totalEntries: "180+ Entries",
-    },
-    {
-      year: "2024",
-      theme: "Sustainable Literacy & Climate Action",
-      winner: "Zainab Bibi (Muzaffarabad)",
-      runnerUp: "Abdullah Khan (Mirpur)",
-      totalEntries: "140+ Entries",
-    },
-  ];
+  useEffect(() => {
+    let cancelled = false;
+    getAdminWinners().then(response => {
+      if (!cancelled) setWinners(Array.isArray(response.data?.data) ? response.data.data : []);
+    }).catch(error => {
+      console.error('Failed to load winners:', error);
+      if (!cancelled) setWinnersError(true);
+    }).finally(() => { if (!cancelled) setWinnersLoading(false); });
+    return () => { cancelled = true; };
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#FFF9EF] py-12 px-4 sm:px-6 lg:px-8">
@@ -248,49 +244,23 @@ function EssayContestsPage() {
           <EssayForm />
         </div>
 
-        {/* Past Archive Showcase */}
-        <div className="bg-white rounded-[24px] border border-[#E0E9DD] p-6 space-y-4">
-          <div className="flex items-center gap-2">
-            <Trophy className="w-4 h-4 text-amber-500" />
-
-            <h3 className="font-bold text-slate-900 text-sm">
-              Past Winners & Competition Archive
-            </h3>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {pastContests.map((item) => (
-              <div
-                key={item.year}
-                className="p-3.5 rounded-xl bg-[#F8FAF5] border border-[#E0E9DD]/80 space-y-1.5"
-              >
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-bold text-[#193E32] bg-[#E7EEE5] px-2 py-0.5 rounded">
-                    Edition {item.year}
-                  </span>
-
-                  <span className="text-[10px] text-slate-500">
-                    {item.totalEntries}
-                  </span>
-                </div>
-
-                <h4 className="text-xs font-bold text-slate-900">
-                  "{item.theme}"
-                </h4>
-
-                <div className="text-[11px] text-slate-600 space-y-0.5 pt-0.5">
-                  <p>
-                    🥇 <strong>Winner:</strong> {item.winner}
-                  </p>
-
-                  <p>
-                    🥈 <strong>Runner Up:</strong> {item.runnerUp}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+        {/* Published winners from MongoDB */}
+        <section className="rounded-[24px] border border-[#E0E9DD] bg-white p-6 space-y-4">
+          <h3 className="flex items-center gap-2 text-lg font-bold text-[#193E32]"><Trophy className="h-5 w-5 text-amber-500" /> Hall of Fame & Competition Winners</h3>
+          {winnersLoading ? <p className="text-sm text-slate-500">Loading competition results...</p>
+            : winnersError ? <p role="alert" className="text-sm text-red-700">Competition results could not be loaded.</p>
+            : winners.length === 0 ? <p className="rounded-xl bg-[#F8FAF5] p-8 text-center text-sm text-slate-600">Results Coming Soon — winners will appear after official declaration.</p>
+            : <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {winners.map(winner => <article key={winner._id} className="rounded-xl border border-[#E0E9DD] bg-[#F8FAF5] p-5 space-y-2">
+                  <span className="text-xs font-bold text-[#276B56]">Edition {winner.editionYear} · {winner.category}</span>
+                  <p className="text-sm font-bold text-[#C58B28]">{winner.placement}</p>
+                  <h4 className="text-lg font-bold text-[#193E32]">{winner.studentName}</h4>
+                  <p className="text-sm text-slate-600">{winner.institution}</p>
+                  <p className="text-sm italic text-slate-700">“{winner.essayTitle}”</p>
+                  {winner.awardPrizes && <p className="text-xs font-semibold text-[#276B56]">{winner.awardPrizes}</p>}
+                </article>)}
+              </div>}
+        </section>
 
       </div>
     </div>

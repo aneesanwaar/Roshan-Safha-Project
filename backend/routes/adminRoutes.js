@@ -12,6 +12,7 @@ const {
   updatePageContent,
   getWinners,
   createWinner,
+  updateWinner,
   deleteWinner,
   getMenuItems,
   updateMenuItem,
@@ -150,6 +151,8 @@ router.post(
 // ==========================================
 
 router.post("/winners", createWinner);
+
+router.put("/winners/:id", updateWinner);
 
 router.delete("/winners/:id", deleteWinner);
 

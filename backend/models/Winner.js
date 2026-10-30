@@ -2,7 +2,8 @@ const mongoose = require('mongoose');
 
 const winnerSchema = new mongoose.Schema(
   {
-    editionYear: {
+    essaySubmission: { type: mongoose.Schema.Types.ObjectId, ref: 'Essay', unique: true, sparse: true },
+  editionYear: {
       type: String,
       required: true,
       trim: true

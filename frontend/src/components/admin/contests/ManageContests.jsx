@@ -6,6 +6,7 @@ import {
   getAdminWinners,
   createAdminWinner,
   deleteAdminWinner,
+  updateAdminWinner,
 } from '../../../services/api';
 import ContestSettings from './ContestSettings';
 import WinnersArchive from './WinnersArchive';
@@ -96,6 +97,21 @@ export default function ManageContests() {
     }
   };
 
+  const editWinner = async (id, form) => {
+    setWinnerBusy(true);
+    setNotice(null);
+    try {
+      const response = await updateAdminWinner(id, form);
+      if (!response.data?.success || !response.data?.data) throw new Error('Winner update was not confirmed.');
+      setWinners(previous => previous.map(w => w._id === id ? response.data.data : w));
+      setNotice({ error: false, text: 'Winner updated successfully.' });
+      return true;
+    } catch (error) {
+      setNotice({ error: true, text: error.response?.data?.error || error.message || 'Failed to edit winner.' });
+      return false;
+    } finally { setWinnerBusy(false); }
+  };
+
   const deleteWinner = async (id) => {
     if (!window.confirm('Delete this winner entry?')) return;
     setWinnerBusy(true);
@@ -130,7 +146,7 @@ export default function ManageContests() {
       )}
 
       <ContestSettings config={config} onChange={setConfig} onSave={saveContest} saving={saving} />
-      <WinnersArchive winners={winners} onAdd={addWinner} onDelete={deleteWinner} busy={winnerBusy} />
+      <WinnersArchive winners={winners} onAdd={addWinner} onEdit={editWinner} onDelete={deleteWinner} busy={winnerBusy} />
     </div>
   );
 }

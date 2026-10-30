@@ -276,3 +276,4 @@ export const exportAdminSubmissions = async (type, format = 'excel') => {
 export { API, API as api };
 
 export default API;
+export const updateAdminWinner = (id, data) => API.put(`/admin/winners/${id}`, data);

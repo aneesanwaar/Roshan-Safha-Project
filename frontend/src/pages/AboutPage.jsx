@@ -50,9 +50,8 @@ const TEMP_FOUNDER_IMAGE =
 function SectionLabel({ children, light = false }) {
   return (
     <span
-      className={`inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.22em] ${
-        light ? "text-[#F1C77F]" : "text-[#276B56]"
-      }`}
+      className={`inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.22em] ${light ? "text-[#F1C77F]" : "text-[#276B56]"
+        }`}
     >
       <span className="h-[2px] w-6 bg-[#E8A94A]" />
       {children}
@@ -124,7 +123,7 @@ function AboutPage() {
   const founderName =
     typeof content.founderName === "string" && content.founderName.trim()
       ? content.founderName.trim()
-      : "Meet the Founder";
+      : "Aamna Saleem Khan";
 
   const founderRole =
     typeof content.founderRole === "string" && content.founderRole.trim()
@@ -138,7 +137,7 @@ function AboutPage() {
 
   const founderImage =
     typeof content.founderImage === "string" &&
-    /^https:\/\//i.test(content.founderImage.trim())
+      /^https:\/\//i.test(content.founderImage.trim())
       ? content.founderImage.trim()
       : TEMP_FOUNDER_IMAGE;
 
@@ -306,15 +305,15 @@ function AboutPage() {
       ====================================== */}
 
       <section className="bg-[#E7EEE5]">
-        <div className="rs-container grid items-center gap-12 py-20 sm:py-24 lg:grid-cols-2 lg:gap-20">
+        <div className="rs-container grid items-center gap-10 py-12 sm:py-14 lg:grid-cols-2 lg:gap-16">
           {/* FOUNDER PHOTO */}
 
-          <div className="relative mx-auto w-full max-w-[530px] lg:mx-0">
+          <div className="relative mx-auto w-full max-w-[px] 420lg:mx-0">
             <div className="absolute -left-5 -top-5 h-32 w-32 rounded-[30px] bg-[#E8A94A]/35" />
 
             <div className="absolute -bottom-5 -right-5 h-36 w-36 rounded-[30px] bg-[#276B56]/20" />
 
-            <div className="relative aspect-[4/4.5] overflow-hidden rounded-[32px] bg-[#D5E1D7] shadow-[0_24px_55px_rgba(25,62,50,0.13)]">
+            <div className="relative h-[340px] sm:h-[400px] lg:h-[440px] overflow-hidden rounded-[32px] bg-[#D5E1D7] shadow-[0_24px_55px_rgba(25,62,50,0.13)]">
               <img
                 src={founderImage}
                 alt={

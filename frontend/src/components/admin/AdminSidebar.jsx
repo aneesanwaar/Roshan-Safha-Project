@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import logoImg from "../../assets/logo.png";
 import {
   LayoutDashboard, TrendingUp, FileSpreadsheet, Megaphone, Trophy,
   Image as ImageIcon, LayoutTemplate, ShieldCheck, LogOut, X,
@@ -44,11 +45,17 @@ function AdminSidebar({ currentSection, setCurrentSection, sidebarOpen,
         <div className="flex min-h-0 w-[min(19rem,85vw)] flex-1 flex-col lg:w-[17.5rem]">
           <div className="flex items-center justify-between gap-2 border-b border-white/10 px-5 py-5">
             <div className="flex min-w-0 items-center gap-3">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#E8A94A] text-sm font-black text-[#193E32] shadow-lg">RS</div>
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-[#FFF9EF] p-1 shadow-lg">
+                <img
+                  src={logoImg}
+                  alt="Roshan Safha Logo"
+                  className="h-full w-full object-contain"
+                />
+              </div>
               <div className="min-w-0"><p className="truncate text-base font-black tracking-tight">Roshan Safha</p><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#E8A94A]">Administration</p></div>
             </div>
             <button type="button" onClick={() => setSidebarOpen(false)} aria-label="Close sidebar"
-              className="rounded-xl p-2 text-white/70 hover:bg-white/10 hover:text-white lg:hidden"><X size={19}/></button>
+              className="rounded-xl p-2 text-white/70 hover:bg-white/10 hover:text-white lg:hidden"><X size={19} /></button>
           </div>
           <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-5 [scrollbar-width:thin]">
             <p className="px-3 pb-3 text-[10px] font-extrabold uppercase tracking-[0.18em] text-white/45">Workspace</p>
@@ -58,8 +65,8 @@ function AdminSidebar({ currentSection, setCurrentSection, sidebarOpen,
                 return <button key={id} type="button" onClick={() => navigate(id)}
                   aria-current={active ? "page" : undefined} title={label}
                   className={`group flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-[12px] font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-[#E8A94A] ${active ? "bg-[#E8A94A] text-[#193E32] shadow-sm" : "text-white/75 hover:bg-white/10 hover:text-white"}`}>
-                  <Icon size={17} className="shrink-0"/><span className="min-w-0 flex-1 leading-5">{label}</span>
-                  {active && <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#193E32]"/>}
+                  <Icon size={17} className="shrink-0" /><span className="min-w-0 flex-1 leading-5">{label}</span>
+                  {active && <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#193E32]" />}
                 </button>;
               })}
             </nav>
@@ -69,7 +76,7 @@ function AdminSidebar({ currentSection, setCurrentSection, sidebarOpen,
               <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#E8A94A] text-sm font-black text-[#193E32]">{activeAdmin?.name?.trim()?.charAt(0)?.toUpperCase() || "A"}</div>
               <div className="min-w-0"><p className="truncate text-xs font-bold">{activeAdmin?.name || "Administrator"}</p><p className="truncate text-[10px] text-white/55">{activeAdmin?.email || activeAdmin?.role || "Admin"}</p></div>
             </div>
-            <button type="button" onClick={onSignOut} className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/15 px-3 py-2.5 text-xs font-bold text-white/85 hover:border-rose-300/40 hover:bg-rose-400/10 hover:text-rose-200"><LogOut size={16}/> Sign Out</button>
+            <button type="button" onClick={onSignOut} className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/15 px-3 py-2.5 text-xs font-bold text-white/85 hover:border-rose-300/40 hover:bg-rose-400/10 hover:text-rose-200"><LogOut size={16} /> Sign Out</button>
           </div>
         </div>
       </aside>

@@ -38,7 +38,7 @@ KNOWLEDGE_BASE = [
         "اگلا پروگرام کب ہے", "تقریبات کی معلومات", "ایونٹ میں رجسٹریشن", "سمر سرکل کیا ہے"
     ], "response": "For upcoming events and programs, check the Events section of the website for the latest details and registration options.", "urdu_response": "آئندہ تقریبات اور پروگراموں کی تازہ معلومات اور رجسٹریشن کے لیے ویب سائٹ کا Events سیکشن دیکھیں۔", "action_link": "/programs/summer-circle#event-registration-form"},
     {"intent": "collaboration", "patterns": [
-        "collaboration", "collaborate", "partnership", "partner with roshan safha", "work with your organization", "organization partnership", "sponsor a program", "how can our ngo collaborate", "institutional collaboration", "collaboration form", "partnership form", "business collaboration", "collab", "taawun", "mil kar kaam karna", "shراکت داری", "شراکت داری", "تعاون", "ادارے کے ساتھ کام کرنا"
+        "collaboration", "collaborate", "partnership", "partner with roshan safha", "work with your organization", "organization partnership", "sponsor a program", "how can our ngo collaborate", "institutional collaboration", "collaboration form", "partnership form", "business collaboration", "collab", "taawun", "mil kar kaam karna", "mai ap k sath tahawan krna chata hu", "main aap ke sath taawun karna chahta hoon", "mein apke sath mil kar kaam karna chahta hun", "shراکت داری", "شراکت داری", "تعاون", "ادارے کے ساتھ کام کرنا"
     ], "response": "You can propose a collaboration or partnership by completing our Collaboration Form. Our team will review your inquiry and contact you.", "urdu_response": "آپ ہمارے Collaboration Form کے ذریعے شراکت داری یا تعاون کی درخواست بھیج سکتے ہیں۔ ہماری ٹیم آپ سے رابطہ کرے گی۔", "action_link": "/get-involved#collaboration-form"},
     {"intent": "about", "patterns": [
         "what is roshan safha", "tell me about your organization", "what do you do", "your mission", "who are you", "what is the purpose of roshan safha",
@@ -49,11 +49,19 @@ KNOWLEDGE_BASE = [
 
 URDU_RE = re.compile(r'[\u0600-\u06FF]')
 
+# Roman Urdu has many spellings; normalize only strong collaboration cues.
+# Keep this intentionally narrow to avoid changing unrelated intent matches.
+def normalize_roman_urdu(text):
+    text = re.sub(r"\b(?:tahawan|taawan|tawun|taavun|taawun|taun)\b", "taawun", text)
+    text = re.sub(r"\bmil\s+(?:k|ke|kar)\s+kaam\b", "mil kar kaam", text)
+    return text
+
+
 def preprocess_text(text):
     text = unicodedata.normalize('NFKC', str(text or '')).casefold()
     text = re.sub(r'[\u064B-\u065F\u0670\u0640]', '', text)
     text = re.sub(r'[^\w\s\u0600-\u06FF]', ' ', text, flags=re.UNICODE)
-    return ' '.join(text.split())
+    return normalize_roman_urdu(' '.join(text.split()))
 
 corpus, intent_map = [], []
 for item in KNOWLEDGE_BASE:

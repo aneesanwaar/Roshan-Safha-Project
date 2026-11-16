@@ -87,12 +87,47 @@ exports.createDonation = async (req, res) => {
   }
 };
 
-// GET /api/donations
+// GET /api/donations (protected)
+// Returns a bounded, newest-first page of donor records for authenticated admins.
 exports.getDonations = async (req, res) => {
   try {
-    const donations = await Donation.find().sort({ createdAt: -1 });
-    res.status(200).json({ success: true, count: donations.length, data: donations });
+    const parsePositiveInt = (value, fallback) => {
+      if (value === undefined) return fallback;
+      if (typeof value !== "string" || !/^[1-9]\d*$/.test(value)) return null;
+      const parsed = Number(value);
+      return Number.isSafeInteger(parsed) ? parsed : null;
+    };
+
+    const page = parsePositiveInt(req.query.page, 1);
+    const limit = parsePositiveInt(req.query.limit, 50);
+    if (page === null || limit === null || limit > 100 || page > 100000) {
+      return res.status(400).json({
+        success: false,
+        error: "Invalid pagination parameters. page must be a positive integer and limit must be 1–100.",
+      });
+    }
+
+    const [total, donations] = await Promise.all([
+      Donation.countDocuments({}),
+      Donation.find({})
+        .select("-__v")
+        .sort({ createdAt: -1, _id: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .lean(),
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      count: donations.length,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+      data: donations,
+    });
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
+    console.error("Donation list retrieval failed:", error);
+    return res.status(500).json({ success: false, error: "Unable to retrieve donations." });
   }
 };

@@ -52,6 +52,13 @@ def chat():
     })
 
 if __name__ == "__main__":
-    port = int(os.getenv("AI_PORT", 8000))
-    print(f"Python AI Microservice running on http://127.0.0.1:{port}")
-    app.run(host="0.0.0.0", port=port, debug=True)
+    # Local development entry point only. Production should use a WSGI server.
+    port = int(os.getenv("AI_PORT", "8000"))
+    host = os.getenv("AI_HOST", "127.0.0.1")
+    debug = os.getenv("FLASK_DEBUG", "false").strip().lower() in ("1", "true", "yes", "on")
+
+    if debug and host not in ("127.0.0.1", "localhost", "::1"):
+        raise RuntimeError("Flask debugger must only be enabled on a loopback interface.")
+
+    print(f"Python AI Microservice running on http://{host}:{port} (debug={debug})")
+    app.run(host=host, port=port, debug=debug)

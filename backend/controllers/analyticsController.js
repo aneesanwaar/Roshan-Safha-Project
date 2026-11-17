@@ -483,6 +483,7 @@ exports.getAnalyticsTrends = async (req, res) => {
         },
         {
           timeout: 5000,
+          headers: { "X-AI-Service-Key": process.env.AI_SERVICE_KEY || "" },
         }
       );
 

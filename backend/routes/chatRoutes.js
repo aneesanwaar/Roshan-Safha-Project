@@ -22,11 +22,21 @@ router.post("/", async (req, res) => {
     return res.status(400).json({ success: false, error: "Message must not exceed 2000 characters." });
   }
 
+  const serviceKey = process.env.AI_SERVICE_KEY;
+  if (!serviceKey) {
+    console.error("Chat proxy: AI_SERVICE_KEY is not configured");
+    return res.status(503).json({
+      success: false,
+      reply: "Our automated assistant is temporarily resting. Please reach out to us at roshansafha@gmail.com.",
+      actionLink: "/contact"
+    });
+  }
+
   try {
     const response = await axios.post(
       `${AI_SERVICE_URL}/api/ai/chat`,
       { message: cleanMessage },
-      { timeout: AI_TIMEOUT_MS }
+      { timeout: AI_TIMEOUT_MS, headers: { "X-AI-Service-Key": serviceKey } }
     );
     return res.status(200).json(response.data);
   } catch (error) {

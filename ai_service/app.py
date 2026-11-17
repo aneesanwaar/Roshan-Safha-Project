@@ -1,10 +1,14 @@
 import os
 import math
+import hmac
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from ml_models.trend_analyzer import run_linear_regression
 from nlp.chatbot_engine import predict_intent
+from dotenv import load_dotenv
 
+
+load_dotenv()
 app = Flask(__name__)
 # Limit request bodies before JSON parsing. Applies to both AI endpoints.
 app.config["MAX_CONTENT_LENGTH"] = 32 * 1024
@@ -12,6 +16,20 @@ CORS(app)  # Existing behavior; restrict origins in the dedicated CORS patch.
 
 MAX_CHAT_CHARS = 2000
 MAX_SERIES_ROWS = 120
+
+# All AI computation endpoints are internal. Health check remains public.
+@app.before_request
+def require_internal_service_key():
+    if request.path not in ("/api/ai/chat", "/api/ai/predict-trends"):
+        return None
+    expected = os.getenv("AI_SERVICE_KEY", "")
+    if not expected:
+        return jsonify({"success": False, "error": "AI service is not configured."}), 503
+    supplied = request.headers.get("X-AI-Service-Key", "")
+    if not supplied or not hmac.compare_digest(supplied, expected):
+        return jsonify({"success": False, "error": "Unauthorized service request."}), 401
+    return None
+
 
 
 def read_json_object():

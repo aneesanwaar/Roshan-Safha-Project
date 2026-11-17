@@ -19,3 +19,9 @@ build
 coverage
 
 .vscode
+
+# Ignore all local environment variants in any service directory.
+.env.*
+!.env.example
+!.env.*.example
+

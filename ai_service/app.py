@@ -1,14 +1,17 @@
 import os
+from pathlib import Path
+from dotenv import load_dotenv
+
+# Load local development settings from this service directory, regardless of
+# the terminal working directory. Deployment-provided variables take precedence.
+load_dotenv(dotenv_path=Path(__file__).resolve().parent / ".env", override=False)
 import math
 import hmac
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from ml_models.trend_analyzer import run_linear_regression
 from nlp.chatbot_engine import predict_intent
-from dotenv import load_dotenv
 
-
-load_dotenv()
 app = Flask(__name__)
 # Limit request bodies before JSON parsing. Applies to both AI endpoints.
 app.config["MAX_CONTENT_LENGTH"] = 32 * 1024

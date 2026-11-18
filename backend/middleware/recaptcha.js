@@ -1,30 +1,38 @@
 const axios = require('axios');
 
 const verifyRecaptcha = async (req, res, next) => {
-  // 1. Bypass if NOT in production, or if no SECRET key is configured in .env
-  if (process.env.NODE_ENV !== 'production' || !process.env.RECAPTCHA_SECRET) {
+  // Preserve the existing local-development workflow. Never bypass in production.
+  if (process.env.NODE_ENV !== 'production') {
     return next();
   }
 
-  const token = req.body.recaptchaToken;
+  const secret = process.env.RECAPTCHA_SECRET;
+  if (!secret || !secret.trim()) {
+    console.error('reCAPTCHA verification unavailable: RECAPTCHA_SECRET is not configured');
+    return res.status(503).json({ error: 'reCAPTCHA verification is temporarily unavailable.' });
+  }
 
-  if (!token) {
-    return res.status(400).json({ error: "Please complete the reCAPTCHA" });
+  const token = req.body && req.body.recaptchaToken;
+  if (typeof token !== 'string' || !token.trim() || token.length > 4096) {
+    return res.status(400).json({ error: 'Please complete the reCAPTCHA.' });
   }
 
   try {
-    // 2. Contact Google to verify the token 
-    const response = await axios.post(
-      `https://www.google.com/recaptcha/api/siteverify?secret=${process.env.RECAPTCHA_SECRET}&response=${token}`
-    );
+    const params = new URLSearchParams();
+    params.append('secret', secret);
+    params.append('response', token);
+    const response = await axios.post('https://www.google.com/recaptcha/api/siteverify', params.toString(), {
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      timeout: 5000,
+    });
 
-    if (response.data.success) {
-      return next(); 
-    } else {
-      return res.status(400).json({ error: "reCAPTCHA verification failed. Bot detected." });
+    if (response.data && response.data.success === true) {
+      return next();
     }
+    return res.status(400).json({ error: 'reCAPTCHA verification failed. Please try again.' });
   } catch (error) {
-    return res.status(500).json({ error: "reCAPTCHA server communication error" });
+    console.error('reCAPTCHA verification request failed:', error.message);
+    return res.status(503).json({ error: 'reCAPTCHA verification is temporarily unavailable.' });
   }
 };
 

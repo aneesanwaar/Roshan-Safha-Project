@@ -1,3 +1,4 @@
+const { contactLimiter } = require("../middleware/rateLimiters");
 const express = require("express");
 const router = express.Router();
 
@@ -7,7 +8,7 @@ const { submitContactForm, getAllContacts } = require("../controllers/contactCon
 const { protect } = require("../middleware/authMiddleware");
 
 // Public: Submit inquiry
-router.post("/", verifyRecaptcha, contactValidationRules, validate, submitContactForm);
+router.post("/", contactLimiter, verifyRecaptcha, contactValidationRules, validate, submitContactForm);
 
 // Admin: View all inquiries
 router.get("/", protect, getAllContacts);

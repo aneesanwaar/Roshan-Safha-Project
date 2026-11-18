@@ -1,3 +1,4 @@
+const { chatbotLimiter } = require("../middleware/rateLimiters");
 const express = require("express");
 const router = express.Router();
 const axios = require("axios");
@@ -7,7 +8,7 @@ const AI_TIMEOUT_MS = 5000;
 const AI_SERVICE_URL = process.env.AI_SERVICE_URL || "http://127.0.0.1:8000";
 
 // POST /api/chat — public chatbot; validate before forwarding to Flask.
-router.post("/", async (req, res) => {
+router.post("/", chatbotLimiter, async (req, res) => {
   const message = req.body?.message;
 
   if (typeof message !== "string") {

@@ -2,6 +2,7 @@ const express = require("express");
 
 const { loginUser } = require("../controllers/authController");
 const { protect } = require("../middleware/authMiddleware");
+const { loginLimiter } = require("../middleware/rateLimiters");
 
 const router = express.Router();
 
@@ -23,7 +24,7 @@ router.post("/register", (req, res) => {
  *
  * Authenticate an administrator and issue a JWT.
  */
-router.post("/login", loginUser);
+router.post("/login", loginLimiter, loginUser);
 
 /**
  * GET /api/auth/me

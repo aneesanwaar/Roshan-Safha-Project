@@ -4,6 +4,7 @@ const path = require("path");
 require("dotenv").config();
 const connectDB = require("./config/db");
 const multer = require("multer");
+const { generalApiLimiter } = require("./middleware/rateLimiters");
 
 // Import Routes
 const donationRoutes = require("./routes/donationRoutes");
@@ -31,6 +32,10 @@ connectDB();
 // 2. Middleware
 app.use(express.json());
 app.use(cors());
+
+// Apply a broad per-IP safety limit to API traffic before route-specific limits.
+// Keep trust proxy at Express default (false) until deployment proxy topology is verified.
+app.use("/api", generalApiLimiter);
 
 // 3. Routes Configuration
 app.use("/api/donations", require("./routes/donationRoutes"));

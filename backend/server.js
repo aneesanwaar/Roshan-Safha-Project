@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+const helmet = require("helmet");
 const path = require("path");
 require("dotenv").config();
 const connectDB = require("./config/db");
@@ -31,7 +32,30 @@ connectDB();
 
 // 2. Middleware
 app.use(express.json());
-app.use(cors());
+// Stage 1.6: explicitly allow only configured browser frontend origins.
+// CORS is a browser access policy, not an API authentication mechanism.
+const allowedOrigins = new Set(
+  (process.env.CORS_ALLOWED_ORIGINS || "http://localhost:5173,http://127.0.0.1:5173")
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean)
+);
+
+app.use(helmet({
+  // The Express server serves JSON APIs, not frontend HTML.
+  // Configure a CSP separately on the host serving React HTML.
+  contentSecurityPolicy: false,
+}));
+app.use(cors({
+  origin(origin, callback) {
+    // No Origin header (e.g. Postman or server-to-server) needs no CORS header.
+    if (!origin) return callback(null, false);
+    return callback(null, allowedOrigins.has(origin));
+  },
+  methods: ["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  optionsSuccessStatus: 204,
+}));
 
 // Apply a broad per-IP safety limit to API traffic before route-specific limits.
 // Keep trust proxy at Express default (false) until deployment proxy topology is verified.

@@ -29,7 +29,8 @@
     "nodemailer": "^8.0.2",
     "pdfkit": "^0.20.2",
     "pdfmake": "^0.3.11",
-    "express-rate-limit": "^8.1.0"
+    "express-rate-limit": "^8.1.0",
+    "helmet": "^8.1.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.14"
